@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/shared/navbar/navbar";
 import AppProvider from "@/providers/app-provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -31,11 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AppProvider>
-          <div className="bg-background">
-            <Navbar />
-
-            {children}
-          </div>
+          <div className="bg-background">{children}</div>
         </AppProvider>
       </body>
     </html>

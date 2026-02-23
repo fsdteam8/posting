@@ -18,7 +18,6 @@ import {
   Star,
 } from "lucide-react";
 
-import { icons } from "@/lib/icons";
 import { currentUser } from "../mock-data";
 
 type SidebarItem = {
@@ -29,15 +28,15 @@ type SidebarItem = {
 };
 
 const mainItems: SidebarItem[] = [
-  { icon: "/home/icons/play.png", label: "Watch", href: "/watch" },
+  { icon: "/home/icons/play.png", label: "Watch", href: "/reels" },
   { icon: "/home/icons/events.png", label: "Events", href: "/events" },
   { icon: "/home/icons/friends.png", label: "Friends", href: "/friends" },
   { icon: "/home/icons/clock.png", label: "Memories", href: "/memories" },
 ];
 
 const expandedItems: SidebarItem[] = [
-  { icon: icons.home.play, label: "Saved", href: "/saved" },
-  { icon: icons.home.play, label: "Groups", href: "/groups" },
+  { icon: "/home/icons/bookmark.png", label: "Saved", href: "/saved" },
+  { icon: "/home/icons/groups.png", label: "Groups", href: "/groups" },
 ];
 
 interface ShortcutItem {

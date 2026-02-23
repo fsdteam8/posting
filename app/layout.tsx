@@ -31,7 +31,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AppProvider>
-          <div className="min-h-screen bg-background">
+          <div className="bg-background">
             <Navbar />
 
             {children}

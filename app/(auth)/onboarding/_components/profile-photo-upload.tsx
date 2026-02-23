@@ -1,0 +1,149 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Camera, User } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "nextjs-toploader/app";
+import { useCallback, useRef, useState } from "react";
+
+export default function ProfilePhotoUpload() {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const router = useRouter();
+
+  const handleFile = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // call rest api for saving the photo
+    console.log("called save profile api... ✅");
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const file = e.dataTransfer.files?.[0];
+      if (file) handleFile(file);
+    },
+    [handleFile],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) handleFile(file);
+    },
+    [handleFile],
+  );
+
+  const openFilePicker = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  return (
+    <>
+      <div className="flex flex-col items-center gap-2">
+        <div className="relative">
+          {/* Outer dashed ring */}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Drop a profile photo here or click the camera icon to upload"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={openFilePicker}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openFilePicker();
+              }
+            }}
+            className={cn(
+              "relative flex size-32 cursor-pointer items-center justify-center rounded-full border-2 border-dashed transition-all duration-200",
+              isDragging
+                ? "border-primary bg-primary/5 scale-105"
+                : "border-muted-foreground/25 hover:border-primary/50",
+              preview && "border-transparent hover:border-transparent",
+            )}
+          >
+            {preview ? (
+              <Image
+                src={preview}
+                alt="Profile preview"
+                width={112}
+                height={112}
+                className="rounded-full object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="flex size-28 items-center justify-center rounded-full bg-muted">
+                <User
+                  className="size-14 text-muted-foreground/50"
+                  strokeWidth={1.2}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Camera button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              openFilePicker();
+            }}
+            aria-label="Upload profile photo"
+            className="absolute bottom-0.5 right-0.5 flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Camera className="size-4" />
+          </button>
+        </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={handleInputChange}
+          aria-hidden="true"
+          tabIndex={-1}
+        />
+      </div>
+      {/* Action buttons */}
+      <div className="flex w-full items-center justify-center gap-3">
+        <Button
+          variant="outline"
+          className="min-w-32.5 rounded-full"
+          onClick={() => router.push(`/onboarding/interest`)}
+        >
+          Skip for now
+        </Button>
+        <Button className="min-w-32.5 rounded-full">Continue</Button>
+      </div>
+    </>
+  );
+}

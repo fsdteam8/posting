@@ -15,7 +15,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         return {
           id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
           accessToken: user.accessToken,
+          refreshToken: user.refreshToken,
         };
       },
     }),
@@ -25,23 +30,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signOut: "/login",
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.user = {
+          id: user.id!,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          accessToken: user.accessToken,
+          refreshToken: user.refreshToken,
+        };
+      }
+      return token;
+    },
+
     async session({ session, token }) {
       if (token.user) {
         session.user = {
           ...session.user,
+          id: token.user.id,
+          firstName: token.user.firstName,
+          lastName: token.user.lastName,
+          email: token.user.email,
+          role: token.user.role,
           accessToken: token.user.accessToken,
+          refreshToken: token.user.refreshToken,
         };
       }
-
       return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.accessToken = user.accessToken;
-      }
-
-      return token;
     },
   },
   secret: process.env.BETTER_AUTH_SECRET,

@@ -20,6 +20,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { useState } from "react";
 
 interface UserProfile {
@@ -171,7 +172,15 @@ export function ProfileMenu({
                 label="Give feedback"
                 shortcut="Ctrl B"
               />
-              <MenuItem icon={LogOut} label="Log out" />
+              <MenuItem
+                icon={LogOut}
+                label="Log out"
+                onSelect={() =>
+                  signOut({
+                    redirectTo: "/login",
+                  })
+                }
+              />
             </nav>
 
             {/* Footer */}
@@ -202,14 +211,19 @@ function MenuItem({
   label,
   trailing,
   shortcut,
+  onSelect,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   trailing?: "chevron" | "external";
   shortcut?: string;
+  onSelect?: () => void;
 }) {
   return (
-    <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-secondary">
+    <button
+      className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-secondary"
+      onClick={() => onSelect?.()}
+    >
       <span className="flex size-9 items-center justify-center rounded-full bg-secondary text-foreground">
         <Icon className="size-5" />
       </span>

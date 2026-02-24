@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 
-import { loginAction } from "@/actions/features/auth/login";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,12 +16,51 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { loginSchema, LoginValues } from "@/schemas/features/login";
+import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useTransition } from "react";
+import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
 export default function LoginForm() {
-  const [pending, startTransition] = useTransition();
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["login"],
+    mutationFn: (data: LoginValues) =>
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.identifier,
+          password: data.password,
+        }),
+      }).then((res) => res.json()),
+
+    onSuccess: async (data: LoginApiResponse) => {
+      // handle error
+      if (!data.success) {
+        toast.error(data.message);
+        return;
+      }
+
+      // handle success
+      await signIn("credentials", {
+        data: JSON.stringify({
+          id: data.data._id,
+          firstName: data.data.user.firstName,
+          lastName: data.data.user.lastName,
+          email: data.data.user.email,
+          accessToken: data.data.accessToken,
+          refreshToken: data.data.refreshToken,
+          role: data.data.role,
+        }),
+        redirectTo: "/",
+      });
+    },
+    onError: (error) => {
+      console.log("error", error);
+    },
+  });
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -34,18 +72,7 @@ export default function LoginForm() {
   });
 
   function onSubmit(data: LoginValues) {
-    // Replace with your auth call (e.g., NextAuth / custom API)
-    startTransition(() => {
-      loginAction(data).then((res) => {
-        if (!res.success) {
-          toast.error(res.message);
-          return;
-        }
-
-        // handle succes
-        toast.success(res.message);
-      });
-    });
+    mutate(data);
   }
 
   return (
@@ -132,9 +159,9 @@ export default function LoginForm() {
             type="submit"
             className="h-11 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
             size="lg"
-            disabled={pending}
+            disabled={isPending}
           >
-            Sign in {pending && <Loader2 className="animate-spin size-5" />}
+            Sign in {isPending && <Loader2 className="animate-spin size-5" />}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
@@ -148,3 +175,38 @@ export default function LoginForm() {
     </div>
   );
 }
+
+/* ---------------- Types ---------------- */
+
+type LoginSuccessResponse = {
+  success: true;
+  message: string;
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    role: string;
+    _id: string;
+    user: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      isEmailVerified: boolean;
+      accountStatus: string;
+    };
+  };
+};
+
+type LoginErrorResponse = {
+  success: false;
+  message: string;
+  errorSources?: {
+    path: string;
+    message: string;
+  }[];
+  err?: {
+    statusCode?: number;
+  };
+};
+
+type LoginApiResponse = LoginSuccessResponse | LoginErrorResponse;

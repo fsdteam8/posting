@@ -3,10 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 
+import { loginAction } from "@/actions/features/auth/login";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -17,16 +16,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-
-const loginSchema = z.object({
-  identifier: z.string().min(1, "Email or phone is required"),
-  password: z.string().min(1, "Password is required"),
-  rememberMe: z.boolean().optional(),
-});
-
-type LoginValues = z.infer<typeof loginSchema>;
+import { loginSchema, LoginValues } from "@/schemas/features/login";
+import { Loader2 } from "lucide-react";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 export default function LoginForm() {
+  const [pending, startTransition] = useTransition();
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -39,7 +35,17 @@ export default function LoginForm() {
 
   function onSubmit(data: LoginValues) {
     // Replace with your auth call (e.g., NextAuth / custom API)
-    console.log("Login submitted:", data);
+    startTransition(() => {
+      loginAction(data).then((res) => {
+        if (!res.success) {
+          toast.error(res.message);
+          return;
+        }
+
+        // handle succes
+        toast.success(res.message);
+      });
+    });
   }
 
   return (
@@ -90,8 +96,8 @@ export default function LoginForm() {
                   <PasswordInput {...field} placeholder="Password" />
                 </FormControl>
 
-                <div className="mt-2 flex items-center justify-between">
-                  <FormField
+                <div className="mt-2 flex items-center justify-end">
+                  {/* <FormField
                     control={form.control}
                     name="rememberMe"
                     render={({ field }) => (
@@ -107,7 +113,7 @@ export default function LoginForm() {
                         </FormLabel>
                       </FormItem>
                     )}
-                  />
+                  /> */}
 
                   <Link
                     href="#"
@@ -126,9 +132,9 @@ export default function LoginForm() {
             type="submit"
             className="h-11 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
             size="lg"
-            disabled={form.formState.isSubmitting}
+            disabled={pending}
           >
-            Sign in
+            Sign in {pending && <Loader2 className="animate-spin size-5" />}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">

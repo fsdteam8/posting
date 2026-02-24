@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "nextjs-toploader/app";
 import { useCallback } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -64,6 +65,8 @@ export default function InterestSelectionForm() {
     mode: "onChange",
   });
 
+  const router = useRouter();
+
   const selectedInterests = useWatch({
     name: "interests",
     control: form.control,
@@ -83,6 +86,8 @@ export default function InterestSelectionForm() {
   function onSubmit(data: InterestFormValues) {
     // Handle form submission
     console.log("Selected interests:", data.interests);
+
+    router.push("/onboarding/interest/people-you-may-know");
   }
 
   const hasMinimum = selectedInterests.length >= 5;
@@ -99,7 +104,7 @@ export default function InterestSelectionForm() {
           Back
         </Link>
 
-        <OnboardingProgress currentStep={1} totalSteps={3} />
+        <OnboardingProgress currentStep={2} totalSteps={3} />
 
         {/* Spacer for centering the progress bar */}
         <div className="w-13" />
@@ -156,7 +161,9 @@ export default function InterestSelectionForm() {
       <footer className="border-t border-border/60">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-center gap-3 px-6 py-5">
           <Button variant="outline" className="min-w-35 rounded-full" asChild>
-            <Link href="/onboarding">Skip for now</Link>
+            <Link href="/onboarding/interest/people-you-may-know">
+              Skip for now
+            </Link>
           </Button>
           <Button
             className="min-w-35 rounded-full"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useProfile } from "@/hooks/profile/use-profile";
 import { Bell, Menu, MessageCircle, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -7,12 +8,6 @@ import { IconButton } from "./icon-button";
 import { NavLinks } from "./nav-links";
 import { NavSearch } from "./nav-search";
 import { ProfileMenu } from "./profile-menu";
-
-const USER = {
-  name: "Martina Luke",
-  avatarUrl:
-    "https://api.dicebear.com/9.x/avataaars/svg?seed=Martina&backgroundColor=b6e3f4",
-};
 
 const PAGES = [
   {
@@ -29,13 +24,26 @@ const PAGES = [
   },
 ];
 
-export function Navbar() {
+interface Props {
+  accessToken: string;
+}
+
+export default function Navbar({ accessToken }: Props) {
   const [activeIdentity, setActiveIdentity] = useState<{
     type: "user" | "page";
     id?: string;
   }>({
-    type: "user",
+    type: "page",
   });
+
+  const { data: profile } = useProfile(accessToken);
+
+  const USER = {
+    name: profile ? `${profile.firstName} ${profile.lastName}` : "...",
+    avatarUrl:
+      profile?.profileImage?.url ||
+      `https://api.dicebear.com/9.x/avataaars/svg?seed=${profile?.firstName}&backgroundColor=b6e3f4`,
+  };
 
   function handleSearch(query: string) {
     // Handle search query — e.g. route to a search results page or filter content

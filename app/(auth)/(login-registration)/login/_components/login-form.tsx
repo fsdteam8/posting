@@ -64,7 +64,8 @@ export default function LoginForm() {
       });
     },
     onError: (error) => {
-      console.log("error", error);
+      console.log("login form", error);
+      toast.error("Unexpected error occurred.");
     },
   });
   const form = useForm<LoginValues>({

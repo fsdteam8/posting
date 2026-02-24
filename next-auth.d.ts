@@ -8,6 +8,7 @@ export type ExtendedUser = DefaultSession["user"] & {
   role: string;
   accessToken: string;
   refreshToken: string;
+  isOnboarded: boolean;
 };
 
 declare module "next-auth" {
@@ -23,6 +24,7 @@ declare module "next-auth" {
     role: string;
     accessToken: string;
     refreshToken: string;
+    isOnboarded: boolean;
   }
 }
 
@@ -39,6 +41,7 @@ declare module "next-auth/jwt" {
       role: string;
       accessToken: string;
       refreshToken: string;
+      isOnboarded: boolean;
     };
   }
 }

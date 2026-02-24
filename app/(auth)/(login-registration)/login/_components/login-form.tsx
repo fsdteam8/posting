@@ -43,6 +43,10 @@ export default function LoginForm() {
         return;
       }
 
+      const redirectToPath = data.data.user.isOnboarded ? "/" : "/onboarding";
+
+      console.log("redirectToPath", redirectToPath);
+
       // handle success
       await signIn("credentials", {
         data: JSON.stringify({
@@ -53,8 +57,10 @@ export default function LoginForm() {
           accessToken: data.data.accessToken,
           refreshToken: data.data.refreshToken,
           role: data.data.role,
+          isOnboarded: data.data.user.isOnboarded,
         }),
-        redirectTo: "/",
+        redirect: true,
+        redirectTo: redirectToPath,
       });
     },
     onError: (error) => {
@@ -95,13 +101,12 @@ export default function LoginForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm font-medium text-foreground">
-                  Email or Phone
+                  Email
                 </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Email or phone number"
+                    placeholder="Email"
                     autoComplete="username"
-                    className="h-11 rounded-lg border-border bg-card text-card-foreground placeholder:text-muted-foreground"
                     {...field}
                   />
                 </FormControl>
@@ -193,6 +198,7 @@ type LoginSuccessResponse = {
       phone: string;
       isEmailVerified: boolean;
       accountStatus: string;
+      isOnboarded: false;
     };
   };
 };

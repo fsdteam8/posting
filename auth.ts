@@ -21,6 +21,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: user.role,
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
+          isOnboarded: user.isOnboarded,
         };
       },
     }),
@@ -40,6 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: user.role,
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
+          isOnboarded: user.isOnboarded,
         };
       }
       return token;
@@ -56,6 +58,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: token.user.role,
           accessToken: token.user.accessToken,
           refreshToken: token.user.refreshToken,
+          isOnboarded: token.user.isOnboarded,
         };
       }
       return session;

@@ -1,12 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { baseURL } from "@/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "nextjs-toploader/app";
 import { useCallback } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { InterestChip } from "./interest-chip";
 import OnboardingProgress from "./on-boarding-progress";
@@ -56,7 +59,39 @@ const interestFormSchema = z.object({
 
 type InterestFormValues = z.infer<typeof interestFormSchema>;
 
-export default function InterestSelectionForm() {
+interface Props {
+  accessToken: string;
+}
+
+export default function InterestSelectionForm({ accessToken }: Props) {
+  const router = useRouter();
+
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["onboarding-interest"],
+    mutationFn: (data: InterestFormValues) =>
+      fetch(`${baseURL}/users/update-profile`, {
+        method: "PUT",
+        headers: {
+          "content-type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          interests: data.interests,
+        }),
+      }).then((res) => res.json()),
+    onSuccess: (response: ApiResponse) => {
+      if (!response.success) {
+        toast.error(response.message ?? "Server Error");
+        return;
+      }
+
+      // handle success
+      router.push("/onboarding/interest/people-you-may-know");
+    },
+    onError: (err) => {
+      toast.error(err.message ?? "Something went wrong");
+    },
+  });
   const form = useForm<InterestFormValues>({
     resolver: zodResolver(interestFormSchema),
     defaultValues: {
@@ -64,8 +99,6 @@ export default function InterestSelectionForm() {
     },
     mode: "onChange",
   });
-
-  const router = useRouter();
 
   const selectedInterests = useWatch({
     name: "interests",
@@ -85,9 +118,9 @@ export default function InterestSelectionForm() {
 
   function onSubmit(data: InterestFormValues) {
     // Handle form submission
-    console.log("Selected interests:", data.interests);
+    mutate(data);
 
-    router.push("/onboarding/interest/people-you-may-know");
+    //
   }
 
   const hasMinimum = selectedInterests.length >= 5;
@@ -167,13 +200,18 @@ export default function InterestSelectionForm() {
           </Button>
           <Button
             className="min-w-35 rounded-full"
-            disabled={!hasMinimum}
+            disabled={!hasMinimum || isPending}
             onClick={form.handleSubmit(onSubmit)}
           >
-            Continue
+            Continue {isPending && <Loader2 className="size-5 animate-spin" />}
           </Button>
         </div>
       </footer>
     </div>
   );
 }
+
+type ApiResponse = {
+  success: boolean;
+  message: string;
+};

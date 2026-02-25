@@ -18,7 +18,7 @@ import {
   Star,
 } from "lucide-react";
 
-import { currentUser } from "../mock-data";
+import { useProfile } from "@/hooks/profile/use-profile";
 
 type SidebarItem = {
   icon: string | StaticImageData; // local image src (from import)
@@ -79,9 +79,22 @@ const shortcuts: ShortcutItem[] = [
   },
 ];
 
-export function LeftSidebar() {
+interface Props {
+  accessToken: string;
+}
+
+export default function LeftSidebar({ accessToken }: Props) {
   const [expanded, setExpanded] = useState(false);
   const pathname = usePathname();
+
+  const { data: profile } = useProfile(accessToken);
+
+  const USER = {
+    name: profile ? `${profile.firstName} ${profile.lastName}` : "...",
+    avatarUrl:
+      profile?.profileImage?.url ||
+      `https://api.dicebear.com/9.x/avataaars/svg?seed=${profile?.firstName}&backgroundColor=b6e3f4`,
+  };
 
   return (
     <aside className="flex flex-col gap-2 py-4 pr-2">
@@ -94,14 +107,14 @@ export function LeftSidebar() {
         )}
       >
         <Avatar className="size-9 ring-1 ring-border group-hover:ring-primary/30 transition">
-          <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+          <AvatarImage src={USER.avatarUrl} alt={USER.name} />
           <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-            {currentUser.name.charAt(0)}
+            {USER.name.charAt(0)}
           </AvatarFallback>
         </Avatar>
 
         <span className="text-[15px] font-semibold text-foreground">
-          {currentUser.name}
+          {USER.name}
         </span>
       </Link>
 

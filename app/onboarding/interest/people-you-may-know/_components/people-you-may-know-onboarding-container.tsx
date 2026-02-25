@@ -1,10 +1,13 @@
 "use client";
 import { PeopleYouMayKnowCard } from "@/components/shared/cards/friend-request/people-you-may-know-card";
 import { Button } from "@/components/ui/button";
+import { baseURL } from "@/constants";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "nextjs-toploader/app";
 import { useState } from "react";
+import { toast } from "sonner";
 import OnboardingProgress from "../../_components/on-boarding-progress";
 
 // Mock data - replace with real data from your API
@@ -67,10 +70,41 @@ const SUGGESTED_PEOPLE = [
   },
 ];
 
-const PeopleYouMayKnowOnBoradingContainer = () => {
+interface Props {
+  accessToken: string;
+}
+
+const PeopleYouMayKnowOnBoradingContainer = ({ accessToken }: Props) => {
   const router = useRouter();
   const [addedFriends, setAddedFriends] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { mutate: isOnboardedMutate, isPending: isOnBoardedPending } =
+    useMutation({
+      mutationKey: ["onboarding-people-you-may-like"],
+      mutationFn: () =>
+        fetch(`${baseURL}/users/update-profile`, {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            isOnboarded: true,
+          }),
+        }).then((res) => res.json()),
+      onSuccess: (response: ApiResponse) => {
+        if (!response.success) {
+          toast.error(response.message ?? "Server Error");
+          return;
+        }
+
+        // handle success
+        router.push("/");
+      },
+      onError: (err) => {
+        toast.error(err.message ?? "Something went wrong");
+      },
+    });
 
   const handleAddFriend = (id: string) => {
     setAddedFriends((prev) => new Set([...prev, id]));
@@ -78,14 +112,8 @@ const PeopleYouMayKnowOnBoradingContainer = () => {
   };
 
   const handleContinue = () => {
-    setIsLoading(true);
-
-    setTimeout(() => {
-      // TODO: Navigate to next step after adding friends
-      console.log("addedFriends", addedFriends);
-
-      setIsLoading(false);
-    }, 3000);
+    console.log(addedFriends);
+    isOnboardedMutate();
   };
   return (
     <div className="flex min-h-svh flex-col bg-background">
@@ -130,7 +158,7 @@ const PeopleYouMayKnowOnBoradingContainer = () => {
                 avatar={person.avatar}
                 mutualFriendsCount={person.mutualFriendsCount}
                 onAddFriend={handleAddFriend}
-                isLoading={isLoading}
+                isLoading={isOnBoardedPending}
               />
             ))}
           </div>
@@ -140,15 +168,21 @@ const PeopleYouMayKnowOnBoradingContainer = () => {
       {/* Bottom action bar */}
       <footer className="border-t border-border/60">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-center gap-3 px-6 py-5">
-          <Button variant="outline" className="min-w-35 rounded-full" asChild>
-            <Link href="/">Skip for now</Link>
+          <Button
+            variant="outline"
+            className="min-w-35 rounded-full"
+            disabled={isOnBoardedPending}
+            onClick={() => isOnboardedMutate()}
+          >
+            Skip for Now
           </Button>
           <Button
             className="min-w-35 rounded-full"
             onClick={handleContinue}
-            disabled={isLoading}
+            disabled={isOnBoardedPending}
           >
-            Continue {isLoading && <Loader2 className="animate-spin size-5" />}
+            Continue{" "}
+            {isOnBoardedPending && <Loader2 className="animate-spin size-5" />}
           </Button>
         </div>
       </footer>
@@ -157,3 +191,8 @@ const PeopleYouMayKnowOnBoradingContainer = () => {
 };
 
 export default PeopleYouMayKnowOnBoradingContainer;
+
+type ApiResponse = {
+  success: boolean;
+  message: string;
+};

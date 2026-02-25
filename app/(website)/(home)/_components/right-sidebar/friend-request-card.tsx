@@ -1,15 +1,21 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "nextjs-toploader/app";
 import type { FriendRequest } from "../mock-data";
 
 export function FriendRequestCard({ requests }: { requests: FriendRequest[] }) {
+  const router = useRouter();
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h3 className="text-[17px] font-semibold text-foreground">
           Friend Requests
         </h3>
-        <button className="text-[14px] font-medium text-primary hover:underline">
+        <button
+          className="text-[14px] font-medium text-primary hover:underline cursor-pointer"
+          onClick={() => router.push("/friends")}
+        >
           See all
         </button>
       </div>

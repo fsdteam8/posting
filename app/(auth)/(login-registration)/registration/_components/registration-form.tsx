@@ -2,9 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, Eye, EyeOff } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
-import * as React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
@@ -20,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Popover,
   PopoverContent,
@@ -32,7 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { baseURL } from "@/constants";
 import { cn } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "nextjs-toploader/app";
+import { toast } from "sonner";
 
 const getStrengthColor = (score: number) => {
   if (score <= 1) return "bg-destructive"; // Weak → red
@@ -58,7 +62,7 @@ const strongPassword = z
 const registerSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  dateOfBirth: z
+  dob: z
     .date({
       error: "Date of birth is required",
     })
@@ -144,15 +148,41 @@ function PasswordStrength({ value }: { value: string }) {
 }
 
 export default function RegisterForm() {
-  const [showPassword, setShowPassword] = React.useState(false);
+  const router = useRouter();
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["registration"],
+    mutationFn: (data: RegisterValues) =>
+      fetch(`${baseURL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          ...data,
+          confirmPassword: data.password,
+        }),
+      }).then((res) => res.json()),
+    onSuccess: (data: RegisterResponse) => {
+      if (!data.success) {
+        toast.error(data.message ?? "Server Error");
+        return;
+      }
 
+      // handle success
+      toast.success("Registration successfull. You can login now!");
+      router.push("/login");
+    },
+    onError: (err) => {
+      toast.error(err.message ?? "Something went wrong");
+    },
+  });
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
-      // dateOfBirth is Date in schema; keep undefined until selected
-      dateOfBirth: undefined as unknown as Date,
+      // dob is Date in schema; keep undefined until selected
+      dob: undefined as unknown as Date,
       gender: "",
       email: "",
       password: "",
@@ -167,7 +197,7 @@ export default function RegisterForm() {
   });
 
   function onSubmit(data: RegisterValues) {
-    console.log("Registration submitted:", data);
+    mutate(data);
   }
 
   return (
@@ -229,7 +259,7 @@ export default function RegisterForm() {
           {/* Date of Birth (shadcn Calendar) */}
           <FormField
             control={form.control}
-            name="dateOfBirth"
+            name="dob"
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel className="text-sm font-medium text-foreground">
@@ -315,11 +345,11 @@ export default function RegisterForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm font-medium text-foreground">
-                  Email or Phone
+                  Email
                 </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Email or Phone number"
+                    placeholder="Email"
                     className="h-11 rounded-lg border-border bg-card text-card-foreground placeholder:text-muted-foreground"
                     {...field}
                   />
@@ -339,29 +369,7 @@ export default function RegisterForm() {
                   Password
                 </FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="New Password"
-                      autoComplete="new-password"
-                      className="h-11 rounded-lg border-border bg-card pr-12 text-card-foreground placeholder:text-muted-foreground"
-                      {...field}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((s) => !s)}
-                      className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground hover:text-foreground"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
+                  <PasswordInput {...field} placeholder="New Password" />
                 </FormControl>
 
                 <PasswordStrength value={passwordValue ?? ""} />
@@ -393,12 +401,28 @@ export default function RegisterForm() {
             type="submit"
             className="h-11 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
             size="lg"
-            disabled={form.formState.isSubmitting}
+            disabled={isPending}
           >
-            Sign up
+            Sign up {isPending && <Loader2 className="animate-spin size-5" />}
           </Button>
         </form>
       </Form>
     </div>
   );
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  data: {
+    firstName: string;
+    lastName: string;
+    dob: string; // ISO date string
+    email: string;
+    phone: string;
+    role: "user" | "admin" | string; // adjust if roles are fixed
+    isOnboarded: boolean;
+    accessToken: string;
+    refreshToken: string;
+  };
 }

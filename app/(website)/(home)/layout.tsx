@@ -1,7 +1,12 @@
-import { LeftSidebar } from "./_components/left-sidebar/left-sidebar";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import LeftSidebar from "./_components/left-sidebar/left-sidebar";
 import { RightSidebar } from "./_components/right-sidebar/right-side-card";
 
-export default function HomeLayout() {
+export default async function HomeLayout() {
+  const cu = await auth();
+
+  if (!cu || !cu.user || !cu.user.accessToken) redirect("/login");
   return (
     <div className=" flex justify-between ">
       {/* Left Sidebar */}
@@ -10,7 +15,7 @@ export default function HomeLayout() {
           className="sticky top-14 h-[calc(100vh-56px)] overflow-y-auto scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          <LeftSidebar />
+          <LeftSidebar accessToken={cu.user.accessToken} />
         </div>
       </div>
 

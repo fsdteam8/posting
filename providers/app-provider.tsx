@@ -19,7 +19,7 @@ const AppProvider = ({ children }: Props) => {
       <NextTopLoader showSpinner={false} />
 
       {/* toast sooner */}
-      <Toaster />
+      <Toaster richColors />
     </QueryClientProvider>
   );
 };

@@ -4,12 +4,21 @@ import { Card } from "@/components/ui/card";
 import * as ResizablePanel from "@/components/ui/resizable-panel";
 import { baseURL } from "@/constants";
 import { useMutation } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { toast } from "sonner";
-import FindAccountContainer from "./find-account-container";
-import OTPFindContainer from "./otp-find-container";
-import OTPForm from "./otp-form";
-import ResetNowForm from "./reset-now";
+const ResetNowForm = dynamic(() => import("./reset-now"), {
+  ssr: false,
+});
+const OTPForm = dynamic(() => import("./otp-form"), {
+  ssr: false,
+});
+const OTPFindContainer = dynamic(() => import("./otp-find-container"), {
+  ssr: false,
+});
+const FindAccountContainer = dynamic(() => import("./find-account-container"), {
+  ssr: false,
+});
 
 interface UserState {
   name: string;

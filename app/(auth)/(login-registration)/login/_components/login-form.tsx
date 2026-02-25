@@ -45,8 +45,6 @@ export default function LoginForm() {
 
       const redirectToPath = data.data.user.isOnboarded ? "/" : "/onboarding";
 
-      console.log("redirectToPath", redirectToPath);
-
       // handle success
       await signIn("credentials", {
         data: JSON.stringify({
@@ -149,7 +147,7 @@ export default function LoginForm() {
                   /> */}
 
                   <Link
-                    href="#"
+                    href="/find-account"
                     className="text-sm text-primary hover:underline"
                   >
                     Forgot password?

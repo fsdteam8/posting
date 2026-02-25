@@ -1,7 +1,12 @@
+import { auth } from "@/auth";
 import { CircleUserRound } from "lucide-react";
+import { redirect } from "next/navigation";
 import ProfilePhotoUpload from "./profile-photo-upload";
 
-export default function OnboardingCard() {
+export default async function OnboardingCard() {
+  const cu = await auth();
+
+  if (!cu || !cu.user || !cu.user.accessToken) redirect("/login");
   return (
     <div className="flex w-full flex-col items-center gap-8 rounded-2xl border border-border/60 bg-card px-8 py-10 shadow-sm">
       {/* Top icon */}
@@ -21,7 +26,7 @@ export default function OnboardingCard() {
       </div>
 
       {/* Profile upload area */}
-      <ProfilePhotoUpload />
+      <ProfilePhotoUpload accessToken={cu.user.accessToken} />
     </div>
   );
 }

@@ -56,6 +56,7 @@ export default function LoginForm() {
           refreshToken: data.data.refreshToken,
           role: data.data.role,
           isOnboarded: data.data.user.isOnboarded,
+          username: data.data.user.username,
         }),
         redirect: true,
         redirectTo: redirectToPath,
@@ -198,6 +199,7 @@ type LoginSuccessResponse = {
       isEmailVerified: boolean;
       accountStatus: string;
       isOnboarded: false;
+      username: string;
     };
   };
 };

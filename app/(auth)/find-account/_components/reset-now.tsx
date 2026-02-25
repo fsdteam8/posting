@@ -38,9 +38,10 @@ type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 interface Props {
   email: string;
   otp: string;
+  onSuccess: () => void;
 }
 
-const ResetNowForm = ({ email, otp }: Props) => {
+const ResetNowForm = ({ email, otp, onSuccess }: Props) => {
   const router = useRouter();
 
   const form = useForm<ResetPasswordValues>({
@@ -64,11 +65,8 @@ const ResetNowForm = ({ email, otp }: Props) => {
         toast.error(data.message);
         return;
       }
-      toast.success(data.message);
 
-      setTimeout(() => {
-        router.replace("/login");
-      }, 1000);
+      onSuccess();
     },
     onError: (err) => {
       console.log("otp-reset-error", err);

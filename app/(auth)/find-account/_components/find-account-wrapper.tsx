@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { toast } from "sonner";
+import SuccessCard from "./password-reset-success";
 const ResetNowForm = dynamic(() => import("./reset-now"), {
   ssr: false,
 });
@@ -35,7 +36,7 @@ const FindAccountWrapper = () => {
     otp: "",
   });
   const [state, setState] = useState<
-    "find-account" | "otp-container" | "otp" | "reset"
+    "find-account" | "otp-container" | "otp" | "reset" | "success"
   >("find-account");
 
   const { mutate, isPending: isFindAccountPending } = useMutation({
@@ -111,7 +112,14 @@ const FindAccountWrapper = () => {
           />
         </ResizablePanel.Content>
         <ResizablePanel.Content value="reset">
-          <ResetNowForm email={user.email} otp={user.otp} />
+          <ResetNowForm
+            email={user.email}
+            otp={user.otp}
+            onSuccess={() => setState("success")}
+          />
+        </ResizablePanel.Content>
+        <ResizablePanel.Content value="success">
+          <SuccessCard />
         </ResizablePanel.Content>
       </ResizablePanel.Root>
     </Card>

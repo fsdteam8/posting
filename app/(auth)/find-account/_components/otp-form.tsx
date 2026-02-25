@@ -26,7 +26,7 @@ type OTPSchemaType = z.infer<typeof otpSchema>;
 
 interface Props {
   email: string;
-  onVerified: () => void;
+  onVerified: (otp: string) => void;
 }
 
 interface ApiRes {
@@ -70,7 +70,7 @@ const OTPForm = ({ email, onVerified }: Props) => {
         return;
       }
       toast.success("Code verified. You can now set a new password.");
-      onVerified();
+      onVerified(otpValue);
     },
     onError: (err) => {
       console.log("otp-verify-error", err);

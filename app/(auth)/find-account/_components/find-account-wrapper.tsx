@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import FindAccountContainer from "./find-account-container";
 import OTPFindContainer from "./otp-find-container";
 import OTPForm from "./otp-form";
+import ResetNowForm from "./reset-now";
 
 interface UserState {
   name: string;
@@ -92,9 +93,17 @@ const FindAccountWrapper = () => {
           />
         </ResizablePanel.Content>
         <ResizablePanel.Content value="otp">
-          <OTPForm email={user.email} onVerified={() => setState("reset")} />
+          <OTPForm
+            email={user.email}
+            onVerified={(otp: string) => {
+              setUser((p) => ({ ...p, otp }));
+              setState("reset");
+            }}
+          />
         </ResizablePanel.Content>
-        <ResizablePanel.Content value="reset">reset</ResizablePanel.Content>
+        <ResizablePanel.Content value="reset">
+          <ResetNowForm email={user.email} otp={user.otp} />
+        </ResizablePanel.Content>
       </ResizablePanel.Root>
     </Card>
   );

@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BookOpen, Compass, Plus, Users } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { GroupsSidebarItem } from "./group-sidebar-item";
 
 export function GroupsSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (path: string) => pathname === path;
 
@@ -31,7 +33,7 @@ export function GroupsSidebar() {
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-3">
         <GroupsSidebarItem
           href="/groups/feed"
           label="Your feed"
@@ -50,6 +52,20 @@ export function GroupsSidebar() {
           isActive={isActive("/groups/joined")}
           icon={BookOpen}
         />
+
+        <Button
+          className="
+    w-full
+    bg-blue-50
+    hover:bg-blue-100
+    text-blue-600
+    transition-colors duration-200
+  "
+          onClick={() => router.push("/groups/create")}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Create new group
+        </Button>
 
         <div className="pt-4 border-t border-border mt-4">
           <h3 className="text-sm font-semibold text-muted-foreground px-4 mb-3">

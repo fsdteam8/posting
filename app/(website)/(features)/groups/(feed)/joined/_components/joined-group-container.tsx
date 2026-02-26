@@ -2,53 +2,97 @@
 
 import ErrorScreen from "@/components/shared/screens/error-screen";
 import { baseURL } from "@/constants";
-import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "nextjs-toploader/app";
-
+import { useInfiniteQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
+import { useRouter } from "nextjs-toploader/app";
+import { useEffect, useRef } from "react";
+
 const JoinedGroupCard = dynamic(() => import("./joined-group-card"), {
   ssr: false,
 });
 
 interface Props {
   accessToken: string;
+  limit?: number;
 }
 
-const JoinedGroupContainer = ({ accessToken }: Props) => {
+const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
   const router = useRouter();
-  const { data, isLoading, isFetching, isError, error, refetch } =
-    useQuery<GroupsResponse>({
-      queryKey: ["joined-group", accessToken],
-      enabled: !!accessToken,
-      queryFn: async () => {
-        const res = await fetch(`${baseURL}/groups?mode=joined`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-        // handle non-2xx as errors (important)
-        if (!res.ok) {
-          let message = `Request failed (${res.status})`;
-          try {
-            const body = await res.json();
-            message = body?.message ?? message;
-          } catch {}
-          throw new Error(message);
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery<GroupsResponse>({
+    queryKey: ["joined-group", accessToken, limit],
+    enabled: !!accessToken,
+    queryFn: async ({ pageParam }) => {
+      const page = (pageParam as number) ?? 1;
+
+      const res = await fetch(
+        `${baseURL}/groups?mode=joined&page=${page}&limit=${limit}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+
+      if (!res.ok) {
+        let message = `Request failed (${res.status})`;
+        try {
+          const body = await res.json();
+          message = body?.message ?? message;
+        } catch {}
+        throw new Error(message);
+      }
+
+      return res.json();
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, pages } = lastPage.pagination;
+      return page < pages ? page + 1 : undefined;
+    },
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  // Flatten all pages into one list
+  const groups = data?.pages.flatMap((p) => p.data) ?? [];
+
+  // Total from API (optional display)
+  const total = data?.pages?.[0]?.pagination?.total ?? 0;
+
+  // IntersectionObserver: when sentinel visible -> load next page
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
         }
-
-        return res.json();
       },
-      staleTime: 30_000,
-      retry: 1,
-    });
+      { root: null, rootMargin: "300px", threshold: 0 },
+    );
 
-  // ---------- Loading (Facebook-style skeleton list) ----------
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // ---------- Initial Loading ----------
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        <JoinedGroupCardSkeleton />
-        <JoinedGroupCardSkeleton />
-        <JoinedGroupCardSkeleton />
-        <JoinedGroupCardSkeleton />
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <JoinedGroupCardSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -66,8 +110,6 @@ const JoinedGroupContainer = ({ accessToken }: Props) => {
       />
     );
   }
-
-  const groups = data?.data ?? [];
 
   // ---------- Empty ----------
   if (groups.length === 0) {
@@ -102,7 +144,7 @@ const JoinedGroupContainer = ({ accessToken }: Props) => {
   return (
     <div className="space-y-3">
       {/* subtle top bar like FB when background refetch happens */}
-      {isFetching && (
+      {isFetching && !isFetchingNextPage && (
         <div className="rounded-lg border bg-white px-3 py-2 text-sm text-gray-600">
           Updating…
         </div>
@@ -110,11 +152,12 @@ const JoinedGroupContainer = ({ accessToken }: Props) => {
 
       <div>
         <h1 className="font-medium text-sm">
-          All groups you&apos;ve joined ({groups.length})
+          All groups you&apos;ve joined ({groups.length}
+          {total ? ` / ${total}` : ""})
         </h1>
       </div>
 
-      <div className="w-full grid grid-cols-4 gap-5">
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {groups.map((item) => (
           <JoinedGroupCard
             key={item._id}
@@ -123,6 +166,19 @@ const JoinedGroupContainer = ({ accessToken }: Props) => {
           />
         ))}
       </div>
+
+      {/* Sentinel (observer watches this) */}
+      <div ref={loadMoreRef} />
+
+      {/* Bottom loader */}
+      {isFetchingNextPage && (
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" />
+          <p className="mt-3 text-sm text-gray-500">Loading more groups...</p>
+        </div>
+      )}
+
+      {/* End message */}
     </div>
   );
 };
@@ -130,15 +186,28 @@ const JoinedGroupContainer = ({ accessToken }: Props) => {
 export default JoinedGroupContainer;
 
 /** Simple skeleton that visually matches a card list */
-function JoinedGroupCardSkeleton() {
+export function JoinedGroupCardSkeleton() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-white p-3">
-      <div className="h-12 w-12 animate-pulse rounded-lg bg-gray-200" />
-      <div className="flex-1 space-y-2">
-        <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
-        <div className="h-3 w-1/3 animate-pulse rounded bg-gray-200" />
+    <div className="w-full max-w-101 rounded-lg border border-[#dadde1] bg-[#ffffff] shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+      {/* Top section: Avatar + Info */}
+      <div className="flex items-center gap-3 p-3 pb-2.5">
+        {/* Image skeleton */}
+        <div className="relative h-15 w-15 shrink-0 overflow-hidden rounded-lg bg-gray-200 animate-pulse" />
+
+        {/* Text skeleton */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse" />
+          <div className="mt-2 h-3 w-1/3 rounded bg-gray-200 animate-pulse" />
+        </div>
       </div>
-      <div className="h-8 w-20 animate-pulse rounded-lg bg-gray-200" />
+
+      {/* Bottom section: Actions */}
+      <div className="flex items-center gap-2 px-3 pb-3 pt-1">
+        {/* View group button skeleton */}
+        <div className="h-9 flex-1 rounded-md bg-gray-200 animate-pulse" />
+        {/* Action button skeleton */}
+        <div className="h-9 w-9 rounded-md bg-gray-200 animate-pulse" />
+      </div>
     </div>
   );
 }
@@ -149,25 +218,44 @@ export interface GroupsResponse {
   success: boolean;
   message: string;
   data: Group[];
+  pagination: Pagination;
+}
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
 }
 
 export interface Group {
   _id: string;
   name: string;
-  description: string;
   category: string;
   privacy: "public" | "private";
+
+  // These are not present in your sample response, so optional:
+  description?: string;
+  coverImage?: ImageAsset;
+
   rules: string[];
   pendingMembers: Member[];
   members: Member[];
   admins: Member[];
-  createdAt: string;
-  updatedAt: string;
+
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
   __v: number;
-  coverImage: {
-    url: string;
-    public_id: string;
-  };
+
+  // Present in sample response:
+  memberMeta: unknown[]; // replace with a real type when you know the schema
+  currentUserMeta: CurrentUserMeta;
+}
+
+export interface CurrentUserMeta {
+  isPinned: boolean;
+  pinnedAt: string | null;
+  lastVisitedAt: string | null;
 }
 
 export interface Member {
@@ -179,6 +267,11 @@ export interface Member {
 }
 
 export interface ProfileImage {
+  public_id: string;
+  url: string;
+}
+
+export interface ImageAsset {
   public_id: string;
   url: string;
 }

@@ -14,7 +14,7 @@ export function GroupsSidebar() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <aside className="w-80 flex flex-col h-screen bg-card border-r border-border sticky top-0">
+    <aside className="w-80 flex flex-col h-[92vh]  bg-card border-r border-border sticky top-0">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <h2 className="text-xl font-bold text-foreground mb-4">Groups</h2>

@@ -14,7 +14,7 @@ export function GroupsSidebar() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <aside className="w-80 flex flex-col h-screen bg-card border-r border-border sticky top-0">
+    <aside className="w-80 flex flex-col h-[92vh]  bg-card border-r border-border sticky top-0">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <h2 className="text-xl font-bold text-foreground mb-4">Groups</h2>
@@ -89,14 +89,6 @@ export function GroupsSidebar() {
           </div>
         </div>
       </nav>
-
-      {/* Create Group Button */}
-      <div className="p-4 border-t border-border">
-        <Button className="w-full gap-2" size="lg">
-          <Plus className="w-5 h-5" />
-          Create new group
-        </Button>
-      </div>
     </aside>
   );
 }

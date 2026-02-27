@@ -6,8 +6,9 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useRef } from "react";
+import { GroupsResponse } from "../../joined/_components/joined-group-container";
 
-const JoinedGroupCard = dynamic(() => import("./joined-group-card"), {
+const DiscoverGroupCard = dynamic(() => import("./discover-group-card"), {
   ssr: false,
 });
 
@@ -16,7 +17,7 @@ interface Props {
   limit?: number;
 }
 
-const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
+const DiscoverGroupContainer = ({ accessToken, limit = 12 }: Props) => {
   const router = useRouter();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -31,13 +32,13 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery<GroupsResponse>({
-    queryKey: ["joined-group", accessToken],
+    queryKey: ["discover-group", accessToken, limit],
     enabled: !!accessToken,
     queryFn: async ({ pageParam }) => {
       const page = (pageParam as number) ?? 1;
 
       const res = await fetch(
-        `${baseURL}/groups?mode=joined&page=${page}&limit=${limit}`,
+        `${baseURL}/groups?mode=discover&page=${page}&limit=${limit}`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
       );
 
@@ -64,9 +65,6 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
   // Flatten all pages into one list
   const groups = data?.pages.flatMap((p) => p.data) ?? [];
 
-  // Total from API (optional display)
-  const total = data?.pages?.[0]?.pagination?.total ?? 0;
-
   // IntersectionObserver: when sentinel visible -> load next page
   useEffect(() => {
     const el = loadMoreRef.current;
@@ -89,9 +87,9 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
   // ---------- Initial Loading ----------
   if (isLoading) {
     return (
-      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {Array.from({ length: 8 }).map((_, i) => (
-          <JoinedGroupCardSkeleton key={i} />
+          <GroupCardSkeleton key={i} />
         ))}
       </div>
     );
@@ -125,9 +123,9 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
         <div className="mt-4 flex justify-center gap-2">
           <button
             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 cursor-pointer"
-            onClick={() => router.push("/groups/discover")}
+            onClick={() => router.push("/groups/joined")}
           >
-            Discover groups
+            Your groups
           </button>
           <button
             className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 cursor-pointer"
@@ -151,17 +149,14 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
       )}
 
       <div>
-        <h1 className="font-medium text-sm">
-          All groups you&apos;ve joined ({groups.length}
-          {total ? ` / ${total}` : ""})
-        </h1>
+        <h1 className="font-medium text-xl">More suggestions</h1>
       </div>
 
       <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {groups.map((item) => (
-          <JoinedGroupCard
+          <DiscoverGroupCard
             key={item._id}
-            data={item}
+            group={item}
             accessToken={accessToken}
           />
         ))}
@@ -183,95 +178,53 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
   );
 };
 
-export default JoinedGroupContainer;
+export default DiscoverGroupContainer;
 
 /** Simple skeleton that visually matches a card list */
-export function JoinedGroupCardSkeleton() {
+export function GroupCardSkeleton({
+  showClose = false,
+}: {
+  showClose?: boolean;
+}) {
   return (
-    <div className="w-full max-w-101 rounded-lg border border-[#dadde1] bg-[#ffffff] shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
-      {/* Top section: Avatar + Info */}
-      <div className="flex items-center gap-3 p-3 pb-2.5">
-        {/* Image skeleton */}
-        <div className="relative h-15 w-15 shrink-0 overflow-hidden rounded-lg bg-gray-200 animate-pulse" />
+    <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-lg">
+      {/* Cover */}
+      <div className="relative h-40 w-full bg-slate-200">
+        {/* Shimmer overlay */}
+        <div className="absolute inset-0 animate-pulse bg-linear-to-r from-slate-200 via-slate-100 to-slate-200" />
 
-        {/* Text skeleton */}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse" />
-          <div className="mt-2 h-3 w-1/3 rounded bg-gray-200 animate-pulse" />
-        </div>
+        {/* Close button placeholder (optional) */}
+        {showClose && (
+          <div className="absolute right-3 top-3 h-8 w-8 rounded-full bg-white/70" />
+        )}
       </div>
 
-      {/* Bottom section: Actions */}
-      <div className="flex items-center gap-2 px-3 pb-3 pt-1">
-        {/* View group button skeleton */}
-        <div className="h-9 flex-1 rounded-md bg-gray-200 animate-pulse" />
-        {/* Action button skeleton */}
-        <div className="h-9 w-9 rounded-md bg-gray-200 animate-pulse" />
+      {/* Content */}
+      <div className="space-y-4 p-5">
+        {/* Title + stats */}
+        <div className="space-y-2">
+          <div className="h-5 w-3/4 rounded bg-slate-200 animate-pulse" />
+          <div className="h-4 w-2/3 rounded bg-slate-200 animate-pulse" />
+          <div className="h-3 w-1/3 rounded bg-slate-200 animate-pulse" />
+        </div>
+
+        {/* Members preview */}
+        <div className="flex items-center gap-2">
+          <div className="flex -space-x-2">
+            <div className="h-8 w-8 rounded-full border-2 border-white bg-slate-200 animate-pulse" />
+            <div className="h-8 w-8 rounded-full border-2 border-white bg-slate-200 animate-pulse" />
+            <div className="h-8 w-8 rounded-full border-2 border-white bg-slate-200 animate-pulse" />
+          </div>
+
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-full max-w-55 rounded bg-slate-200 animate-pulse" />
+            <div className="h-4 w-2/3 max-w-45 rounded bg-slate-200 animate-pulse" />
+          </div>
+        </div>
+
+        {/* Button */}
+        <div className="h-10 w-full rounded-md bg-slate-200 animate-pulse" />
       </div>
     </div>
   );
-}
-
-// ---------------- Types ----------------
-
-export interface GroupsResponse {
-  success: boolean;
-  message: string;
-  data: Group[];
-  pagination: Pagination;
-}
-
-export interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  pages: number;
-}
-
-export interface Group {
-  _id: string;
-  name: string;
-  category: string;
-  privacy: "public" | "private";
-
-  // These are not present in your sample response, so optional:
-  description?: string;
-  coverImage?: ImageAsset;
-
-  rules: string[];
-  pendingMembers: Member[];
-  members: Member[];
-  admins: Member[];
-
-  createdAt: string; // ISO string
-  updatedAt: string; // ISO string
-  __v: number;
-
-  // Present in sample response:
-  memberMeta: unknown[]; // replace with a real type when you know the schema
-  currentUserMeta: CurrentUserMeta;
-}
-
-export interface CurrentUserMeta {
-  isPinned: boolean;
-  pinnedAt: string | null;
-  lastVisitedAt: string | null;
-}
-
-export interface Member {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  profileImage: ProfileImage;
-}
-
-export interface ProfileImage {
-  public_id: string;
-  url: string;
-}
-
-export interface ImageAsset {
-  public_id: string;
-  url: string;
 }

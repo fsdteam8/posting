@@ -89,14 +89,6 @@ export function GroupsSidebar() {
           </div>
         </div>
       </nav>
-
-      {/* Create Group Button */}
-      <div className="p-4 border-t border-border">
-        <Button className="w-full gap-2" size="lg">
-          <Plus className="w-5 h-5" />
-          Create new group
-        </Button>
-      </div>
     </aside>
   );
 }

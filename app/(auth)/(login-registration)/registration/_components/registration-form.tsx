@@ -226,7 +226,7 @@ export default function RegisterForm() {
                   <FormControl>
                     <Input
                       placeholder="First name"
-                      className="h-11 rounded-lg border-border bg-card text-card-foreground placeholder:text-muted-foreground"
+                      className="h-10 rounded-lg border-border bg-card text-card-foreground placeholder:text-muted-foreground"
                       {...field}
                     />
                   </FormControl>
@@ -246,7 +246,7 @@ export default function RegisterForm() {
                   <FormControl>
                     <Input
                       placeholder="Surname"
-                      className="h-11 rounded-lg border-border bg-card text-card-foreground placeholder:text-muted-foreground"
+                      className="h-10 rounded-lg border-border bg-card text-card-foreground placeholder:text-muted-foreground"
                       {...field}
                     />
                   </FormControl>
@@ -273,7 +273,7 @@ export default function RegisterForm() {
                         type="button"
                         variant="outline"
                         className={cn(
-                          "h-11 w-full justify-start rounded-lg border-border bg-card text-left font-normal text-card-foreground",
+                          "h-10 w-full justify-start rounded-lg border-border bg-card text-left font-normal text-card-foreground",
                           !field.value && "text-muted-foreground",
                         )}
                       >
@@ -320,7 +320,7 @@ export default function RegisterForm() {
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-11 w-full rounded-lg border-border bg-card text-card-foreground">
+                    <SelectTrigger className="h-10 w-full rounded-lg border-border bg-card text-card-foreground">
                       <SelectValue placeholder="Select your gender" />
                     </SelectTrigger>
                   </FormControl>
@@ -350,7 +350,7 @@ export default function RegisterForm() {
                 <FormControl>
                   <Input
                     placeholder="Email"
-                    className="h-11 rounded-lg border-border bg-card text-card-foreground placeholder:text-muted-foreground"
+                    className="h-10 rounded-lg border-border bg-card text-card-foreground placeholder:text-muted-foreground"
                     {...field}
                   />
                 </FormControl>

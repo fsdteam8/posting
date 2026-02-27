@@ -7,16 +7,16 @@ import {
   MenubarSeparator,
   MenubarTrigger,
 } from "@/components/ui/menubar";
-import { baseURL } from "@/constants";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
   MoreHorizontal,
   Pin,
+  PinOff,
   SquareArrowRightExit,
 } from "lucide-react";
-import { toast } from "sonner";
-import { Group, GroupsResponse } from "./joined-group-container";
+import { useLeaveGroup } from "../../_components/api/use-leave-group-api";
+import { usePinGroup } from "../../_components/api/use-pin-group-api";
+import { Group } from "./joined-group-container";
 
 interface Props {
   data: Group;
@@ -24,49 +24,16 @@ interface Props {
 }
 
 const JoinedGroupCardAction = ({ data, accessToken }: Props) => {
-  const queryClient = useQueryClient();
-
-  const { mutate, isPending } = useMutation({
-    mutationKey: ["leave-group", data._id],
-    mutationFn: async () => {
-      const res = await fetch(`${baseURL}/groups/${data._id}/leave`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      // optional: treat non-2xx as error
-      if (!res.ok) {
-        let message = `Request failed (${res.status})`;
-        try {
-          const body = await res.json();
-          message = body?.message ?? message;
-        } catch {}
-        throw new Error(message);
-      }
-
-      return res.json() as Promise<ApiRes>;
-    },
-    onSuccess: (res) => {
-      if (!res.success) {
-        toast.error(res.message);
-        return;
-      }
-
-      // ✅ remove from "joined-group" cache
-      queryClient.setQueryData<GroupsResponse>(
-        ["joined-group", accessToken],
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            data: old.data.filter((g) => g._id !== data._id),
-          };
-        },
-      );
-
-      toast.success("Left group");
-    },
+  const { mutate: leaveGroup, isPending } = useLeaveGroup({
+    groupId: data._id,
+    accessToken,
   });
+
+  const { mutate: pinGroup, isPending: isPinPending } = usePinGroup({
+    groupId: data._id,
+    accessToken,
+  });
+
   return (
     <div>
       <Menubar>
@@ -76,11 +43,21 @@ const JoinedGroupCardAction = ({ data, accessToken }: Props) => {
           </MenubarTrigger>
           <MenubarContent>
             <MenubarGroup>
-              <MenubarItem>
-                <Pin /> Pin Group
+              <MenubarItem
+                onClick={() => pinGroup(!data.currentUserMeta.isPinned)}
+                disabled={isPinPending}
+              >
+                {isPinPending ? (
+                  <Loader2 className="animate-spin" />
+                ) : data.currentUserMeta.isPinned ? (
+                  <PinOff />
+                ) : (
+                  <Pin />
+                )}{" "}
+                {data.currentUserMeta.isPinned ? "Unpin" : "Pin"} Group
               </MenubarItem>
               <MenubarSeparator />
-              <MenubarItem onClick={() => mutate()}>
+              <MenubarItem onClick={() => leaveGroup()}>
                 {isPending ? (
                   <Loader2 className="animate-spin" />
                 ) : (
@@ -97,8 +74,3 @@ const JoinedGroupCardAction = ({ data, accessToken }: Props) => {
 };
 
 export default JoinedGroupCardAction;
-
-interface ApiRes {
-  success: boolean;
-  message: string;
-}

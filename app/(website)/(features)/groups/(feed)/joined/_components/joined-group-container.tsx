@@ -31,7 +31,7 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery<GroupsResponse>({
-    queryKey: ["joined-group", accessToken, limit],
+    queryKey: ["joined-group", accessToken],
     enabled: !!accessToken,
     queryFn: async ({ pageParam }) => {
       const page = (pageParam as number) ?? 1;

@@ -9,7 +9,7 @@ export default function GroupsLayout({
     <div className="flex h-[92vh] bg-background">
       <GroupsSidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className=" mx-auto p-6">{children}</div>
+        <div className=" mx-auto p-0">{children}</div>
       </main>
     </div>
   );

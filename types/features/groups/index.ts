@@ -1,0 +1,67 @@
+export interface GetSingleGroupResponse {
+  success: boolean;
+  message: string;
+  data: Group;
+}
+
+// get response for
+export interface GroupsResponse {
+  success: boolean;
+  message: string;
+  data: Group[];
+  pagination: Pagination;
+}
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+}
+
+export interface Group {
+  _id: string;
+  name: string;
+  category: string;
+  privacy: "public" | "private";
+  rules: string[];
+  pendingMembers: GroupUser[];
+  members: GroupUser[];
+  admins: GroupUser[];
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  __v: number;
+  groupUserName: string;
+  memberMeta: MemberMeta[];
+  currentUserMeta: CurrentUserMeta;
+  coverImage: {
+    url: string;
+    public_id: string;
+  };
+}
+
+export interface GroupUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  profileImage: ProfileImage;
+}
+
+export interface ProfileImage {
+  public_id: string;
+  url: string;
+}
+
+export interface MemberMeta {
+  user: string; // user ID reference
+  lastVisitedAt: string; // ISO date string
+  isPinned: boolean;
+  pinnedAt: string; // ISO date string
+}
+
+export interface CurrentUserMeta {
+  lastVisitedAt: string; // ISO date string
+  isPinned: boolean;
+  pinnedAt: string; // ISO date string
+}

@@ -1,7 +1,8 @@
+import { Group } from "@/types/features/groups";
 import { Pin } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Group } from "./joined-group-container";
+import { useRouter } from "nextjs-toploader/app";
 
 const JoinedGroupCardAction = dynamic(
   () => import("./joined-group-card-action"),
@@ -17,6 +18,7 @@ export default function JoinedGroupCard({
   data,
   accessToken,
 }: JoinedGroupCardProps) {
+  const router = useRouter();
   const { name: groupName, coverImage, currentUserMeta } = data;
 
   const groupImage =
@@ -56,6 +58,7 @@ export default function JoinedGroupCard({
       {/* Bottom section */}
       <div className="flex items-center gap-2 px-3 pb-3 pt-1">
         <button
+          onClick={() => router.push(`/groups/view/${data._id}`)}
           className="flex h-9 flex-1 items-center justify-center rounded-md bg-[#e7f3ff] text-[15px] font-semibold text-[#1877f2] transition-colors hover:bg-[#dbe7f2]"
           type="button"
         >

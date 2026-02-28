@@ -54,7 +54,7 @@ const Layout = async ({ children, params }: Props) => {
         </GroupTabNavigation>
       </Card>
 
-      <div className="p-5">{children}</div>
+      <div className="p-5 bg-[#F2F4F7]">{children}</div>
     </HydrationBoundary>
   );
 };

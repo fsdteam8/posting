@@ -1,7 +1,8 @@
 "use client";
 
 import { SpotlightNavbar } from "@/components/ui/spot-light-navbar";
-import { useRouter, useSelectedLayoutSegment } from "next/navigation";
+import { useSelectedLayoutSegment } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 
 export default function GroupTabNavigation({
   groupId,
@@ -34,12 +35,13 @@ export default function GroupTabNavigation({
   });
 
   const handleNavClick = (item: { href: string }) => {
-    router.push(item.href, { scroll: false });
+    router.push(item.href, { scroll: true });
   };
 
   return (
     <div>
       <SpotlightNavbar
+        key={segment ?? "overview"}
         items={navItems}
         onItemClick={handleNavClick}
         defaultActiveIndex={defaultIndex !== -1 ? defaultIndex : 0}

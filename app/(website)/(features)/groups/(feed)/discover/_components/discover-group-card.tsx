@@ -2,13 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { baseURL } from "@/constants";
+import { formatCount } from "@/lib/utils";
+import { Group } from "@/types/features/groups";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "nextjs-toploader/app";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Group } from "../../joined/_components/joined-group-container";
 
 interface GroupCardProps {
   group: Group;
@@ -50,13 +51,6 @@ export default function GroupCard({
   const displayMembers = group.members.slice(0, 3);
   const remainingMembers = Math.max(0, group.members.length - 3);
 
-  // Format member count for display (e.g., "175K members")
-  const formatCount = (count: number) => {
-    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-    if (count >= 1000) return `${(count / 1000).toFixed(0)}K`;
-    return count.toString();
-  };
-
   return (
     <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-lg">
       {/* Cover Image Container */}
@@ -97,7 +91,12 @@ export default function GroupCard({
       <div className="space-y-4 p-5">
         {/* Stats */}
         <div className="space-y-1">
-          <h3 className="font-semibold">{group.name}</h3>
+          <h3
+            className="font-semibold cursor-pointer hover:text-primary transition duration-300"
+            onClick={() => router.push(`/groups/view/${group.groupUserName}`)}
+          >
+            {group.name}
+          </h3>
           <p className="text-sm font-medium text-slate-600">
             {formatCount(memberCount)} members • 10+ posts a day
           </p>

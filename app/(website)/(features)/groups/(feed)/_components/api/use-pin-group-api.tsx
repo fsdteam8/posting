@@ -1,7 +1,6 @@
 import { baseURL } from "@/constants";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner"; // adjust if using different toast lib
-import { GroupsResponse } from "../../joined/_components/joined-group-container";
 
 type UsePinGroupArgs = {
   groupId: string;
@@ -39,40 +38,6 @@ export function usePinGroup({ groupId, accessToken }: UsePinGroupArgs) {
         toast.error(res.message);
         return;
       }
-
-      const nowIso = new Date().toISOString();
-
-      queryClient.setQueryData<GroupsResponse>(
-        ["joined-group", accessToken],
-        (old) => {
-          if (!old) return old;
-
-          const prepareddata = {
-            ...old,
-            data: old.data.map((group) => {
-              if (group._id !== groupId) return group;
-
-              const prev = group.currentUserMeta ?? {
-                isPinned: false,
-                pinnedAt: null,
-                lastVisitedAt: null,
-              };
-
-              return {
-                ...group,
-                currentUserMeta: {
-                  ...prev,
-                  isPinned: pinned,
-                  pinnedAt: pinned ? nowIso : null,
-                },
-              };
-            }),
-          };
-
-          console.log(prepareddata);
-          return prepareddata;
-        },
-      );
 
       toast.success(pinned ? "Group pinned" : "Group unpinned");
     },

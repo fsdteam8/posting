@@ -7,6 +7,7 @@ import {
   MenubarSeparator,
   MenubarTrigger,
 } from "@/components/ui/menubar";
+import { Group } from "@/types/features/groups";
 import {
   Loader2,
   MoreHorizontal,
@@ -16,7 +17,6 @@ import {
 } from "lucide-react";
 import { useLeaveGroup } from "../../_components/api/use-leave-group-api";
 import { usePinGroup } from "../../_components/api/use-pin-group-api";
-import { Group } from "./joined-group-container";
 
 interface Props {
   data: Group;

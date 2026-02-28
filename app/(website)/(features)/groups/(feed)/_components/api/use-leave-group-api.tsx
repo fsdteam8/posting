@@ -1,7 +1,10 @@
 import { baseURL } from "@/constants";
+import {
+  GetSingleGroupResponse,
+  GroupsResponse,
+} from "@/types/features/groups";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner"; // or your toast lib
-import { GroupsResponse } from "../../joined/_components/joined-group-container";
 
 type ApiRes = {
   success: boolean;
@@ -11,9 +14,13 @@ type ApiRes = {
 type UseLeaveGroupArgs = {
   groupId: string;
   accessToken: string;
+  cu?: {
+    username: string;
+    id: string;
+  };
 };
 
-export function useLeaveGroup({ groupId, accessToken }: UseLeaveGroupArgs) {
+export function useLeaveGroup({ groupId, accessToken, cu }: UseLeaveGroupArgs) {
   const queryClient = useQueryClient();
 
   return useMutation<ApiRes, Error>({
@@ -52,6 +59,28 @@ export function useLeaveGroup({ groupId, accessToken }: UseLeaveGroupArgs) {
           };
         },
       );
+
+      // ✅ on the future just remove loggedInUserFrom member
+      if (cu) {
+        queryClient.setQueryData<GetSingleGroupResponse>(
+          ["group", cu.username],
+          (old) => {
+            if (!old) return old;
+
+            const updatedMembers = old.data.members.filter(
+              (item) => item._id !== cu.id,
+            );
+
+            return {
+              ...old,
+              data: {
+                ...old.data,
+                members: updatedMembers,
+              },
+            };
+          },
+        );
+      }
 
       toast.success("Left group");
     },

@@ -2,11 +2,11 @@
 
 import ErrorScreen from "@/components/shared/screens/error-screen";
 import { baseURL } from "@/constants";
+import { GroupsResponse } from "@/types/features/groups";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useRef } from "react";
-import { GroupsResponse } from "../../joined/_components/joined-group-container";
 
 const DiscoverGroupCard = dynamic(() => import("./discover-group-card"), {
   ssr: false,

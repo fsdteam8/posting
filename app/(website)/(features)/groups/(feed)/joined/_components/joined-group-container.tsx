@@ -2,6 +2,7 @@
 
 import ErrorScreen from "@/components/shared/screens/error-screen";
 import { baseURL } from "@/constants";
+import { GroupsResponse } from "@/types/features/groups";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "nextjs-toploader/app";
@@ -213,65 +214,3 @@ export function JoinedGroupCardSkeleton() {
 }
 
 // ---------------- Types ----------------
-
-export interface GroupsResponse {
-  success: boolean;
-  message: string;
-  data: Group[];
-  pagination: Pagination;
-}
-
-export interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  pages: number;
-}
-
-export interface Group {
-  _id: string;
-  name: string;
-  category: string;
-  privacy: "public" | "private";
-
-  // These are not present in your sample response, so optional:
-  description?: string;
-  coverImage?: ImageAsset;
-
-  rules: string[];
-  pendingMembers: Member[];
-  members: Member[];
-  admins: Member[];
-
-  createdAt: string; // ISO string
-  updatedAt: string; // ISO string
-  __v: number;
-
-  // Present in sample response:
-  memberMeta: unknown[]; // replace with a real type when you know the schema
-  currentUserMeta: CurrentUserMeta;
-}
-
-export interface CurrentUserMeta {
-  isPinned: boolean;
-  pinnedAt: string | null;
-  lastVisitedAt: string | null;
-}
-
-export interface Member {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  profileImage: ProfileImage;
-}
-
-export interface ProfileImage {
-  public_id: string;
-  url: string;
-}
-
-export interface ImageAsset {
-  public_id: string;
-  url: string;
-}

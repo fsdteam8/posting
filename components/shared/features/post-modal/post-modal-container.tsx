@@ -37,11 +37,12 @@ import {
   Smile,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { MediaFile, MediaUploader } from "./media-uploader";
@@ -52,6 +53,10 @@ const RichTextEditor = dynamic(() => import("./rich-text-editor"), {
 
 // Add this import at the top
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  FeelingActivity,
+  FeelingActivityPicker,
+} from "./feeling-activity-picker";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -66,6 +71,16 @@ interface GroupTriggerProps {
   onOpen?: () => void;
 }
 
+const ACTIVITY_CATEGORIES_LABEL: Record<string, string> = {
+  watching: "Watching",
+  eating: "Eating",
+  drinking: "Drinking",
+  traveling: "Traveling to",
+  playing: "Playing",
+  listening: "Listening to",
+  celebrating: "Celebrating",
+  reading: "Reading",
+};
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
 const postSchema = z.object({
@@ -78,15 +93,10 @@ const postSchema = z.object({
   }),
   isAnonymous: z.boolean(),
   media: z.array(z.custom<MediaFile>()),
+  feelingActivity: z.custom<FeelingActivity>().nullable(),
 });
 
 type PostFormValues = z.infer<typeof postSchema>;
-
-// ─── Toolbar Button ───────────────────────────────────────────────────────────
-
-// ─── Tiptap Editor ────────────────────────────────────────────────────────────
-
-// ─── Group Trigger Card ───────────────────────────────────────────────────────
 
 const GroupTrigger = ({ accessToken, onOpen }: GroupTriggerProps) => {
   const { data: profile } = useProfile(accessToken);
@@ -170,6 +180,7 @@ const visibilityIcons = {
 const PostModalContainer = ({ accessToken, username, app }: Props) => {
   const [open, setOpen] = useState(false);
   const [photoToolOpen, setPhotoToolOpen] = useState(false);
+  const [feelingOpen, setFeelingOpen] = useState(false);
 
   const { data: profile } = useProfile(accessToken);
   const { data, isLoading, isError, error } = useGetSingleGroup({
@@ -192,10 +203,15 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
       visibility: "public",
       isAnonymous: false,
       content: "",
+      feelingActivity: null,
     },
   });
 
   const isSubmitting = form.formState.isSubmitting;
+  const feelingActivity = useWatch({
+    control: form.control,
+    name: "feelingActivity",
+  });
 
   // Derive fixed visibility for group/page apps
   const fixedVisibility = useMemo(() => {
@@ -221,6 +237,13 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
     values.media.forEach((m, i) => {
       formData.append(`media[${i}]`, m.file);
     });
+
+    if (values.feelingActivity) {
+      formData.append(
+        "feelingActivity",
+        JSON.stringify(values.feelingActivity),
+      );
+    }
 
     console.log(values);
 
@@ -258,7 +281,34 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
             )}
 
             <div className="flex flex-col gap-1">
-              <p className="text-sm font-semibold leading-tight">{USER.name}</p>
+              <div className="flex items-center gap-1 flex-wrap">
+                <p className="text-sm font-semibold leading-tight">
+                  {USER.name}
+                </p>
+                {feelingActivity && (
+                  <>
+                    <span className="text-[13px] text-fb-text-secondary font-normal">
+                      is
+                    </span>
+                    <span className="text-base leading-none">
+                      {feelingActivity.emoji}
+                    </span>
+                    <span className="text-[12px] font-normal text-fb-text capitalize">
+                      {feelingActivity.type === "feeling"
+                        ? `feeling ${feelingActivity.label}`
+                        : `${ACTIVITY_CATEGORIES_LABEL[feelingActivity.category!]} ${feelingActivity.label}`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => form.setValue("feelingActivity", null)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors ml-1"
+                      title="Click for remove"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </>
+                )}
+              </div>
 
               {/* Visibility selector */}
               <FormField
@@ -325,8 +375,8 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
           </div>
 
           {/* Rich text editor field */}
-          <ScrollArea className="">
-            <div className="space-y-3 max-h-100">
+          <ScrollArea>
+            <div className="space-y-3 max-h-100 pr-2">
               <FormField
                 control={form.control}
                 name="content"
@@ -364,6 +414,32 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
             </div>
           </ScrollArea>
 
+          <FormField
+            control={form.control}
+            name="feelingActivity"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div>
+                    {/* Picker panel */}
+                    {feelingOpen && (
+                      <div className="border border-fb-divider rounded-xl overflow-hidden shadow-sm">
+                        <FeelingActivityPicker
+                          value={field.value}
+                          onChange={(val) => {
+                            field.onChange(val);
+                            setFeelingOpen(false);
+                          }}
+                          onClose={() => setFeelingOpen(false)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
           {/* Attachments row */}
           <div className="border border-fb-divider rounded-xl px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-semibold text-fb-text">
@@ -388,9 +464,18 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
               <button
                 type="button"
                 title="Feeling/activity"
-                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                onClick={() => setFeelingOpen((p) => !p)}
+                className={cn(
+                  "p-1.5 rounded-full transition-colors",
+                  feelingActivity ? "bg-yellow-100" : "hover:bg-gray-100",
+                )}
               >
-                <Smile className="w-5 h-5 text-[#f7b928]" />
+                <Smile
+                  className={cn(
+                    "w-5 h-5",
+                    feelingActivity ? "text-yellow-500" : "text-[#f7b928]",
+                  )}
+                />
               </button>
             </div>
           </div>

@@ -1,7 +1,10 @@
+import { auth } from "@/auth";
 import DiscussionAbout from "@/components/shared/features/group/discussion/discussion-about";
 import GroupFeaturedSection from "@/components/shared/features/group/discussion/group-featured-section";
 import GroupPostCard from "@/components/shared/features/group/discussion/group-post-card";
-import { BarChart3, ChevronDown, Smile, UserPlus } from "lucide-react";
+import PostModalContainer from "@/components/shared/features/post-modal/post-modal-container";
+import { ChevronDown } from "lucide-react";
+import { redirect } from "next/navigation";
 
 const POSTS = [
   {
@@ -59,39 +62,20 @@ const POSTS = [
   },
 ];
 
-const Page = async ({}: { params: { username: string } }) => {
+const Page = async ({ params }: { params: { username: string } }) => {
+  const cu = await auth();
+  const { username } = await params;
+
+  if (!cu || !cu.user || !cu.user.accessToken) redirect("/login");
+
   return (
     <div className="grid grid-cols-3 gap-5 ">
       <div className=" w-full col-span-2 px-2 sm:px-0 mt-4 pb-8 space-y-4">
-        <div className="bg-card rounded-lg shadow-sm">
-          <div className="p-3 flex items-center gap-2">
-            {/* User avatar */}
-            <div className="w-10 h-10 rounded-full bg-linear-to-br from-fb-blue to-[#6a3cb5] shrink-0" />
-            <button className="flex-1 text-left bg-fb-bg-wash rounded-full px-4 py-2.5 text-[15px] text-fb-text-secondary hover:bg-fb-hover transition-colors">
-              Write something...
-            </button>
-          </div>
-          <div className="border-t border-fb-divider px-2 py-1 flex items-center">
-            <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-fb-hover transition-colors">
-              <UserPlus className="w-5 h-5 text-[#45bd62]" />
-              <span className="text-[13px] sm:text-[15px] font-semibold text-fb-text-secondary">
-                Anonymous post
-              </span>
-            </button>
-            <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-fb-hover transition-colors">
-              <Smile className="w-5 h-5 text-[#f7b928]" />
-              <span className="text-[13px] sm:text-[15px] font-semibold text-fb-text-secondary">
-                Feeling/activity
-              </span>
-            </button>
-            <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-fb-hover transition-colors">
-              <BarChart3 className="w-5 h-5 text-[#f5533d]" />
-              <span className="text-[13px] sm:text-[15px] font-semibold text-fb-text-secondary">
-                Poll
-              </span>
-            </button>
-          </div>
-        </div>
+        <PostModalContainer
+          accessToken={cu?.user.accessToken}
+          username={username}
+          app="group"
+        />
 
         <GroupFeaturedSection />
 

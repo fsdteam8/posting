@@ -59,7 +59,7 @@ function ReactionIcon({ type }: { type: "like" | "love" | "haha" }) {
 
 export default function GroupPostCard({ post }: { post: PostData }) {
   return (
-    <div className="bg-fb-bg-card rounded-lg shadow-sm">
+    <div className="bg-card rounded-lg shadow-sm">
       {/* Post header */}
       <div className="flex items-start justify-between px-4 pt-3 pb-2">
         <div className="flex items-start gap-2">

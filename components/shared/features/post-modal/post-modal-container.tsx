@@ -53,10 +53,13 @@ const RichTextEditor = dynamic(() => import("./rich-text-editor"), {
 
 // Add this import at the top
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCreateGroupPost } from "@/hooks/features/groups/api/use-create-group-post";
+import { GroupUser } from "@/types/features/groups";
 import {
   FeelingActivity,
   FeelingActivityPicker,
 } from "./feeling-activity-picker";
+import { TagPeoplePicker } from "./tag-people-picker";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -94,6 +97,7 @@ const postSchema = z.object({
   isAnonymous: z.boolean(),
   media: z.array(z.custom<MediaFile>()),
   feelingActivity: z.custom<FeelingActivity>().nullable(),
+  taggedUsers: z.array(z.custom<GroupUser>()),
 });
 
 type PostFormValues = z.infer<typeof postSchema>;
@@ -181,12 +185,22 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
   const [open, setOpen] = useState(false);
   const [photoToolOpen, setPhotoToolOpen] = useState(false);
   const [feelingOpen, setFeelingOpen] = useState(false);
+  const [tagOpen, setTagOpen] = useState(false);
 
   const { data: profile } = useProfile(accessToken);
   const { data, isLoading, isError, error } = useGetSingleGroup({
     username,
     accessToken,
   });
+
+  const groupId = data?.success ? data.data._id : "";
+
+  const { mutateAsync: createGroupPost } = useCreateGroupPost({
+    groupId,
+    accessToken,
+  });
+
+  const groupPrivacy = data?.data.privacy ?? "private";
 
   const USER = {
     name: profile ? `${profile.firstName} ${profile.lastName}` : "...",
@@ -204,6 +218,7 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
       isAnonymous: false,
       content: "",
       feelingActivity: null,
+      taggedUsers: [],
     },
   });
 
@@ -211,6 +226,10 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
   const feelingActivity = useWatch({
     control: form.control,
     name: "feelingActivity",
+  });
+  const taggedUsers = useWatch({
+    control: form.control,
+    name: "taggedUsers",
   });
 
   // Derive fixed visibility for group/page apps
@@ -229,25 +248,48 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
   }, [fixedVisibility, form]);
 
   const onSubmit = async (values: PostFormValues) => {
-    const formData = new FormData();
-    formData.append("content", values.content);
-    formData.append("visibility", values.visibility);
-    formData.append("isAnonymous", String(values.isAnonymous));
+    try {
+      const formData = new FormData();
 
-    values.media.forEach((m, i) => {
-      formData.append(`media[${i}]`, m.file);
-    });
-
-    if (values.feelingActivity) {
+      formData.append("content", values.content);
       formData.append(
-        "feelingActivity",
-        JSON.stringify(values.feelingActivity),
+        "status",
+        groupPrivacy === "private" ? "draft" : "published",
       );
+      formData.append("visibility", values.visibility);
+      formData.append("isAnonymous", String(values.isAnonymous));
+
+      if (values.feelingActivity?.type === "feeling") {
+        formData.append("feeling", values.feelingActivity.label);
+      } else if (values.feelingActivity?.type === "activity") {
+        formData.append("activity", values.feelingActivity.label);
+      }
+
+      values.taggedUsers.forEach((u) => {
+        formData.append("tags[]", u._id);
+      });
+
+      const images = values.media.filter((m) => m.type === "image");
+      const videos = values.media.filter((m) => m.type === "video");
+
+      images.forEach((m) => formData.append("images", m.file));
+      if (videos.length > 0) formData.append("video", videos[0].file);
+
+      let postType: "text" | "image" | "video" = "text";
+      if (videos.length > 0) postType = "video";
+      else if (images.length > 0) postType = "image";
+      formData.append("postType", postType);
+
+      const response = await createGroupPost(formData);
+
+      console.log("post response", response);
+
+      toast.success("Post created!");
+      form.reset();
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
     }
-
-    console.log(values);
-
-    // e.g. await createGroupPost(formData, { accessToken })
   };
 
   // ── Dialog content ────────────────────────────────────────────────────────
@@ -376,7 +418,7 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
 
           {/* Rich text editor field */}
           <ScrollArea>
-            <div className="space-y-3 max-h-100 pr-2">
+            <div className="space-y-3 max-h-80 pr-2">
               <FormField
                 control={form.control}
                 name="content"
@@ -440,6 +482,54 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="taggedUsers"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div>
+                    {field.value.length > 0 && !tagOpen && (
+                      <div className="flex items-center gap-1 flex-wrap text-[13px]">
+                        <span className="text-fb-text-secondary">— with</span>
+                        {field.value.slice(0, 2).map((u, i) => (
+                          <span
+                            key={u._id}
+                            className="font-semibold text-fb-text"
+                          >
+                            {u.firstName} {u.lastName}
+                            {i < Math.min(field.value.length, 2) - 1 ? "," : ""}
+                          </span>
+                        ))}
+                        {field.value.length > 2 && (
+                          <span className="text-fb-text-secondary">
+                            and{" "}
+                            <span className="font-semibold text-fb-text">
+                              {field.value.length - 2}+ others
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Picker panel */}
+                    {tagOpen && (
+                      <div className="border border-fb-divider rounded-xl overflow-hidden shadow-sm">
+                        <TagPeoplePicker
+                          accessToken={accessToken}
+                          groupUsername={username}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onClose={() => setTagOpen(false)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
           {/* Attachments row */}
           <div className="border border-fb-divider rounded-xl px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-semibold text-fb-text">
@@ -457,9 +547,18 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
               <button
                 type="button"
                 title="Tag people"
-                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                onClick={() => setTagOpen((p) => !p)}
+                className={cn(
+                  "p-1.5 rounded-full transition-colors",
+                  taggedUsers.length > 0 ? "bg-blue-100" : "hover:bg-gray-100",
+                )}
               >
-                <UserPlus className="w-5 h-5 text-[#1877f2]" />
+                <UserPlus
+                  className={cn(
+                    "w-5 h-5",
+                    taggedUsers.length > 0 ? "text-primary" : "text-[#1877f2]",
+                  )}
+                />
               </button>
               <button
                 type="button"

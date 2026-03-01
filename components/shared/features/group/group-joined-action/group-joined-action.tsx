@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 
+import AlertModal from "@/components/ui/custom/alert-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDeleteGroup } from "@/hooks/features/groups/api/use-delete-group";
 import { useJoinGroup } from "@/hooks/features/groups/api/use-join-group";
+import { useRouter } from "nextjs-toploader/app";
+import { useState } from "react";
 
 interface Props {
   accessToken: string;
@@ -39,10 +43,21 @@ const GroupJoinedAction = ({
   isJoined,
   cu,
 }: Props) => {
+  const router = useRouter();
+  const [deleteOpen, setDeleteOpen] = useState<true | false>(false);
   const { mutate: leaveGroup, isPending } = useLeaveGroup({
     groupId: data._id,
     accessToken,
     cu,
+  });
+  const { mutate: deleteGroup, isPending: isDeleting } = useDeleteGroup({
+    groupId: data._id,
+    accessToken,
+    cu,
+    cb: () => {
+      setDeleteOpen(false);
+      router.push("/groups");
+    },
   });
   const { mutate: joinNow, isPending: isJoining } = useJoinGroup({
     groupId: data._id,
@@ -60,7 +75,7 @@ const GroupJoinedAction = ({
 
   const handleDelete = () => {
     // TODO: hook/API for delete group
-    console.log("Delete group");
+    deleteGroup();
   };
 
   if (!isJoined) {
@@ -83,44 +98,55 @@ const GroupJoinedAction = ({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="secondary"
-          className="gap-1.5 px-4 py-1.5 text-[15px] font-semibold"
-          size="sm"
-          disabled={isPending}
-        >
-          <Users className="w-4 h-4" />
-          Joined
-          <ChevronDown className="w-3.5 h-3.5 ml-1" />
-        </Button>
-      </DropdownMenuTrigger>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="secondary"
+            className="gap-1.5 px-4 py-1.5 text-[15px] font-semibold"
+            size="sm"
+            disabled={isPending}
+          >
+            <Users className="w-4 h-4" />
+            Joined
+            <ChevronDown className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuItem onClick={handleUnfollow}>
-          <BellOff className="mr-2 h-4 w-4" />
-          Unfollow group
-        </DropdownMenuItem>
-
-        {!isAdmin && (
-          <DropdownMenuItem onClick={handleLeave} disabled={isPending}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Leave group
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onClick={handleUnfollow}>
+            <BellOff className="mr-2 h-4 w-4" />
+            Unfollow group
           </DropdownMenuItem>
-        )}
 
-        {isAdmin && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleDelete}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Group
+          {!isAdmin && (
+            <DropdownMenuItem onClick={handleLeave} disabled={isPending}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Leave group
             </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          )}
+
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Group
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertModal
+        onConfirm={handleDelete}
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        loading={isDeleting}
+        title="Delete group by leaving?"
+        message="Are you sure you want to leave Private Group? Since you're the last member, leaving now will also delete this group."
+      />
+    </>
   );
 };
 

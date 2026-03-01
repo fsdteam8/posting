@@ -1,5 +1,5 @@
 import { baseURL } from "@/constants";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner"; // adjust if using different toast lib
 
 type UsePinGroupArgs = {
@@ -8,8 +8,6 @@ type UsePinGroupArgs = {
 };
 
 export function usePinGroup({ groupId, accessToken }: UsePinGroupArgs) {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationKey: ["pin-group", groupId],
     mutationFn: async (pinned: boolean) => {

@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import GroupCoverPhoto from "@/components/shared/features/group/group-cover-photo";
 import GroupInfoHeader from "@/components/shared/features/group/group-info-header";
+import GroupTabNavigation from "@/components/shared/features/group/group-tab-navigation";
+import { Card } from "@/components/ui/card";
 import { baseURL } from "@/constants";
 import { getQueryClient } from "@/lib/tanstack-query/query-client";
 import { GetSingleGroupResponse } from "@/types/features/groups";
@@ -37,13 +39,22 @@ const Layout = async ({ children, params }: Props) => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <GroupCoverPhoto username={username} accessToken={cu.user.accessToken} />
-      <GroupInfoHeader
-        username={username}
-        accessToken={cu.user.accessToken}
-        loggedinUserId={cu.user.id}
-      />
-      {children}
+      <Card className="py-0 rounded-none px-5 pt-5">
+        <GroupCoverPhoto
+          username={username}
+          accessToken={cu.user.accessToken}
+        />
+        <GroupInfoHeader
+          username={username}
+          accessToken={cu.user.accessToken}
+          loggedinUserId={cu.user.id}
+        />
+        <GroupTabNavigation groupId={username}>
+          <></>
+        </GroupTabNavigation>
+      </Card>
+
+      <div className="p-5 bg-[#F2F4F7]">{children}</div>
     </HydrationBoundary>
   );
 };

@@ -8,11 +8,17 @@ import { PostMedia } from "./post-media";
 
 interface PostCardProps {
   post: Post;
+  accessToken: string;
+  loggedInUserId: string;
 }
 
 const CHAR_LIMIT = 350;
 
-const GroupPostCard = ({ post }: PostCardProps) => {
+const GroupPostCard = ({
+  post,
+  accessToken,
+  loggedInUserId,
+}: PostCardProps) => {
   const [expanded, setExpanded] = useState(false);
 
   const isLong = post.content && post.content.length > CHAR_LIMIT;
@@ -61,18 +67,11 @@ const GroupPostCard = ({ post }: PostCardProps) => {
       )}
 
       <PostMedia post={post} />
-      <PostActions post={post} />
-
-      {post.allowComments && (
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-secondary shrink-0" />
-            <div className="flex-1 bg-fb-bg-wash rounded-full px-4 py-2 text-[14px] text-fb-text-secondary cursor-text">
-              Write a comment...
-            </div>
-          </div>
-        </div>
-      )}
+      <PostActions
+        post={post}
+        accessToken={accessToken}
+        loggedInUserId={loggedInUserId}
+      />
     </div>
   );
 };

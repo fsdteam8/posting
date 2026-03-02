@@ -8,9 +8,10 @@ import { useEffect, useRef } from "react";
 interface Props {
   accessToken: string;
   groupId: string;
+  loggedinUser: string;
 }
 
-const GroupPostContainer = ({ accessToken, groupId }: Props) => {
+const GroupPostContainer = ({ accessToken, groupId, loggedinUser }: Props) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -87,7 +88,12 @@ const GroupPostContainer = ({ accessToken, groupId }: Props) => {
   return (
     <div className="space-y-3">
       {posts.map((post) => (
-        <GroupPostCard key={post._id} post={post} />
+        <GroupPostCard
+          key={post._id}
+          post={post}
+          accessToken={accessToken}
+          loggedInUserId={loggedinUser}
+        />
       ))}
 
       {/* Sentinel — triggers next page fetch when visible */}

@@ -33,6 +33,7 @@ const Page = async ({ params }: { params: { username: string } }) => {
         <GroupPostContainer
           accessToken={cu.user.accessToken}
           groupId={username}
+          loggedinUser={cu.user.id}
         />
       </div>
 

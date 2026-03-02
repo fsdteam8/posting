@@ -1,6 +1,6 @@
 import { Pagination } from "@/types";
 
-export interface GroupPost {
+export interface Post {
   video: {
     url: string;
     public_id: string;
@@ -65,6 +65,6 @@ export interface GroupPost {
 export interface GroupPostsResponse {
   success: boolean;
   message: string;
-  data: GroupPost[];
+  data: Post[];
   pagination: Pagination;
 }

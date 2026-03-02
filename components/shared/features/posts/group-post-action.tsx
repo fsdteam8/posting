@@ -1,10 +1,10 @@
 "use client";
 
-import { GroupPost } from "@/types/features/posts";
+import { Post } from "@/types/features/posts";
 import { MessageCircle, Share2, ThumbsUp } from "lucide-react";
 
 interface PostActionsProps {
-  post: GroupPost;
+  post: Post;
   onCommentClick?: () => void;
 }
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { GroupPost } from "@/types/features/posts";
+import { Post } from "@/types/features/posts";
 import { Play } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
 interface PostMediaProps {
-  post: GroupPost;
+  post: Post;
 }
 
 export const PostMedia = ({ post }: PostMediaProps) => {

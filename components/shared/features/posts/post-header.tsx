@@ -1,9 +1,10 @@
 "use client";
 
-import { GroupPost } from "@/types/features/posts";
+import { Post } from "@/types/features/posts";
 import { formatDistanceToNow } from "date-fns";
-import { Globe, Lock, MoreHorizontal, Users } from "lucide-react";
+import { Globe, Lock, Users } from "lucide-react";
 import Image from "next/image";
+import PostHeaderAction from "./post-header-action";
 
 const visibilityIcon = {
   public: <Globe className="w-3 h-3 text-fb-text-secondary" />,
@@ -13,11 +14,10 @@ const visibilityIcon = {
 };
 
 interface PostHeaderProps {
-  post: GroupPost;
-  onMoreClick?: () => void;
+  post: Post;
 }
 
-export const PostHeader = ({ post, onMoreClick }: PostHeaderProps) => {
+export const PostHeader = ({ post }: PostHeaderProps) => {
   const { author, createdAt, visibility, feeling, activity } = post;
 
   const avatarUrl =
@@ -62,13 +62,7 @@ export const PostHeader = ({ post, onMoreClick }: PostHeaderProps) => {
           </div>
         </div>
       </div>
-      <button
-        onClick={onMoreClick}
-        className="p-2 rounded-full hover:bg-fb-hover transition-colors"
-        aria-label="More options"
-      >
-        <MoreHorizontal className="w-5 h-5 text-fb-text-secondary" />
-      </button>
+      <PostHeaderAction data={post} />
     </div>
   );
 };

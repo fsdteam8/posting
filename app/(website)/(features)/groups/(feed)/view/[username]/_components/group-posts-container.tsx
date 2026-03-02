@@ -1,6 +1,6 @@
 "use client";
 
-import GroupPostCard from "@/components/shared/features/group/posts/post-card";
+import GroupPostCard from "@/components/shared/features/posts/post-card";
 import { useGetGroupPosts } from "@/hooks/features/groups/posts/api/use-get-group-post";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";

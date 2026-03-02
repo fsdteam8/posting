@@ -17,7 +17,7 @@ export interface FeelingActivity {
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const FEELINGS: FeelingActivity[] = [
+export const FEELINGS: FeelingActivity[] = [
   { id: "f1", type: "feeling", label: "happy", emoji: "😊" },
   { id: "f2", type: "feeling", label: "loved", emoji: "🥰" },
   { id: "f3", type: "feeling", label: "sad", emoji: "😢" },
@@ -44,7 +44,7 @@ const FEELINGS: FeelingActivity[] = [
   { id: "f24", type: "feeling", label: "hopeful", emoji: "🌟" },
 ];
 
-const ACTIVITY_CATEGORIES: {
+export const ACTIVITY_CATEGORIES: {
   id: string;
   label: string;
   emoji: string;

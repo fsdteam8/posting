@@ -4,6 +4,10 @@ import { Post } from "@/types/features/posts";
 import { formatDistanceToNow } from "date-fns";
 import { Globe, Lock, Users } from "lucide-react";
 import Image from "next/image";
+import {
+  ACTIVITY_CATEGORIES,
+  FEELINGS,
+} from "../post-modal/feeling-activity-picker";
 import PostHeaderAction from "./post-header-action";
 
 const visibilityIcon = {
@@ -26,10 +30,29 @@ export const PostHeader = ({ post }: PostHeaderProps) => {
 
   const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true });
 
-  const feelingLine = feeling
-    ? `is feeling ${feeling}`
-    : activity
-      ? `is ${activity}`
+  // Look up emoji from hardcoded data
+  const feelingData = feeling
+    ? FEELINGS.find((f) => f.label === feeling)
+    : null;
+
+  const activityData = activity
+    ? ACTIVITY_CATEGORIES.flatMap((c) => c.items).find(
+        (a) => a.label === activity,
+      )
+    : null;
+
+  const activityCategory = activityData
+    ? ACTIVITY_CATEGORIES.find((c) => c.id === activityData.category)
+    : null;
+
+  // Build the feeling/activity line
+  const feelingLine = feelingData
+    ? { emoji: feelingData.emoji, text: `is feeling ${feelingData.label}` }
+    : activityData
+      ? {
+          emoji: activityData.emoji,
+          text: `is ${activityCategory?.label ?? ""} ${activityData.label}`,
+        }
       : null;
 
   return (
@@ -48,9 +71,14 @@ export const PostHeader = ({ post }: PostHeaderProps) => {
               {author.firstName} {author.lastName}
             </p>
             {feelingLine && (
-              <p className="text-[14px] text-fb-text-secondary">
-                {feelingLine}
-              </p>
+              <div className="flex items-center gap-1">
+                <span className="text-[14px] text-fb-text-secondary">
+                  {feelingLine.text}
+                </span>
+                <span className="text-[14px] leading-none">
+                  {feelingLine.emoji}
+                </span>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-1 mt-0.5">

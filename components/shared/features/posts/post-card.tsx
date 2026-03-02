@@ -27,7 +27,7 @@ const GroupPostCard = ({
 
   return (
     <div className="bg-card rounded-lg shadow-sm overflow-hidden">
-      <PostHeader post={post} />
+      <PostHeader post={post} accessToken={accessToken} />
 
       {post.content && (
         <div className="px-4 pb-1">

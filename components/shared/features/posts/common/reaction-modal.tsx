@@ -30,7 +30,6 @@ export default function ReactionsModal({
 }: ReactionsModalProps) {
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
 
-  // Group reactions by type
   const reactionGroups = useMemo(() => {
     const groups: Record<string, Reaction[]> = {
       all: reactions,
@@ -44,15 +43,12 @@ export default function ReactionsModal({
 
     reactions.forEach((reaction) => {
       const type = reaction.type;
-      if (type in groups) {
-        (groups[type] as Reaction[]).push(reaction);
-      }
+      if (type in groups) (groups[type] as Reaction[]).push(reaction);
     });
 
     return groups;
   }, [reactions]);
 
-  // Count reactions
   const reactionCounts = useMemo(() => {
     const counts: Record<string, number> = {
       like: 0,
@@ -64,9 +60,7 @@ export default function ReactionsModal({
     };
 
     reactions.forEach((reaction) => {
-      if (reaction.type in counts) {
-        counts[reaction.type]++;
-      }
+      if (reaction.type in counts) counts[reaction.type]++;
     });
 
     return counts;
@@ -79,31 +73,35 @@ export default function ReactionsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3">
+      <div className="flex w-full max-w-sm flex-col overflow-hidden rounded-xl bg-white shadow-2xl max-h-[80vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
+          <h2 className="text-sm font-semibold text-gray-900">
             {selectedReaction
-              ? `${reactionEmojis[selectedReaction]} ${selectedReaction.charAt(0).toUpperCase() + selectedReaction.slice(1)}`
+              ? `${reactionEmojis[selectedReaction]} ${
+                  selectedReaction.charAt(0).toUpperCase() +
+                  selectedReaction.slice(1)
+                }`
               : "All Reactions"}
           </h2>
+
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            className="rounded-md p-1.5 hover:bg-gray-100 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="h-4 w-4 text-gray-600" />
           </button>
         </div>
 
-        {/* Reaction Tabs */}
-        <div className="flex gap-2 overflow-x-auto px-4 py-3 border-b border-gray-200 scrollbar-hide">
+        {/* Tabs */}
+        <div className="flex gap-1.5 overflow-x-auto border-b border-gray-200 px-3 py-2 scrollbar-hide">
           <button
             onClick={() => setSelectedReaction(null)}
-            className={`px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all ${
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
               selectedReaction === null
-                ? "bg-blue-100 text-blue-600 border-b-2 border-blue-500"
+                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
           >
@@ -118,22 +116,24 @@ export default function ReactionsModal({
                 onClick={() =>
                   setSelectedReaction(selectedReaction === type ? null : type)
                 }
-                className={`px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all flex items-center gap-1 ${
+                className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
                   selectedReaction === type
-                    ? "bg-blue-100 text-blue-600 border-b-2 border-blue-500"
+                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                <span>{reactionEmojis[type]}</span>
+                <span className="text-[13px] leading-none">
+                  {reactionEmojis[type]}
+                </span>
                 <span>{count}</span>
               </button>
             ))}
         </div>
 
-        {/* User List */}
+        {/* List */}
         <div className="flex-1 overflow-y-auto">
           {displayReactions.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="flex h-full items-center justify-center py-10 text-sm text-gray-500">
               No reactions yet
             </div>
           ) : (
@@ -141,38 +141,39 @@ export default function ReactionsModal({
               {displayReactions.map((reaction) => (
                 <div
                   key={reaction.user._id}
-                  className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
                     {/* Avatar */}
                     <div className="relative shrink-0">
                       {reaction.user.profileImage?.url ? (
                         <Image
                           src={reaction.user.profileImage.url}
                           alt={reaction.user.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                          height={40}
-                          width={40}
+                          className="h-8 w-8 rounded-full object-cover"
+                          height={32}
+                          width={32}
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold">
-                          {reaction.user.firstName[0]}
-                          {reaction.user.lastName[0]}
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold text-gray-700">
+                          {reaction.user.firstName?.[0]}
+                          {reaction.user.lastName?.[0]}
                         </div>
                       )}
-                      {/* Reaction Badge */}
-                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full border-2 border-white text-[10px]">
+
+                      {/* Reaction badge */}
+                      <div className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-white ring-1 ring-gray-200 text-[10px] leading-none">
                         {reactionEmojis[reaction.type]}
                       </div>
                     </div>
 
-                    {/* User Info */}
+                    {/* User */}
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-gray-900 truncate">
+                      <p className="truncate text-sm font-medium text-gray-900">
                         {reaction.user.name}
                       </p>
                       {reaction.mutualFriendCount > 0 && (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-[11px] text-gray-500">
                           {reaction.mutualFriendCount}{" "}
                           {reaction.mutualFriendCount === 1
                             ? "mutual friend"
@@ -182,17 +183,15 @@ export default function ReactionsModal({
                     </div>
                   </div>
 
-                  {/* Action Button */}
+                  {/* Action */}
                   {reaction.user._id !== loggedInUserId && (
-                    <div className="shrink-0 ml-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-sm font-medium"
-                      >
-                        {reaction.isMutualFriend ? "Following" : "Follow"}
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2.5 text-xs font-medium"
+                    >
+                      {reaction.isMutualFriend ? "Following" : "Follow"}
+                    </Button>
                   )}
                 </div>
               ))}

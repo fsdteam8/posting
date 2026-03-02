@@ -52,7 +52,7 @@ export default function ProfilePhotoUpload({ accessToken }: Props) {
         toast.error(data.message || "Failed to upload photo");
         return;
       }
-      router.push(`/onboarding/interest`);
+      router.push(`/onboarding/people-you-may-know`);
     },
     onError: (err) => {
       console.log("onboarding-avatarUpload-error", err);
@@ -195,7 +195,7 @@ export default function ProfilePhotoUpload({ accessToken }: Props) {
           variant="outline"
           className="min-w-32.5 rounded-full"
           disabled={isPending}
-          onClick={() => router.push(`/onboarding/interest`)}
+          onClick={() => router.push(`/onboarding/people-you-may-know`)}
         >
           Skip for now
         </Button>

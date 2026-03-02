@@ -66,6 +66,12 @@ const ResetNowForm = ({ email, otp, onSuccess }: Props) => {
         return;
       }
 
+      // ✅ 1) clear instruction toast
+      toast.success("Password updated");
+
+      // ✅ 2) attempt revoke sessions (best effort)
+
+      // ✅ 3) run your success UI (if you need)
       onSuccess();
     },
     onError: (err) => {

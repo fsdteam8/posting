@@ -26,6 +26,7 @@ interface UserState {
   email: string;
   avatarUrl: string;
   otp: string;
+  phone: string;
 }
 
 const FindAccountWrapper = () => {
@@ -34,6 +35,7 @@ const FindAccountWrapper = () => {
     email: "",
     avatarUrl: "",
     otp: "",
+    phone: "",
   });
   const [state, setState] = useState<
     "find-account" | "otp-container" | "otp" | "reset" | "success"
@@ -55,6 +57,7 @@ const FindAccountWrapper = () => {
           ...p,
           name: data.data.firstName,
           avatarUrl: data.data.profileImage.url,
+          phone: data.data.phone,
         };
       });
 
@@ -90,12 +93,14 @@ const FindAccountWrapper = () => {
             userName={user.name}
             avatarUrl={user.avatarUrl}
             onOtpSent={() => setState("otp")}
+            userPhone={user.phone}
             onReset={() => {
               setUser({
                 name: "",
                 email: "",
                 avatarUrl: "",
                 otp: "",
+                phone: "",
               });
 
               setState("find-account");
@@ -119,7 +124,7 @@ const FindAccountWrapper = () => {
           />
         </ResizablePanel.Content>
         <ResizablePanel.Content value="success">
-          <SuccessCard />
+          <SuccessCard description="Password updated. For security, you’ll be logged out from all devices. Please log in again." />
         </ResizablePanel.Content>
       </ResizablePanel.Root>
     </Card>
@@ -136,5 +141,7 @@ interface AccountFindResponse {
       url: string;
     };
     firstName: string;
+    email: string;
+    phone: string;
   };
 }

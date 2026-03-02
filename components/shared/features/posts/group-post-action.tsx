@@ -1,0 +1,256 @@
+"use client";
+
+import { useReactToPost } from "@/hooks/features/groups/posts/api/use-react-to-post";
+import { cn } from "@/lib/utils";
+import { Post } from "@/types/features/posts";
+import { AnimatePresence, motion } from "framer-motion";
+import { MessageCircle, Share2, ThumbsUp } from "lucide-react";
+import { useRef, useState } from "react";
+import OverlappingReactions from "./common/overlaping-reactions";
+
+// ─── Reaction definitions ─────────────────────────────────────────────────────
+
+export const REACTIONS = [
+  { type: "like", emoji: "👍", label: "Like", color: "#1877f2" },
+  { type: "love", emoji: "❤️", label: "Love", color: "#f33e58" },
+  { type: "haha", emoji: "😆", label: "Haha", color: "#f7b928" },
+  { type: "wow", emoji: "😮", label: "Wow", color: "#f7b928" },
+  { type: "sad", emoji: "😢", label: "Sad", color: "#f7b928" },
+  { type: "angry", emoji: "😡", label: "Angry", color: "#e9710f" },
+  { type: "care", emoji: "🥰", label: "Care", color: "#f7b928" },
+] as const;
+
+export type ReactionType = (typeof REACTIONS)[number]["type"];
+
+// ─── Props ────────────────────────────────────────────────────────────────────
+
+interface PostActionsProps {
+  post: Post;
+  accessToken: string;
+  onCommentClick?: () => void;
+  loggedInUserId: string;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export const PostActions = ({
+  post,
+  accessToken,
+  onCommentClick,
+  loggedInUserId,
+}: PostActionsProps) => {
+  const { reactionCount, commentCount, shareCount, _id: postId } = post;
+
+  const [hovering, setHovering] = useState(false);
+  const [activeReaction, setActiveReaction] = useState<ReactionType | null>(
+    post.reactions.find((item) => item.user._id === loggedInUserId)?.type ??
+      null,
+  );
+  const [hoveredReaction, setHoveredReaction] = useState<ReactionType | null>(
+    null,
+  );
+  const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const groupId = post._id;
+
+  const { mutate: react, isPending } = useReactToPost({
+    postId,
+    groupId,
+    accessToken,
+    loggedInUserId,
+  });
+
+  // ── Hover with delay so accidental mouse-outs don't flicker ───────────────
+  const openPicker = () => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    setHovering(true);
+  };
+
+  const closePicker = () => {
+    hoverTimeout.current = setTimeout(() => setHovering(false), 300);
+  };
+
+  const handleReact = (type: ReactionType) => {
+    const next = activeReaction === type ? null : type; // toggle off same
+    setActiveReaction(next);
+    setHovering(false);
+    if (next) react({ type });
+  };
+
+  // Quick tap = like, long hover = picker
+  const handleLikeClick = () => {
+    if (!hovering) handleReact("like");
+  };
+
+  const currentReaction = REACTIONS.find((r) => r.type === activeReaction);
+
+  return (
+    <>
+      {/* ── Counts row ──────────────────────────────────────────────────────── */}
+      {(reactionCount > 0 || commentCount > 0 || shareCount > 0) && (
+        <div className="flex items-center justify-between px-4 py-2 border-b border-fb-divider">
+          {reactionCount > 0 && (
+            <OverlappingReactions
+              maxDisplay={post.reactionCount}
+              reactions={post.reactions}
+              loggedInUserId={loggedInUserId}
+            />
+          )}
+          <div className="flex items-center gap-3 ml-auto">
+            {commentCount > 0 && (
+              <button
+                onClick={onCommentClick}
+                className="text-[14px] text-fb-text-secondary hover:underline"
+              >
+                {commentCount.toLocaleString()} comments
+              </button>
+            )}
+            {shareCount > 0 && (
+              <span className="text-[14px] text-fb-text-secondary hover:underline cursor-pointer">
+                {shareCount.toLocaleString()} shares
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Action buttons ────────────────────────────────────────────────────── */}
+      <div className="flex items-center mx-4">
+        <div
+          className="flex-1 relative"
+          onMouseEnter={openPicker}
+          onMouseLeave={closePicker}
+        >
+          {/* Reaction picker */}
+          <AnimatePresence>
+            {hovering && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                onMouseEnter={openPicker}
+                onMouseLeave={closePicker}
+                className="absolute bottom-full left-0 mb-2 bg-white rounded-full shadow-[0_2px_12px_rgba(0,0,0,0.15)] border border-gray-100 px-2.5 py-2 flex items-end gap-1 z-50"
+              >
+                {REACTIONS.map((reaction, i) => (
+                  <motion.div
+                    key={reaction.type}
+                    initial={{ scale: 0, opacity: 0, y: 10 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    transition={{
+                      delay: i * 0.035,
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 22,
+                    }}
+                    className="relative flex flex-col items-center"
+                  >
+                    {/* Label */}
+                    <AnimatePresence>
+                      {hoveredReaction === reaction.type && (
+                        <motion.span
+                          initial={{ opacity: 0, y: 4, scale: 0.85 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 4, scale: 0.85 }}
+                          transition={{ duration: 0.12 }}
+                          className="absolute -top-8 bg-gray-900 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap pointer-events-none"
+                        >
+                          {reaction.label}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.45, y: -8 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 20,
+                      }}
+                      onClick={() => handleReact(reaction.type)}
+                      onHoverStart={() => setHoveredReaction(reaction.type)}
+                      onHoverEnd={() => setHoveredReaction(null)}
+                      className={cn(
+                        "text-[28px] leading-none select-none focus:outline-none relative",
+                        activeReaction === reaction.type &&
+                          "drop-shadow-[0_0_6px_rgba(24,119,242,0.8)]",
+                      )}
+                    >
+                      {reaction.emoji}
+                    </motion.button>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Like / Active reaction button */}
+          <button
+            onClick={handleLikeClick}
+            disabled={isPending}
+            className="w-full flex items-center justify-center gap-2 py-0 rounded-md hover:bg-fb-hover transition-colors"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {activeReaction && currentReaction ? (
+                <motion.span
+                  key={activeReaction}
+                  initial={{ scale: 0.4, rotate: -15 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0.4, rotate: 15 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  className="flex items-center gap-2 hover:bg-gray-100 w-full justify-center p-1 rounded-[3px] cursor-pointer"
+                >
+                  <span className="text-[18px] leading-none">
+                    {currentReaction.emoji}
+                  </span>
+                  <span
+                    className="text-[15px] font-semibold capitalize"
+                    style={{ color: currentReaction.color }}
+                  >
+                    {currentReaction.label}
+                  </span>
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="like-default"
+                  initial={{ scale: 0.4 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.4 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  className="flex items-center gap-2 hover:bg-gray-100 w-full justify-center p-1 rounded-[3px] cursor-pointer"
+                >
+                  <ThumbsUp className="w-4 h-4 text-secondary-foreground" />
+                  <span className="text-[12px] font-semibold text-secondary-foreground">
+                    Like
+                  </span>
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </div>
+
+        {/* Comment */}
+        <button
+          onClick={onCommentClick}
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-fb-hover transition-colors"
+        >
+          <MessageCircle className="w-4 h- text-secondary-foreground" />
+          <span className="text-[12px] font-semibold text-secondary-foreground">
+            Comment
+          </span>
+        </button>
+
+        {/* Share */}
+        <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-fb-hover transition-colors">
+          <Share2 className="w-4 h-4 text-secondary-foreground" />
+          <span className="text-[12px] font-semibold text-secondary-foreground">
+            Share
+          </span>
+        </button>
+      </div>
+    </>
+  );
+};

@@ -2,8 +2,11 @@
 
 import { Card } from "@/components/ui/card";
 import { baseURL } from "@/constants";
+import { useProfile } from "@/hooks/profile/use-profile";
 import { GroupFormValues } from "@/schemas/features/groups";
 import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
+import { useRouter } from "nextjs-toploader/app";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CreateGroupForm } from "./create-group-form";
@@ -19,6 +22,17 @@ const CreteGroupContainer = ({ accessToken }: Props) => {
     category: "Technology",
   });
 
+  const router = useRouter();
+
+  const { data: profile } = useProfile(accessToken);
+
+  const USER = {
+    name: profile ? `${profile.firstName} ${profile.lastName}` : "...",
+    avatarUrl:
+      profile?.profileImage?.url ||
+      `https://api.dicebear.com/9.x/avataaars/svg?seed=${profile?.firstName}&backgroundColor=b6e3f4`,
+  };
+
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ["group-create"],
     mutationFn: (formData: FormData) =>
@@ -29,11 +43,13 @@ const CreteGroupContainer = ({ accessToken }: Props) => {
         },
         body: formData,
       }).then((res) => res.json()),
-    onSuccess: (data) => {
+    onSuccess: (data: ApiRes) => {
       if (!data.success) {
         toast.error(data.message);
         return;
       }
+
+      router.push(`/groups/view/${data.data.groupUserName}`);
 
       // handle success
       toast.success(data.message);
@@ -74,12 +90,16 @@ const CreteGroupContainer = ({ accessToken }: Props) => {
           <Card className="p-6">
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-full bg-linear-to-br from-blue-400 to-blue-600 shrink-0" />
+                <Image
+                  src={USER.avatarUrl}
+                  alt={USER.name}
+                  height={40}
+                  width={40}
+                  className="rounded-full"
+                />
                 <div>
                   <p className="text-sm font-medium text-foreground">Admin</p>
-                  <p className="text-xs text-muted-foreground">
-                    Monir Hossain Rabby
-                  </p>
+                  <p className="text-xs text-muted-foreground">{USER.name}</p>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -106,3 +126,12 @@ const CreteGroupContainer = ({ accessToken }: Props) => {
 };
 
 export default CreteGroupContainer;
+
+interface ApiRes {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    groupUserName: string;
+  };
+}

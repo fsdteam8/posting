@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import OnboardingCard from "./_components/on-boarding-card";
-import OnboardingProgress from "./interest/_components/on-boarding-progress";
+import OnboardingProgress from "./people-you-may-know/interest/_components/on-boarding-progress";
 
 export const metadata: Metadata = {
   title: "Upload Profile Photo - Onboarding",

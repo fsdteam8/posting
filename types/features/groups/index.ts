@@ -1,7 +1,20 @@
+import { Pagination } from "@/types";
+
 export interface GetSingleGroupResponse {
   success: boolean;
   message: string;
   data: Group;
+}
+
+export interface GetGroupMembersResponse {
+  success: boolean;
+  message: string;
+  data: GroupUser[];
+}
+
+export interface CreateGroupPostResponse {
+  success: boolean;
+  message: string;
 }
 
 // get response for
@@ -12,18 +25,11 @@ export interface GroupsResponse {
   pagination: Pagination;
 }
 
-export interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  pages: number;
-}
-
 export interface Group {
   _id: string;
   name: string;
   category: string;
-  privacy: "public" | "private";
+  privacy: "public" | "private" | "closed";
   rules: string[];
   pendingMembers: GroupUser[];
   members: GroupUser[];

@@ -4,6 +4,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -70,9 +71,9 @@ const FindAccountContainer = ({ onSuccess, isPending }: Props) => {
             name="email" // Field name in form values
             render={({ field }) => (
               <FormItem>
+                <FormLabel>Email or phone</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Email or phone" // Hint text for user
                     type="text" // Text input since it accepts phone too
                     className="h-11 rounded-full px-4 bg-muted border-input placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
                     {...field}

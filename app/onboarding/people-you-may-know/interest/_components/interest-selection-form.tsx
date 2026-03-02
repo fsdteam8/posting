@@ -66,6 +66,34 @@ interface Props {
 export default function InterestSelectionForm({ accessToken }: Props) {
   const router = useRouter();
 
+  const { mutate: isOnboardedMutate, isPending: isOnBoardedPending } =
+    useMutation({
+      mutationKey: ["update-profile"],
+      mutationFn: () =>
+        fetch(`${baseURL}/users/update-profile`, {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            isOnboarded: true,
+          }),
+        }).then((res) => res.json()),
+      onSuccess: (response: ApiResponse) => {
+        if (!response.success) {
+          toast.error(response.message ?? "Server Error");
+          return;
+        }
+
+        // handle success
+        router.push("/");
+      },
+      onError: (err) => {
+        toast.error(err.message ?? "Something went wrong");
+      },
+    });
+
   const { mutate, isPending } = useMutation({
     mutationKey: ["onboarding-interest"],
     mutationFn: (data: InterestFormValues) =>
@@ -86,7 +114,7 @@ export default function InterestSelectionForm({ accessToken }: Props) {
       }
 
       // handle success
-      router.push("/onboarding/interest/people-you-may-know");
+      router.push("/");
     },
     onError: (err) => {
       toast.error(err.message ?? "Something went wrong");
@@ -137,7 +165,7 @@ export default function InterestSelectionForm({ accessToken }: Props) {
           Back
         </Link>
 
-        <OnboardingProgress currentStep={2} totalSteps={3} />
+        <OnboardingProgress currentStep={3} totalSteps={3} />
 
         {/* Spacer for centering the progress bar */}
         <div className="w-13" />
@@ -193,14 +221,17 @@ export default function InterestSelectionForm({ accessToken }: Props) {
       {/* Bottom action bar */}
       <footer className="border-t border-border/60">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-center gap-3 px-6 py-5">
-          <Button variant="outline" className="min-w-35 rounded-full" asChild>
-            <Link href="/onboarding/interest/people-you-may-know">
-              Skip for now
-            </Link>
+          <Button
+            variant="outline"
+            className="min-w-35 rounded-full"
+            onClick={() => isOnboardedMutate()}
+            disabled={isOnBoardedPending}
+          >
+            Skip for now
           </Button>
           <Button
             className="min-w-35 rounded-full"
-            disabled={!hasMinimum || isPending}
+            disabled={!hasMinimum || isPending || isOnBoardedPending}
             onClick={form.handleSubmit(onSubmit)}
           >
             Continue {isPending && <Loader2 className="size-5 animate-spin" />}

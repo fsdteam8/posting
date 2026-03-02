@@ -12,7 +12,6 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -35,7 +34,7 @@ import {
 import { baseURL } from "@/constants";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "nextjs-toploader/app";
+import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
 const getStrengthColor = (score: number) => {
@@ -148,7 +147,6 @@ function PasswordStrength({ value }: { value: string }) {
 }
 
 export default function RegisterForm() {
-  const router = useRouter();
   const { mutate, isPending } = useMutation({
     mutationKey: ["registration"],
     mutationFn: (data: RegisterValues) =>
@@ -162,15 +160,29 @@ export default function RegisterForm() {
           confirmPassword: data.password,
         }),
       }).then((res) => res.json()),
-    onSuccess: (data: RegisterResponse) => {
+    onSuccess: async (data: AuthResponse) => {
       if (!data.success) {
         toast.error(data.message ?? "Server Error");
         return;
       }
 
-      // handle success
-      toast.success("Registration successfull. You can login now!");
-      router.push("/login");
+      const payload = {
+        id: data.data._user._id,
+        firstName: data.data._user.firstName,
+        lastName: data.data._user.lastName,
+        email: data.data._user.email,
+        accessToken: data.data.accessToken,
+        refreshToken: data.data._user.refreshToken,
+        role: data.data._user.role,
+        isOnboarded: data.data._user.isOnboarded,
+        username: data.data._user.username,
+      };
+
+      await signIn("credentials", {
+        data: JSON.stringify({ ...payload }),
+        redirect: true,
+        redirectTo: "/onboarding",
+      });
     },
     onError: (err) => {
       toast.error(err.message ?? "Something went wrong");
@@ -256,88 +268,6 @@ export default function RegisterForm() {
             />
           </div>
 
-          {/* Date of Birth (shadcn Calendar) */}
-          <FormField
-            control={form.control}
-            name="dob"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="text-sm font-medium text-foreground">
-                  Date of Birth
-                </FormLabel>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                          "h-10 w-full justify-start rounded-lg border-border bg-card text-left font-normal text-card-foreground",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Select date</span>
-                        )}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(date) => field.onChange(date)}
-                      disabled={(date) => date > new Date()}
-                      initialFocus
-                      captionLayout="dropdown"
-                      fromYear={1900}
-                      toYear={new Date().getFullYear()}
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                <FormDescription className="text-xs">
-                  You must be at least 13 years old.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Gender */}
-          <FormField
-            control={form.control}
-            name="gender"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-foreground">
-                  Gender
-                </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="h-10 w-full rounded-lg border-border bg-card text-card-foreground">
-                      <SelectValue placeholder="Select your gender" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                    <SelectItem value="prefer-not-to-say">
-                      Prefer not to say
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           {/* Email or Phone */}
           <FormField
             control={form.control}
@@ -358,6 +288,87 @@ export default function RegisterForm() {
               </FormItem>
             )}
           />
+
+          {/* Date of Birth (shadcn Calendar) */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="dob"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel className="text-sm font-medium text-foreground">
+                    Date of Birth
+                  </FormLabel>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "h-10 w-full justify-start rounded-lg border-border bg-card text-left font-normal text-card-foreground",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Select date</span>
+                          )}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(date) => field.onChange(date)}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                        captionLayout="dropdown"
+                        fromYear={1900}
+                        toYear={new Date().getFullYear()}
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Gender */}
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-foreground">
+                    Gender
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-10 w-full rounded-lg border-border bg-card text-card-foreground">
+                        <SelectValue placeholder="Select your gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="prefer-not-to-say">
+                        Prefer not to say
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Password (strong + show/hide + strength meter) */}
           <FormField
@@ -411,18 +422,88 @@ export default function RegisterForm() {
   );
 }
 
-export interface RegisterResponse {
+export interface AuthResponse {
   success: boolean;
   message: string;
   data: {
-    firstName: string;
-    lastName: string;
-    dob: string; // ISO date string
-    email: string;
-    phone: string;
-    role: "user" | "admin" | string; // adjust if roles are fixed
-    isOnboarded: boolean;
     accessToken: string;
-    refreshToken: string;
+    _user: User;
   };
+}
+
+export interface User {
+  _id: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone: string;
+  address: string;
+  isEmailVerified: boolean;
+  emailVerificationOTP: string | null;
+  emailVerificationOTPExpiry: string | null;
+  accountStatus: string;
+  bio: string;
+  dob: string; // ISO date string
+  gender: string;
+
+  profileImage: ImageAsset;
+  coverImage: ImageAsset;
+
+  location: Location;
+  locationGeo: GeoLocation;
+
+  currentCity: string;
+  hometown: string;
+  relationshipStatus: string;
+  website: string;
+
+  interests: string[];
+  hobbies: string[];
+  languages: string[];
+  skills: string[];
+
+  followers: string[];
+  following: string[];
+  blockedUsers: string[];
+
+  privacySettings: PrivacySettings;
+
+  isOnline: boolean;
+  refreshToken: string;
+  isOnboarded: boolean;
+
+  works: unknown[]; // Replace with proper type if structure is known
+  education: unknown[]; // Replace with proper type if structure is known
+  socialLinks: unknown[]; // Replace with proper type if structure is known
+
+  lastActiveAt: string; // ISO date string
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+
+  username: string;
+  __v: number;
+}
+
+export interface ImageAsset {
+  public_id: string;
+  url: string;
+}
+
+export interface Location {
+  city: string;
+  state: string;
+  country: string;
+}
+
+export interface GeoLocation {
+  type: "Point";
+  coordinates: [number, number];
+}
+
+export interface PrivacySettings {
+  profileVisibility: "public" | "private" | string;
+  whoCanFollow: "everyone" | "friends" | string;
+  whoCanSendFriendRequest: "everyone" | "friends" | string;
 }

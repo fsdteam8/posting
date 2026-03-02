@@ -1,15 +1,24 @@
 import { Reaction } from "@/types/features/posts";
+import { useState } from "react";
 import { REACTIONS } from "../group-post-action";
+
+import dynamic from "next/dynamic";
+const ReactionsModal = dynamic(() => import("./reaction-modal"), {
+  ssr: false,
+});
 
 interface OverlappingReactionsProps {
   reactions: Reaction[];
   maxDisplay?: number;
+  loggedInUserId: string;
 }
 
 export default function OverlappingReactions({
   reactions,
   maxDisplay = 3,
+  loggedInUserId,
 }: OverlappingReactionsProps) {
+  const [open, setOpen] = useState(false);
   // Count reactions by type
   const reactionCounts = reactions.reduce(
     (acc, reaction) => {
@@ -32,32 +41,45 @@ export default function OverlappingReactions({
   const totalCount = reactions.length;
 
   return (
-    <div className="flex items-center gap-1">
-      {/* Overlapping emoji circles */}
-      <div className="relative flex items-center w-auto">
-        {sortedReactions.map((reaction: any, index) => (
-          <div
-            key={reaction.type}
-            className="relative w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white shadow-sm"
-            style={{
-              backgroundColor: reaction.color,
-              marginLeft: index === 0 ? 0 : "-12px",
-              zIndex: sortedReactions.length - index,
-            }}
-            title={`${reaction.label}: ${reaction.count}`}
-          >
-            {reaction.emoji}
-          </div>
-        ))}
+    <>
+      <div className="flex items-center gap-1">
+        {/* Overlapping emoji circles */}
+        <div className="relative flex items-center w-auto">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {sortedReactions.map((reaction: any, index) => (
+            <div
+              key={reaction.type}
+              className="relative w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white shadow-sm"
+              style={{
+                backgroundColor: reaction.color,
+                marginLeft: index === 0 ? 0 : "-12px",
+                zIndex: sortedReactions.length - index,
+              }}
+              title={`${reaction.label}: ${reaction.count}`}
+            >
+              {reaction.emoji}
+            </div>
+          ))}
+        </div>
+
+        {/* Count display */}
+        <div
+          className="text-sm font-semibold text-gray-600 cursor-pointer hover:underline"
+          title={`Total reaction ${totalCount}`}
+          onClick={() => setOpen((p) => !p)}
+        >
+          {totalCount}
+        </div>
       </div>
 
-      {/* Count display */}
-      <div
-        className="text-sm font-semibold text-gray-600 cursor-pointer hover:underline"
-        title={`Total reaction ${totalCount}`}
-      >
-        {totalCount}
-      </div>
-    </div>
+      {open && (
+        <ReactionsModal
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          reactions={reactions}
+          loggedInUserId={loggedInUserId}
+        />
+      )}
+    </>
   );
 }

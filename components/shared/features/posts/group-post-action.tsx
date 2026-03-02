@@ -42,7 +42,7 @@ export const PostActions = ({
   const { reactionCount, commentCount, shareCount, _id: postId } = post;
 
   const [hovering, setHovering] = useState(false);
-  let [activeReaction, setActiveReaction] = useState<ReactionType | null>(
+  const [activeReaction, setActiveReaction] = useState<ReactionType | null>(
     post.reactions.find((item) => item.user._id === loggedInUserId)?.type ??
       null,
   );
@@ -93,6 +93,7 @@ export const PostActions = ({
             <OverlappingReactions
               maxDisplay={post.reactionCount}
               reactions={post.reactions}
+              loggedInUserId={loggedInUserId}
             />
           )}
           <div className="flex items-center gap-3 ml-auto">
@@ -200,7 +201,7 @@ export const PostActions = ({
                   animate={{ scale: 1, rotate: 0 }}
                   exit={{ scale: 0.4, rotate: 15 }}
                   transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 hover:bg-gray-100 w-full justify-center p-1 rounded-[3px] cursor-pointer"
                 >
                   <span className="text-[18px] leading-none">
                     {currentReaction.emoji}

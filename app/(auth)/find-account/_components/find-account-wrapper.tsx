@@ -124,7 +124,7 @@ const FindAccountWrapper = () => {
           />
         </ResizablePanel.Content>
         <ResizablePanel.Content value="success">
-          <SuccessCard />
+          <SuccessCard description="Password updated. For security, you’ll be logged out from all devices. Please log in again." />
         </ResizablePanel.Content>
       </ResizablePanel.Root>
     </Card>

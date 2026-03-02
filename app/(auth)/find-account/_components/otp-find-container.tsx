@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { baseURL } from "@/constants";
-import { maskEmail } from "@/lib/utils";
+import { maskEmail, maskPhone } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, Lock, Mail } from "lucide-react";
+import { Loader2, Lock, Mail, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "nextjs-toploader/app";
 import { useForm } from "react-hook-form";
@@ -37,6 +37,7 @@ const OTPFindContainer = ({
   avatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop",
   onOtpSent,
   onReset,
+  userPhone,
 }: ResetPasswordFormProps) => {
   const router = useRouter();
   const form = useForm<FormValues>({
@@ -90,12 +91,12 @@ const OTPFindContainer = ({
       description: maskEmail(userEmail),
       icon: Mail,
     },
-    // {
-    //   id: "sms",
-    //   title: "Send code via SMS",
-    //   description: userPhone,
-    //   icon: MessageSquare,
-    // },
+    {
+      id: "sms",
+      title: "Send code via SMS",
+      description: maskPhone(userPhone!),
+      icon: MessageSquare,
+    },
     {
       id: "password",
       title: "Enter password to log in",

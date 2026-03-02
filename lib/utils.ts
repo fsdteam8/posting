@@ -15,6 +15,21 @@ export const maskEmail = (email: string) => {
   return `${visible}${masked}@${domain}`;
 };
 
+export const maskPhone = (phone: string) => {
+  if (!phone) return phone;
+
+  // Remove non-digit characters (optional, but safer)
+  const digits = phone.replace(/\D/g, "");
+
+  if (digits.length <= 4) return phone;
+
+  const start = digits.slice(0, 2);
+  const end = digits.slice(-2);
+  const masked = "*".repeat(digits.length - 4);
+
+  return `${start}${masked}${end}`;
+};
+
 // Format member count for display (e.g., "175K members")
 export const formatCount = (count: number) => {
   if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;

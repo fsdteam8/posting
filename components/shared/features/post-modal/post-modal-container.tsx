@@ -72,6 +72,8 @@ interface Props {
 interface GroupTriggerProps {
   accessToken: string;
   onOpen?: () => void;
+  onAnonymousCall?: () => void;
+  onFeelingTrigger?: () => void;
 }
 
 const ACTIVITY_CATEGORIES_LABEL: Record<string, string> = {
@@ -102,7 +104,12 @@ const postSchema = z.object({
 
 type PostFormValues = z.infer<typeof postSchema>;
 
-const GroupTrigger = ({ accessToken, onOpen }: GroupTriggerProps) => {
+const GroupTrigger = ({
+  accessToken,
+  onOpen,
+  onAnonymousCall,
+  onFeelingTrigger,
+}: GroupTriggerProps) => {
   const { data: profile } = useProfile(accessToken);
 
   const USER = {
@@ -141,6 +148,7 @@ const GroupTrigger = ({ accessToken, onOpen }: GroupTriggerProps) => {
           <Button
             variant="secondary"
             className="bg-transparent flex-1 hover:bg-gray-200 transition-colors duration-300"
+            onClick={onAnonymousCall}
           >
             <UserPlus className="w-5 h-5 text-[#45bd62]" />
             <span className="text-[13px] sm:text-[15px] font-semibold text-fb-text-secondary">
@@ -150,6 +158,7 @@ const GroupTrigger = ({ accessToken, onOpen }: GroupTriggerProps) => {
           <Button
             variant="secondary"
             className="bg-transparent flex-1 hover:bg-gray-200 transition-colors duration-300"
+            onClick={onFeelingTrigger}
           >
             <Smile className="w-5 h-5 text-[#f7b928]" />
             <span className="text-[13px] sm:text-[15px] font-semibold text-fb-text-secondary">
@@ -640,6 +649,14 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
           <GroupTrigger
             accessToken={accessToken}
             onOpen={() => setOpen((p) => !p)}
+            onAnonymousCall={() => {
+              setOpen(true);
+              form.setValue("isAnonymous", true);
+            }}
+            onFeelingTrigger={() => {
+              setOpen(true);
+              setFeelingOpen(true);
+            }}
           />
         </DialogTrigger>
         <DialogContent className="sm:max-w-lg">

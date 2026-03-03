@@ -15,6 +15,7 @@ import { useSavePost } from "@/hooks/features/groups/posts/api/use-save-post";
 import { Post } from "@/types/features/posts";
 import {
   Bookmark,
+  BookmarkX,
   EyeOff,
   MessageCircle,
   MessageCircleOff,
@@ -47,6 +48,7 @@ const PostHeaderAction = ({
   const { mutate, isPending: isSaving } = useSavePost({
     postId: data._id,
     accessToken,
+    groupId: groupId,
   });
 
   const { mutate: onHideMutate } = useHidePost({
@@ -105,9 +107,13 @@ const PostHeaderAction = ({
             onClick={() => mutate()}
             disabled={isSaving}
           >
-            <Bookmark className="w-4 h-4 text-fb-text shrink-0" />
+            {data.isSaved ? (
+              <BookmarkX className="w-4 h-4 text-fb-text shrink-0" />
+            ) : (
+              <Bookmark className="w-4 h-4 text-fb-text shrink-0" />
+            )}
             <span className="text-[13px] font-medium text-fb-text">
-              Save post
+              {data.isSaved ? "Unsave post" : "Save post"}
             </span>
           </DropdownMenuItem>
 

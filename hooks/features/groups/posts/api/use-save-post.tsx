@@ -1,5 +1,10 @@
 import { baseURL } from "@/constants";
-import { useMutation } from "@tanstack/react-query";
+import { GroupPostsResponse } from "@/types/features/posts";
+import {
+  InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
 type ApiRes = {
@@ -14,9 +19,12 @@ type ApiRes = {
 type Params = {
   postId: string;
   accessToken: string;
+  groupId: string;
 };
 
-export function useSavePost({ postId, accessToken }: Params) {
+export function useSavePost({ postId, accessToken, groupId }: Params) {
+  const queryClient = useQueryClient();
+
   return useMutation<ApiRes, Error, void>({
     mutationKey: ["save-post", postId],
 
@@ -49,6 +57,24 @@ export function useSavePost({ postId, accessToken }: Params) {
 
       // handle success
       toast.success(data.message);
+
+      // ✅ Update infinite query cache
+      queryClient.setQueryData<InfiniteData<GroupPostsResponse>>(
+        ["group-posts", groupId],
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((p) =>
+                p._id === postId ? { ...p, isSaved: !p.isSaved } : p,
+              ),
+            })),
+          };
+        },
+      );
     },
   });
 }

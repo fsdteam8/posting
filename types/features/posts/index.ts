@@ -58,6 +58,7 @@ export interface Post {
   __v: number;
   comments: string[];
   id: string;
+  isSaved: boolean;
 }
 
 export interface ReactionUser {

@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useHidePost } from "@/hooks/features/groups/posts/api/use-hide-post";
 import { useSavePost } from "@/hooks/features/groups/posts/api/use-save-post";
 import { Post } from "@/types/features/posts";
 import {
@@ -23,13 +24,21 @@ import {
 interface Props {
   data: Post;
   accessToken: string;
+  groupId: string;
 }
 
-const PostHeaderAction = ({ data, accessToken }: Props) => {
+const PostHeaderAction = ({ data, accessToken, groupId }: Props) => {
   const { mutate, isPending: isSaving } = useSavePost({
     postId: data._id,
     accessToken,
   });
+
+  const { mutate: onHideMutate } = useHidePost({
+    postId: data._id,
+    accessToken,
+    groupId: groupId,
+  });
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -62,7 +71,10 @@ const PostHeaderAction = ({ data, accessToken }: Props) => {
           </span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer">
+        <DropdownMenuItem
+          className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"
+          onClick={() => onHideMutate()}
+        >
           <EyeOff className="w-4 h-4 text-fb-text shrink-0" />
           <span className="text-[13px] font-medium text-fb-text">
             Hide post

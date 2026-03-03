@@ -10,6 +10,7 @@ interface PostCardProps {
   post: Post;
   accessToken: string;
   loggedInUserId: string;
+  groupId: string;
 }
 
 const CHAR_LIMIT = 350;
@@ -18,6 +19,7 @@ const GroupPostCard = ({
   post,
   accessToken,
   loggedInUserId,
+  groupId,
 }: PostCardProps) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -27,7 +29,7 @@ const GroupPostCard = ({
 
   return (
     <div className="bg-card rounded-lg shadow-sm overflow-hidden">
-      <PostHeader post={post} accessToken={accessToken} />
+      <PostHeader post={post} accessToken={accessToken} groupId={groupId} />
 
       {post.content && (
         <div className="px-4 pb-1">

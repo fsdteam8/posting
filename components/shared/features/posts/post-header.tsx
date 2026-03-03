@@ -20,9 +20,10 @@ const visibilityIcon = {
 interface PostHeaderProps {
   post: Post;
   accessToken: string;
+  groupId: string;
 }
 
-export const PostHeader = ({ post, accessToken }: PostHeaderProps) => {
+export const PostHeader = ({ post, accessToken, groupId }: PostHeaderProps) => {
   const { author, createdAt, visibility, feeling, activity } = post;
 
   const avatarUrl =
@@ -91,7 +92,11 @@ export const PostHeader = ({ post, accessToken }: PostHeaderProps) => {
           </div>
         </div>
       </div>
-      <PostHeaderAction data={post} accessToken={accessToken} />
+      <PostHeaderAction
+        data={post}
+        accessToken={accessToken}
+        groupId={groupId}
+      />
     </div>
   );
 };

@@ -74,7 +74,7 @@ export const PostActions = ({
     const next = activeReaction === type ? null : type; // toggle off same
     setActiveReaction(next);
     setHovering(false);
-    if (next) react({ type });
+    react({ type });
   };
 
   // Quick tap = like, long hover = picker

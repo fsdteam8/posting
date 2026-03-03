@@ -88,6 +88,11 @@ export const PostHeader = ({
                 </span>
               </div>
             )}
+            {buildTagLine(post.tags) && (
+              <span className="text-[14px] text-fb-text-secondary font-normal">
+                is with {buildTagLine(post.tags)}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1 mt-0.5">
             <span className="text-[12px] text-fb-text-secondary">
@@ -107,3 +112,45 @@ export const PostHeader = ({
     </div>
   );
 };
+
+function buildTagLine(tags: Post["tags"]): React.ReactNode | null {
+  if (!tags || tags.length === 0) return null;
+
+  const first = tags[0];
+  const second = tags[1];
+  const rest = tags.length - 2;
+
+  if (tags.length === 1)
+    return (
+      <span className="font-semibold text-fb-text-primary">
+        {first.firstName} {first.lastName}
+      </span>
+    );
+
+  if (tags.length === 2)
+    return (
+      <>
+        <span className="font-semibold text-fb-text-primary">
+          {first.firstName} {first.lastName}
+        </span>{" "}
+        and{" "}
+        <span className="font-semibold text-fb-text-primary">
+          {second.firstName} {second.lastName}
+        </span>
+      </>
+    );
+
+  return (
+    <>
+      <span className="font-semibold text-fb-text-primary">
+        {first.firstName} {first.lastName}
+      </span>
+      ,{" "}
+      <span className="font-semibold text-fb-text-primary">
+        {second.firstName} {second.lastName}
+      </span>{" "}
+      and{" "}
+      <span className="font-semibold text-fb-text-primary">{rest} others</span>
+    </>
+  );
+}

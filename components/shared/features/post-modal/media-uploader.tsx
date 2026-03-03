@@ -8,7 +8,7 @@ import { useCallback, useRef, useState } from "react";
 
 export interface MediaFile {
   id: string;
-  file: File;
+  file?: File;
   url: string; // object URL for preview
   type: "image" | "video";
 }
@@ -40,7 +40,7 @@ function detectType(file: File): "image" | "video" {
 function toMediaFile(file: File): MediaFile {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    file,
+    file, // still set for new uploads
     url: URL.createObjectURL(file),
     type: detectType(file),
   };
@@ -352,7 +352,7 @@ export const MediaUploader = ({
 
   const handleRemove = (id: string) => {
     const removed = value.find((f) => f.id === id);
-    if (removed) URL.revokeObjectURL(removed.url);
+    if (removed?.file) URL.revokeObjectURL(removed.url); // only revoke blob URLs
     onChange(value.filter((f) => f.id !== id));
   };
 

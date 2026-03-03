@@ -55,9 +55,12 @@ const RichTextEditor = dynamic(() => import("./rich-text-editor"), {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCreateGroupPost } from "@/hooks/features/groups/api/use-create-group-post";
 import { GroupUser } from "@/types/features/groups";
+import { Post } from "@/types/features/posts";
 import {
+  ACTIVITY_CATEGORIES,
   FeelingActivity,
   FeelingActivityPicker,
+  FEELINGS,
 } from "./feeling-activity-picker";
 import { TagPeoplePicker } from "./tag-people-picker";
 
@@ -67,6 +70,9 @@ interface Props {
   accessToken: string;
   username: string;
   app: "group" | "page" | "profile";
+  initialData?: Post;
+  externalOpen?: boolean; // ← add
+  onExternalOpenChange?: (v: boolean) => void; // ← add
 }
 
 interface GroupTriggerProps {
@@ -190,17 +196,31 @@ const visibilityIcons = {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const PostModalContainer = ({ accessToken, username, app }: Props) => {
-  const [open, setOpen] = useState(false);
+const PostModalContainer = ({
+  accessToken,
+  username,
+  app,
+  initialData,
+  externalOpen,
+  onExternalOpenChange,
+}: Props) => {
   const [photoToolOpen, setPhotoToolOpen] = useState(false);
   const [feelingOpen, setFeelingOpen] = useState(false);
   const [tagOpen, setTagOpen] = useState(false);
+
+  // In the component, merge external and internal open state:
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = onExternalOpenChange ?? setInternalOpen;
 
   const { data: profile } = useProfile(accessToken);
   const { data, isLoading, isError, error } = useGetSingleGroup({
     username,
     accessToken,
   });
+
+  // Detect edit mode
+  const isEditMode = Boolean(initialData);
 
   const groupId = data?.success ? data.data._id : "";
 
@@ -256,15 +276,11 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
     }
   }, [fixedVisibility, form]);
 
+  // Change onSubmit to branch between create and edit
   const onSubmit = async (values: PostFormValues) => {
     try {
       const formData = new FormData();
-
       formData.append("content", values.content);
-      formData.append(
-        "status",
-        groupPrivacy === "private" ? "draft" : "published",
-      );
       formData.append("visibility", values.visibility);
       formData.append("isAnonymous", String(values.isAnonymous));
 
@@ -274,32 +290,88 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
         formData.append("activity", values.feelingActivity.label);
       }
 
-      values.taggedUsers.forEach((u) => {
-        formData.append("tags[]", u._id);
-      });
+      values.taggedUsers.forEach((u) => formData.append("tags[]", u._id));
 
       const images = values.media.filter((m) => m.type === "image");
       const videos = values.media.filter((m) => m.type === "video");
-
-      images.forEach((m) => formData.append("images", m.file));
-      if (videos.length > 0) formData.append("video", videos[0].file);
+      images.forEach((m) => formData.append("images", m.file!));
+      // ✅ append multiple videos
+      videos.forEach((m) => {
+        formData.append("videos", m.file!);
+      });
 
       let postType: "text" | "image" | "video" = "text";
       if (videos.length > 0) postType = "video";
       else if (images.length > 0) postType = "image";
       formData.append("postType", postType);
 
-      const response = await createGroupPost(formData);
+      if (isEditMode) {
+        // await editGroupPost(formData); // ← useEditPost mutateAsync
+        toast.success("Post updated!");
+      } else {
+        formData.append(
+          "status",
+          groupPrivacy === "private" ? "draft" : "published",
+        );
+        await createGroupPost(formData);
+        toast.success("Post created!");
+      }
 
-      console.log("post response", response);
-
-      toast.success("Post created!");
       form.reset();
       setOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
     }
   };
+
+  useEffect(() => {
+    if (open && initialData) {
+      const existingImages: MediaFile[] = (initialData.images ?? []).map(
+        (img) => ({
+          id: typeof img === "string" ? img : img._id,
+          url: typeof img === "string" ? img : img.url,
+          type: "image",
+        }),
+      );
+
+      const existingVideos: MediaFile[] = (initialData.videos ?? []).map(
+        (v) => ({
+          id: v.id,
+          url: v.url,
+          type: "video",
+        }),
+      );
+
+      form.reset({
+        content: initialData.content ?? "",
+        visibility:
+          (initialData.visibility as PostFormValues["visibility"]) ?? "public",
+        isAnonymous: false,
+        media: [...existingImages, ...existingVideos],
+        feelingActivity: (() => {
+          if (initialData.feeling) {
+            const found = FEELINGS.find((f) => f.label === initialData.feeling);
+            return found ?? null;
+          }
+          if (initialData.activity) {
+            const found = ACTIVITY_CATEGORIES.flatMap((c) => c.items).find(
+              (a) => a.label === initialData.activity,
+            );
+            return found ?? null;
+          }
+          return null;
+        })(),
+        // Map tags → GroupUser shape expected by TagPeoplePicker
+        taggedUsers: (initialData.tags ?? []).map((tag) => ({
+          _id: tag._id,
+          firstName: tag.firstName,
+          lastName: tag.lastName,
+          username: tag.username,
+          profileImage: tag.profileImage,
+        })),
+      });
+    }
+  }, [open, initialData, form]);
 
   // ── Dialog content ────────────────────────────────────────────────────────
   let dialogBody: React.ReactNode;
@@ -631,8 +703,10 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Posting...
+                {isEditMode ? "Saving..." : "Posting..."}
               </>
+            ) : isEditMode ? (
+              "Save changes"
             ) : (
               "Post"
             )}
@@ -646,23 +720,25 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild className="w-full flex-1">
-          <GroupTrigger
-            accessToken={accessToken}
-            onOpen={() => setOpen((p) => !p)}
-            onAnonymousCall={() => {
-              setOpen(true);
-              form.setValue("isAnonymous", true);
-            }}
-            onFeelingTrigger={() => {
-              setOpen(true);
-              setFeelingOpen(true);
-            }}
-          />
+          {isEditMode ? null : (
+            <GroupTrigger
+              accessToken={accessToken}
+              onOpen={() => setOpen(true)}
+              onAnonymousCall={() => {
+                setOpen(true);
+                form.setValue("isAnonymous", true);
+              }}
+              onFeelingTrigger={() => {
+                setOpen(true);
+                setFeelingOpen(true);
+              }}
+            />
+          )}
         </DialogTrigger>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader className="border-b border-fb-divider pb-3">
             <DialogTitle className="text-center text-[17px]">
-              Create Post
+              {isEditMode ? "Edit Post" : "Create Post"}
             </DialogTitle>
           </DialogHeader>
           <div className="mt-1">{dialogBody}</div>

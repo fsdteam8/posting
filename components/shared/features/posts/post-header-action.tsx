@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import PostModalContainer from "../post-modal/post-modal-container";
 
 const AlertModal = dynamic(() => import("@/components/ui/custom/alert-modal"), {
   ssr: false,
@@ -46,6 +47,7 @@ const PostHeaderAction = ({
   loggedinUserId,
 }: Props) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const { mutate, isPending: isSaving } = useSavePost({
     postId: data._id,
     accessToken,
@@ -177,7 +179,10 @@ const PostHeaderAction = ({
           )}
 
           {isCreator && (
-            <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer">
+            <DropdownMenuItem
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"
+              onClick={() => setEditOpen(true)}
+            >
               <PencilLine className="w-4 h-4 text-fb-text shrink-0" />
               <span className="text-[13px] font-medium text-fb-text">
                 Edit post
@@ -210,6 +215,17 @@ const PostHeaderAction = ({
           loading={isDeleting}
           title="Permanently delete post?"
           message="Deleting this post will also delete all the associated reactions and comments. This can't be undone. If you need a record of the content, take a screenshot before deleting it."
+        />
+      )}
+
+      {editOpen && (
+        <PostModalContainer
+          accessToken={accessToken}
+          username={data.group._id} // or however you get the group username
+          app="group"
+          initialData={data}
+          externalOpen={editOpen}
+          onExternalOpenChange={setEditOpen}
         />
       )}
     </>

@@ -33,6 +33,7 @@ const Layout = async ({ children, params }: Props) => {
 
       // optional: handle non-2xx better
       const json = (await res.json()) as GetSingleGroupResponse;
+
       return json;
     },
   });

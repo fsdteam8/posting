@@ -9,12 +9,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDeletePost } from "@/hooks/features/groups/posts/api/use-delete-post";
+import { useEditPost } from "@/hooks/features/groups/posts/api/use-edit-post";
 import { useHidePost } from "@/hooks/features/groups/posts/api/use-hide-post";
 import { useSavePost } from "@/hooks/features/groups/posts/api/use-save-post";
 import { Post } from "@/types/features/posts";
 import {
   Bookmark,
   EyeOff,
+  MessageCircle,
   MessageCircleOff,
   MoreHorizontal,
   PencilLine,
@@ -59,11 +61,29 @@ const PostHeaderAction = ({
     accessToken,
   });
 
+  const { mutate: editPost } = useEditPost({
+    postId: data._id,
+    groupId,
+    accessToken,
+  });
+
   const handleDelete = () => {
     deletePost();
   };
 
   const isCreator = data.author._id === loggedinUserId;
+
+  const onToggleCommenting = (data: "allowed" | "notAllowed") => {
+    const formdata = new FormData();
+
+    if (data === "allowed") {
+      formdata.append("allowComments", "true");
+    } else if (data === "notAllowed") {
+      formdata.append("allowComments", "false");
+    }
+
+    editPost(formdata);
+  };
 
   return (
     <>
@@ -111,8 +131,19 @@ const PostHeaderAction = ({
           </DropdownMenuItem>
 
           {isCreator && (
-            <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer">
-              <MessageCircleOff className="w-4 h-4 text-fb-text shrink-0" />
+            <DropdownMenuItem
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"
+              onClick={() => {
+                onToggleCommenting(
+                  data.allowComments ? "notAllowed" : "allowed",
+                );
+              }}
+            >
+              {data.allowComments ? (
+                <MessageCircleOff className="w-4 h-4 text-fb-text shrink-0" />
+              ) : (
+                <MessageCircle className="w-4 h-4 text-fb-text shrink-0" />
+              )}
               <span className="text-[13px] font-medium text-fb-text">
                 {data.allowComments
                   ? "Turn off commenting"

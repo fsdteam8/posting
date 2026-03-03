@@ -1,23 +1,23 @@
 "use client";
 
 import ErrorScreen from "@/components/shared/screens/error-screen";
-import { baseURL } from "@/constants";
-import { GroupsResponse } from "@/types/features/groups";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useGetMyGroup } from "@/hooks/features/groups/api/use-get-my-group";
 import dynamic from "next/dynamic";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useRef } from "react";
-
-const JoinedGroupCard = dynamic(() => import("./joined-group-card"), {
-  ssr: false,
-});
+const JoinedGroupCard = dynamic(
+  () => import("../../joined/_components/joined-group-card"),
+  {
+    ssr: false,
+  },
+);
 
 interface Props {
   accessToken: string;
   limit?: number;
 }
 
-const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
+const ManagedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
   const router = useRouter();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -31,35 +31,9 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery<GroupsResponse>({
-    queryKey: ["joined-group", accessToken],
-    enabled: !!accessToken,
-    queryFn: async ({ pageParam }) => {
-      const page = (pageParam as number) ?? 1;
-
-      const res = await fetch(
-        `${baseURL}/groups?mode=joined&page=${page}&limit=${limit}`,
-        { headers: { Authorization: `Bearer ${accessToken}` } },
-      );
-
-      if (!res.ok) {
-        let message = `Request failed (${res.status})`;
-        try {
-          const body = await res.json();
-          message = body?.message ?? message;
-        } catch {}
-        throw new Error(message);
-      }
-
-      return res.json();
-    },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const { page, pages } = lastPage.pagination;
-      return page < pages ? page + 1 : undefined;
-    },
-    staleTime: 30_000,
-    retry: 1,
+  } = useGetMyGroup({
+    accessToken,
+    limit,
   });
 
   // Flatten all pages into one list
@@ -117,10 +91,10 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
     return (
       <div className="rounded-xl border bg-white p-6 text-center">
         <p className="text-base font-semibold text-gray-900">
-          You haven’t joined any groups yet
+          You haven’t created any groups yet
         </p>
         <p className="mt-1 text-sm text-gray-600">
-          Join groups to see updates and discussions here.
+          Create groups to see updates and discussions here.
         </p>
 
         <div className="mt-4 flex justify-center gap-2">
@@ -153,7 +127,7 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
 
       <div>
         <h1 className="font-medium text-sm">
-          All groups you&apos;ve joined ({groups.length}
+          All groups you&apos;ve manage ({groups.length}
           {total ? ` / ${total}` : ""})
         </h1>
       </div>
@@ -164,9 +138,8 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
             key={item._id}
             data={item}
             accessToken={accessToken}
-            onViewClick={() =>
-              router.push(`/groups/view/${item.groupUserName}`)
-            }
+            isAdmin
+            onViewClick={() => router.push(`/groups/${item.groupUserName}`)}
           />
         ))}
       </div>
@@ -187,7 +160,7 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
   );
 };
 
-export default JoinedGroupContainer;
+export default ManagedGroupContainer;
 
 /** Simple skeleton that visually matches a card list */
 export function JoinedGroupCardSkeleton() {

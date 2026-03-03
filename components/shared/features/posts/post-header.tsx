@@ -21,9 +21,15 @@ interface PostHeaderProps {
   post: Post;
   accessToken: string;
   groupId: string;
+  loggedinUserId: string;
 }
 
-export const PostHeader = ({ post, accessToken, groupId }: PostHeaderProps) => {
+export const PostHeader = ({
+  post,
+  accessToken,
+  groupId,
+  loggedinUserId,
+}: PostHeaderProps) => {
   const { author, createdAt, visibility, feeling, activity } = post;
 
   const avatarUrl =
@@ -96,6 +102,7 @@ export const PostHeader = ({ post, accessToken, groupId }: PostHeaderProps) => {
         data={post}
         accessToken={accessToken}
         groupId={groupId}
+        loggedinUserId={loggedinUserId}
       />
     </div>
   );

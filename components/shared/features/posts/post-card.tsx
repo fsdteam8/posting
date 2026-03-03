@@ -73,6 +73,7 @@ const GroupPostCard = ({
         post={post}
         accessToken={accessToken}
         loggedInUserId={loggedInUserId}
+        groupId={groupId}
       />
     </div>
   );

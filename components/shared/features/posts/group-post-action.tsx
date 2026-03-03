@@ -29,6 +29,7 @@ interface PostActionsProps {
   accessToken: string;
   onCommentClick?: () => void;
   loggedInUserId: string;
+  groupId: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ export const PostActions = ({
   accessToken,
   onCommentClick,
   loggedInUserId,
+  groupId,
 }: PostActionsProps) => {
   const { reactionCount, commentCount, shareCount, _id: postId } = post;
 
@@ -50,8 +52,6 @@ export const PostActions = ({
     null,
   );
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const groupId = post._id;
 
   const { mutate: react, isPending } = useReactToPost({
     postId,

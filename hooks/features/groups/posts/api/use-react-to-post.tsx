@@ -1,5 +1,11 @@
 import { baseURL } from "@/constants";
-import { useMutation } from "@tanstack/react-query";
+import { GroupPostsResponse, Post } from "@/types/features/posts";
+import {
+  InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type ReactionType = "like" | "love" | "haha" | "wow" | "sad" | "angry" | "care";
 
@@ -7,8 +13,7 @@ type ApiRes = {
   success: boolean;
   message: string;
   data?: {
-    reactionCount: number;
-    reactions: { user: string; type: ReactionType }[];
+    post: Post;
   };
 };
 
@@ -19,7 +24,8 @@ type Params = {
   loggedInUserId: string;
 };
 
-export function useReactToPost({ postId, accessToken }: Params) {
+export function useReactToPost({ postId, accessToken, groupId }: Params) {
+  const queryClient = useQueryClient();
   return useMutation<ApiRes, Error, { type: ReactionType }>({
     mutationKey: ["react-post", postId],
 
@@ -45,6 +51,37 @@ export function useReactToPost({ postId, accessToken }: Params) {
       return res.json();
     },
 
-    onSuccess: () => {},
+    onSuccess: (res: ApiRes) => {
+      if (!res.success) {
+        toast.error(res.message);
+        return;
+      }
+
+      const updatedPost = res.data?.post;
+      if (!updatedPost) {
+        // Server said success but didn't return post — avoid corrupting cache
+        toast.error("Something went wrong. Please try again.");
+        return;
+      }
+
+      // cache update
+
+      queryClient.setQueryData<InfiniteData<GroupPostsResponse>>(
+        ["group-posts", groupId],
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((item) =>
+                item._id === postId ? updatedPost : item,
+              ),
+            })),
+          };
+        },
+      );
+    },
   });
 }

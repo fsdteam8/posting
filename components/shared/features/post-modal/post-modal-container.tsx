@@ -54,6 +54,7 @@ const RichTextEditor = dynamic(() => import("./rich-text-editor"), {
 // Add this import at the top
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCreateGroupPost } from "@/hooks/features/groups/api/use-create-group-post";
+import { useEditPost } from "@/hooks/features/groups/posts/api/use-edit-post";
 import { GroupUser } from "@/types/features/groups";
 import { Post } from "@/types/features/posts";
 import {
@@ -229,6 +230,12 @@ const PostModalContainer = ({
     accessToken,
   });
 
+  const { mutateAsync: editPost } = useEditPost({
+    postId: initialData?._id ?? "",
+    accessToken,
+    groupId,
+  });
+
   const groupPrivacy = data?.data.privacy ?? "private";
 
   const USER = {
@@ -280,33 +287,57 @@ const PostModalContainer = ({
   const onSubmit = async (values: PostFormValues) => {
     try {
       const formData = new FormData();
+
+      // ── Basic fields ──────────────────────────────────────────────────────
       formData.append("content", values.content);
       formData.append("visibility", values.visibility);
       formData.append("isAnonymous", String(values.isAnonymous));
 
+      // ── Feeling / activity ────────────────────────────────────────────────
       if (values.feelingActivity?.type === "feeling") {
         formData.append("feeling", values.feelingActivity.label);
       } else if (values.feelingActivity?.type === "activity") {
         formData.append("activity", values.feelingActivity.label);
       }
 
+      // ── Tagged users ──────────────────────────────────────────────────────
       values.taggedUsers.forEach((u) => formData.append("tags[]", u._id));
 
-      const images = values.media.filter((m) => m.type === "image");
-      const videos = values.media.filter((m) => m.type === "video");
-      images.forEach((m) => formData.append("images", m.file!));
-      // ✅ append multiple videos
-      videos.forEach((m) => {
-        formData.append("videos", m.file!);
-      });
+      // ── Media ─────────────────────────────────────────────────────────────
+      const newImages = values.media.filter(
+        (m) => m.type === "image" && m.file,
+      );
+      const newVideos = values.media.filter(
+        (m) => m.type === "video" && m.file,
+      );
+      const keptImages = values.media.filter(
+        (m) => m.type === "image" && !m.file,
+      );
+      const keptVideos = values.media.filter(
+        (m) => m.type === "video" && !m.file,
+      );
 
+      // New image files
+      newImages.forEach((m) => formData.append("images", m.file!));
+
+      // Existing image URLs (kept)
+      keptImages.forEach((m) => formData.append("images", m.url));
+
+      // New video files
+      newVideos.forEach((m) => formData.append("videos", m.file!));
+
+      // Existing video URLs (kept)
+      keptVideos.forEach((m) => formData.append("videos", m.url));
+
+      // ── Post type ─────────────────────────────────────────────────────────
       let postType: "text" | "image" | "video" = "text";
-      if (videos.length > 0) postType = "video";
-      else if (images.length > 0) postType = "image";
+      if (values.media.some((m) => m.type === "video")) postType = "video";
+      else if (values.media.some((m) => m.type === "image")) postType = "image";
       formData.append("postType", postType);
 
+      // ── Submit ────────────────────────────────────────────────────────────
       if (isEditMode) {
-        // await editGroupPost(formData); // ← useEditPost mutateAsync
+        await editPost(formData);
         toast.success("Post updated!");
       } else {
         formData.append(

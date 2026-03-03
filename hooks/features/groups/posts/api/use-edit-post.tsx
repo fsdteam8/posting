@@ -61,20 +61,24 @@ export function useEditPost({ postId, groupId, accessToken }: Params) {
       toast.success("Post updated");
 
       // ✅ Update infinite query cache
-      queryClient.setQueryData<InfiniteData<GroupPostsResponse>>(
-        ["group-posts", groupId],
-        (old) => {
-          if (!old) return old;
+      if (groupId) {
+        queryClient.setQueryData<InfiniteData<GroupPostsResponse>>(
+          ["group-posts", groupId],
+          (old) => {
+            if (!old) return old;
 
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              data: page.data.map((p) => (p._id === postId ? updatedPost : p)),
-            })),
-          };
-        },
-      );
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                data: page.data.map((p) =>
+                  p._id === postId ? updatedPost : p,
+                ),
+              })),
+            };
+          },
+        );
+      }
     },
 
     onError: (error) => {

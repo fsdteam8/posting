@@ -17,6 +17,7 @@ import {
   Bookmark,
   BookmarkX,
   EyeOff,
+  Megaphone,
   MessageCircle,
   MessageCircleOff,
   MoreHorizontal,
@@ -87,6 +88,14 @@ const PostHeaderAction = ({
     editPost(formdata);
   };
 
+  const onTogglePin = (value: "true" | "false") => {
+    const formdata = new FormData();
+
+    formdata.append("isPinned", value);
+
+    editPost(formdata);
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -117,14 +126,23 @@ const PostHeaderAction = ({
             </span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer">
-            <Pin className="w-4 h-4 text-fb-text shrink-0" />
-            <span className="text-[13px] font-medium text-fb-text">
-              {data.isPinned ? "Unpin post" : "Pin to featured"}
-            </span>
-          </DropdownMenuItem>
+          {isCreator && (
+            <DropdownMenuItem
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"
+              onClick={() => onTogglePin(data.isPinned ? "false" : "true")}
+            >
+              {data.isPinned ? (
+                <Megaphone className="w-4 h-4 text-fb-text shrink-0" />
+              ) : (
+                <Pin className="w-4 h-4 text-fb-text shrink-0" />
+              )}
+              <span className="text-[13px] font-medium text-fb-text">
+                {data.isPinned ? "Unpin from Featured" : "Pin to featured"}
+              </span>
+            </DropdownMenuItem>
+          )}
 
-          {!isCreator && <DropdownMenuSeparator className="my-1" />}
+          <DropdownMenuSeparator className="my-1" />
 
           <DropdownMenuItem
             className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"

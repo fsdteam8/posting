@@ -12,7 +12,7 @@ import { ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
-  params: Promise<{ username: string }>;
+  params: Promise<{ groupUserName: string }>;
 }
 
 const Layout = async ({ children, params }: Props) => {
@@ -21,13 +21,23 @@ const Layout = async ({ children, params }: Props) => {
   const queryClient = getQueryClient();
 
   if (!cu || !cu.user || !cu.user.accessToken) redirect("/login");
-  const { username } = await params;
+  const { groupUserName } = await params;
+
+  const base = `/groups/${groupUserName}`;
+
+  const navItems = [
+    { label: "Discussion", href: base }, // index
+
+    { label: "Featured", href: `${base}/announcements` },
+    { label: "People", href: `${base}/members` },
+    { label: "Media", href: `${base}/media` },
+  ];
 
   // ✅ Prefetch on server
   await queryClient.prefetchQuery({
-    queryKey: ["group", username],
+    queryKey: ["group", groupUserName],
     queryFn: async () => {
-      const res = await fetch(`${baseURL}/groups/username/${username}`, {
+      const res = await fetch(`${baseURL}/groups/username/${groupUserName}`, {
         headers: { Authorization: `Bearer ${cu.user.accessToken}` },
       });
 
@@ -38,30 +48,23 @@ const Layout = async ({ children, params }: Props) => {
     },
   });
 
-  const base = `/groups/view/${username}`;
-
-  const navItems = [
-    { label: "About", href: `${base}/about` },
-    { label: "Discussion", href: base }, // index
-
-    { label: "Featured", href: `${base}/announcements` },
-    { label: "People", href: `${base}/members` },
-    { label: "Media", href: `${base}/media` },
-  ];
-
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <Card className="py-0 rounded-none px-5 pt-5">
         <GroupCoverPhoto
-          username={username}
+          username={groupUserName}
           accessToken={cu.user.accessToken}
         />
         <GroupInfoHeader
-          username={username}
+          username={groupUserName}
           accessToken={cu.user.accessToken}
           loggedinUserId={cu.user.id}
         />
-        <GroupTabNavigation groupId={username} navItems={navItems} base={base}>
+        <GroupTabNavigation
+          groupId={groupUserName}
+          navItems={navItems}
+          base={base}
+        >
           <></>
         </GroupTabNavigation>
       </Card>

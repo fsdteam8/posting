@@ -67,7 +67,7 @@ const GroupsIManageSidebar = ({ accessToken }: Props) => {
             <div
               key={g._id}
               className="px-4 py-3 rounded-lg flex items-center gap-3 text-foreground hover:bg-muted transition-colors cursor-pointer"
-              onClick={() => router.push(`/groups/manage/${g.groupUserName}`)}
+              onClick={() => router.push(`/groups/${g.groupUserName}`)}
             >
               <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
                 {g?.coverImage?.url ? (

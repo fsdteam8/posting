@@ -1,5 +1,6 @@
 "use client";
 
+import { DEFAULT_IMAGES } from "@/constants";
 import { Post } from "@/types/features/posts";
 import { formatDistanceToNow } from "date-fns";
 import { Globe, Lock, Users } from "lucide-react";
@@ -32,9 +33,7 @@ export const PostHeader = ({
 }: PostHeaderProps) => {
   const { author, createdAt, visibility, feeling, activity } = post;
 
-  const avatarUrl =
-    author.profileImage?.url ||
-    `https://api.dicebear.com/9.x/avataaars/svg?seed=${author.firstName}&backgroundColor=b6e3f4`;
+  const avatarUrl = author.profileImage?.url || DEFAULT_IMAGES.user.avatar;
 
   const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true });
 

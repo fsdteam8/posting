@@ -15,10 +15,11 @@ const GroupsIManageSidebar = ({ accessToken }: Props) => {
   const router = useRouter();
   const { data, isLoading, isError, error } = useGetMyGroup({
     accessToken,
-    limit: 4, // ✅ fetch only 4
+    limit: 5, // ✅ fetch only 4
   });
 
   const groups = data?.pages.flatMap((p) => p.data).slice(0, 4) ?? [];
+  const totalGroups = data?.pages.flatMap((p) => p.data) ?? [];
 
   return (
     <>
@@ -26,9 +27,11 @@ const GroupsIManageSidebar = ({ accessToken }: Props) => {
         <h3 className="text-sm font-semibold text-muted-foreground mb-2">
           Groups you manage
         </h3>
-        <Button variant="link" onClick={() => router.push(`/groups/manage`)}>
-          See all
-        </Button>
+        {totalGroups.length > 4 && (
+          <Button variant="link" onClick={() => router.push(`/groups/manage`)}>
+            See all
+          </Button>
+        )}
       </div>
 
       {isLoading && (

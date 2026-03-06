@@ -4,28 +4,25 @@ import { SpotlightNavbar } from "@/components/ui/spot-light-navbar";
 import { useSelectedLayoutSegment } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 
+export interface NavItem {
+  label: string;
+  href: string;
+}
+
 export default function GroupTabNavigation({
-  groupId,
+  navItems,
+  base,
 }: {
   children: React.ReactNode;
   groupId: string;
+  navItems: NavItem[];
+  base: string;
 }) {
   const router = useRouter();
 
   // active child segment under /groups/view/[groupId]
   // null means you are at /groups/view/[groupId] (the index page)
   const segment = useSelectedLayoutSegment(); // "about" | "discussion" | "members" | "media" | null
-
-  const base = `/groups/view/${groupId}`;
-
-  const navItems = [
-    { label: "About", href: `${base}/about` },
-    { label: "Discussion", href: base }, // index
-
-    { label: "Featured", href: `${base}/announcements` },
-    { label: "People", href: `${base}/members` },
-    { label: "Media", href: `${base}/media` },
-  ];
 
   const activeKey = segment ?? "overview";
 

@@ -6,8 +6,13 @@ import { BookOpen, Compass, Plus, Users } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { GroupsSidebarItem } from "./group-sidebar-item";
+import GroupsIManageSidebar from "./groups-i-manage-sidebar";
 
-export function GroupsSidebar() {
+interface Props {
+  accessToken: string;
+}
+
+export default function GroupsSidebar({ accessToken }: Props) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -68,25 +73,7 @@ export function GroupsSidebar() {
         </Button>
 
         <div className="pt-4 border-t border-border mt-4">
-          <h3 className="text-sm font-semibold text-muted-foreground px-4 mb-3">
-            Groups you manage
-          </h3>
-
-          <div className="space-y-2">
-            <div className="px-4 py-3 rounded-lg flex items-center gap-3 text-foreground hover:bg-muted transition-colors cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">DS</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">
-                  Devi Shetty Hospital
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Last active 21h ago
-                </div>
-              </div>
-            </div>
-          </div>
+          <GroupsIManageSidebar accessToken={accessToken} />
         </div>
       </nav>
     </aside>

@@ -29,6 +29,7 @@ interface PostActionsProps {
   accessToken: string;
   onCommentClick?: () => void;
   loggedInUserId: string;
+  groupId: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ export const PostActions = ({
   accessToken,
   onCommentClick,
   loggedInUserId,
+  groupId,
 }: PostActionsProps) => {
   const { reactionCount, commentCount, shareCount, _id: postId } = post;
 
@@ -50,8 +52,6 @@ export const PostActions = ({
     null,
   );
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const groupId = post._id;
 
   const { mutate: react, isPending } = useReactToPost({
     postId,
@@ -74,7 +74,7 @@ export const PostActions = ({
     const next = activeReaction === type ? null : type; // toggle off same
     setActiveReaction(next);
     setHovering(false);
-    if (next) react({ type });
+    react({ type });
   };
 
   // Quick tap = like, long hover = picker

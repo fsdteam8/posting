@@ -8,6 +8,7 @@ export interface Post {
     thumbnail: string;
     duration: number;
   };
+  videos: VideoInfo[];
   checkIn: {
     name: string;
     coordinates: number[];
@@ -18,7 +19,6 @@ export interface Post {
   postType: "text" | "image" | "video" | "reel" | "shared";
   sharedPost: string | null;
   sharedMessage: string;
-  tags: string[];
   mentions: string[];
   feeling: string;
   activity: string;
@@ -34,6 +34,7 @@ export interface Post {
     _id: string;
     name: string;
     privacy: "public" | "private";
+    groupUserName: string;
   };
   status: "published" | "draft" | "archived";
   visibility: "public" | "only me" | "friends" | "friends of friends";
@@ -48,7 +49,7 @@ export interface Post {
   reportCount: number;
   hiddenFor: string[];
   isDeleted: boolean;
-  images: string[];
+  images: PostImage[];
   reactions: Reaction[];
   publishedAt: string;
   excerpt: string;
@@ -58,6 +59,14 @@ export interface Post {
   __v: number;
   comments: string[];
   id: string;
+  isSaved: boolean;
+  tags: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+    profileImage: CloudinaryImage;
+  }[];
 }
 
 export interface ReactionUser {
@@ -69,12 +78,27 @@ export interface ReactionUser {
   profileImage: CloudinaryImage;
 }
 
+export interface PostImage {
+  url: string;
+  public_id: string;
+  _id: string;
+  id: string;
+}
+
 export type Reaction = {
   user: ReactionUser;
   type: ReactionType;
   mutualFriendCount: number;
   mutualFriends: ReactionUser[]; // if mutual friends are users (same shape). If different, change type.
   isMutualFriend: boolean;
+};
+
+export type VideoInfo = {
+  url: string;
+  public_id: string;
+  thumbnail: string;
+  duration: number;
+  id: string;
 };
 
 export interface CloudinaryImage {

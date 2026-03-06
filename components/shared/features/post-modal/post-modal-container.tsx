@@ -54,10 +54,14 @@ const RichTextEditor = dynamic(() => import("./rich-text-editor"), {
 // Add this import at the top
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCreateGroupPost } from "@/hooks/features/groups/api/use-create-group-post";
+import { useEditPost } from "@/hooks/features/groups/posts/api/use-edit-post";
 import { GroupUser } from "@/types/features/groups";
+import { Post } from "@/types/features/posts";
 import {
+  ACTIVITY_CATEGORIES,
   FeelingActivity,
   FeelingActivityPicker,
+  FEELINGS,
 } from "./feeling-activity-picker";
 import { TagPeoplePicker } from "./tag-people-picker";
 
@@ -67,11 +71,16 @@ interface Props {
   accessToken: string;
   username: string;
   app: "group" | "page" | "profile";
+  initialData?: Post;
+  externalOpen?: boolean; // ← add
+  onExternalOpenChange?: (v: boolean) => void; // ← add
 }
 
 interface GroupTriggerProps {
   accessToken: string;
   onOpen?: () => void;
+  onAnonymousCall?: () => void;
+  onFeelingTrigger?: () => void;
 }
 
 const ACTIVITY_CATEGORIES_LABEL: Record<string, string> = {
@@ -102,7 +111,12 @@ const postSchema = z.object({
 
 type PostFormValues = z.infer<typeof postSchema>;
 
-const GroupTrigger = ({ accessToken, onOpen }: GroupTriggerProps) => {
+const GroupTrigger = ({
+  accessToken,
+  onOpen,
+  onAnonymousCall,
+  onFeelingTrigger,
+}: GroupTriggerProps) => {
   const { data: profile } = useProfile(accessToken);
 
   const USER = {
@@ -141,6 +155,7 @@ const GroupTrigger = ({ accessToken, onOpen }: GroupTriggerProps) => {
           <Button
             variant="secondary"
             className="bg-transparent flex-1 hover:bg-gray-200 transition-colors duration-300"
+            onClick={onAnonymousCall}
           >
             <UserPlus className="w-5 h-5 text-[#45bd62]" />
             <span className="text-[13px] sm:text-[15px] font-semibold text-fb-text-secondary">
@@ -150,6 +165,7 @@ const GroupTrigger = ({ accessToken, onOpen }: GroupTriggerProps) => {
           <Button
             variant="secondary"
             className="bg-transparent flex-1 hover:bg-gray-200 transition-colors duration-300"
+            onClick={onFeelingTrigger}
           >
             <Smile className="w-5 h-5 text-[#f7b928]" />
             <span className="text-[13px] sm:text-[15px] font-semibold text-fb-text-secondary">
@@ -181,11 +197,22 @@ const visibilityIcons = {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const PostModalContainer = ({ accessToken, username, app }: Props) => {
-  const [open, setOpen] = useState(false);
+const PostModalContainer = ({
+  accessToken,
+  username,
+  app,
+  initialData,
+  externalOpen,
+  onExternalOpenChange,
+}: Props) => {
   const [photoToolOpen, setPhotoToolOpen] = useState(false);
   const [feelingOpen, setFeelingOpen] = useState(false);
   const [tagOpen, setTagOpen] = useState(false);
+
+  // In the component, merge external and internal open state:
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = onExternalOpenChange ?? setInternalOpen;
 
   const { data: profile } = useProfile(accessToken);
   const { data, isLoading, isError, error } = useGetSingleGroup({
@@ -193,11 +220,20 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
     accessToken,
   });
 
+  // Detect edit mode
+  const isEditMode = Boolean(initialData);
+
   const groupId = data?.success ? data.data._id : "";
 
   const { mutateAsync: createGroupPost } = useCreateGroupPost({
     groupId,
     accessToken,
+  });
+
+  const { mutateAsync: editPost } = useEditPost({
+    postId: initialData?._id ?? "",
+    accessToken,
+    groupId,
   });
 
   const groupPrivacy = data?.data.privacy ?? "private";
@@ -247,50 +283,126 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
     }
   }, [fixedVisibility, form]);
 
+  // Change onSubmit to branch between create and edit
   const onSubmit = async (values: PostFormValues) => {
     try {
       const formData = new FormData();
 
+      // ── Basic fields ──────────────────────────────────────────────────────
       formData.append("content", values.content);
-      formData.append(
-        "status",
-        groupPrivacy === "private" ? "draft" : "published",
-      );
       formData.append("visibility", values.visibility);
       formData.append("isAnonymous", String(values.isAnonymous));
 
+      // ── Feeling / activity ────────────────────────────────────────────────
       if (values.feelingActivity?.type === "feeling") {
         formData.append("feeling", values.feelingActivity.label);
       } else if (values.feelingActivity?.type === "activity") {
         formData.append("activity", values.feelingActivity.label);
       }
 
-      values.taggedUsers.forEach((u) => {
-        formData.append("tags[]", u._id);
-      });
+      // ── Tagged users ──────────────────────────────────────────────────────
+      values.taggedUsers.forEach((u) => formData.append("tags[]", u._id));
 
-      const images = values.media.filter((m) => m.type === "image");
-      const videos = values.media.filter((m) => m.type === "video");
+      // ── Media ─────────────────────────────────────────────────────────────
+      const newImages = values.media.filter(
+        (m) => m.type === "image" && m.file,
+      );
+      const newVideos = values.media.filter(
+        (m) => m.type === "video" && m.file,
+      );
+      const keptImages = values.media.filter(
+        (m) => m.type === "image" && !m.file,
+      );
+      const keptVideos = values.media.filter(
+        (m) => m.type === "video" && !m.file,
+      );
 
-      images.forEach((m) => formData.append("images", m.file));
-      if (videos.length > 0) formData.append("video", videos[0].file);
+      // New image files
+      newImages.forEach((m) => formData.append("images", m.file!));
 
+      // Existing image URLs (kept)
+      keptImages.forEach((m) => formData.append("images", m.url));
+
+      // New video files
+      newVideos.forEach((m) => formData.append("videos", m.file!));
+
+      // Existing video URLs (kept)
+      keptVideos.forEach((m) => formData.append("videos", m.url));
+
+      // ── Post type ─────────────────────────────────────────────────────────
       let postType: "text" | "image" | "video" = "text";
-      if (videos.length > 0) postType = "video";
-      else if (images.length > 0) postType = "image";
+      if (values.media.some((m) => m.type === "video")) postType = "video";
+      else if (values.media.some((m) => m.type === "image")) postType = "image";
       formData.append("postType", postType);
 
-      const response = await createGroupPost(formData);
+      // ── Submit ────────────────────────────────────────────────────────────
+      if (isEditMode) {
+        await editPost(formData);
+        toast.success("Post updated!");
+      } else {
+        formData.append(
+          "status",
+          groupPrivacy === "private" ? "draft" : "published",
+        );
+        await createGroupPost(formData);
+        toast.success("Post created!");
+      }
 
-      console.log("post response", response);
-
-      toast.success("Post created!");
       form.reset();
       setOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
     }
   };
+
+  useEffect(() => {
+    if (open && initialData) {
+      const existingImages: MediaFile[] = (initialData.images ?? []).map(
+        (img) => ({
+          id: typeof img === "string" ? img : img._id,
+          url: typeof img === "string" ? img : img.url,
+          type: "image",
+        }),
+      );
+
+      const existingVideos: MediaFile[] = (initialData.videos ?? []).map(
+        (v) => ({
+          id: v.id,
+          url: v.url,
+          type: "video",
+        }),
+      );
+
+      form.reset({
+        content: initialData.content ?? "",
+        visibility:
+          (initialData.visibility as PostFormValues["visibility"]) ?? "public",
+        isAnonymous: false,
+        media: [...existingImages, ...existingVideos],
+        feelingActivity: (() => {
+          if (initialData.feeling) {
+            const found = FEELINGS.find((f) => f.label === initialData.feeling);
+            return found ?? null;
+          }
+          if (initialData.activity) {
+            const found = ACTIVITY_CATEGORIES.flatMap((c) => c.items).find(
+              (a) => a.label === initialData.activity,
+            );
+            return found ?? null;
+          }
+          return null;
+        })(),
+        // Map tags → GroupUser shape expected by TagPeoplePicker
+        taggedUsers: (initialData.tags ?? []).map((tag) => ({
+          _id: tag._id,
+          firstName: tag.firstName,
+          lastName: tag.lastName,
+          username: tag.username,
+          profileImage: tag.profileImage,
+        })),
+      });
+    }
+  }, [open, initialData, form]);
 
   // ── Dialog content ────────────────────────────────────────────────────────
   let dialogBody: React.ReactNode;
@@ -622,8 +734,10 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Posting...
+                {isEditMode ? "Saving..." : "Posting..."}
               </>
+            ) : isEditMode ? (
+              "Save changes"
             ) : (
               "Post"
             )}
@@ -637,15 +751,25 @@ const PostModalContainer = ({ accessToken, username, app }: Props) => {
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild className="w-full flex-1">
-          <GroupTrigger
-            accessToken={accessToken}
-            onOpen={() => setOpen((p) => !p)}
-          />
+          {isEditMode ? null : (
+            <GroupTrigger
+              accessToken={accessToken}
+              onOpen={() => setOpen(true)}
+              onAnonymousCall={() => {
+                setOpen(true);
+                form.setValue("isAnonymous", true);
+              }}
+              onFeelingTrigger={() => {
+                setOpen(true);
+                setFeelingOpen(true);
+              }}
+            />
+          )}
         </DialogTrigger>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader className="border-b border-fb-divider pb-3">
             <DialogTitle className="text-center text-[17px]">
-              Create Post
+              {isEditMode ? "Edit Post" : "Create Post"}
             </DialogTitle>
           </DialogHeader>
           <div className="mt-1">{dialogBody}</div>

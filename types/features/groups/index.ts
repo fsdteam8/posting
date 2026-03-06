@@ -30,21 +30,44 @@ export interface Group {
   name: string;
   category: string;
   privacy: "public" | "private" | "closed";
-  rules: string[];
+
+  rules: GroupRule[];
+
+  // ✅ new fields
+  location: string; // default: ""
+  website: string; // default: ""
+  whoCanPost: "anyone" | "admins"; // default: "anyone"
+  postApprovalRequired: boolean; // default: false
+  whoCanInvite: "anyone" | "admins"; // default: "anyone"
+  discoverability: "visible" | "hidden"; // default: "visible"
+
   pendingMembers: GroupUser[];
   members: GroupUser[];
   admins: GroupUser[];
+
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
   __v: number;
+
   groupUserName: string;
   memberMeta: MemberMeta[];
   currentUserMeta: CurrentUserMeta;
+
   coverImage: {
     url: string;
     public_id: string;
   };
 }
+
+export type GroupRule = {
+  _id: string;
+  title: string;
+  description: string;
+  order: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export interface GroupUser {
   _id: string;

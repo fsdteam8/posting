@@ -93,6 +93,7 @@ const GroupPostContainer = ({ accessToken, groupId, loggedinUser }: Props) => {
           post={post}
           accessToken={accessToken}
           loggedInUserId={loggedinUser}
+          groupId={groupId}
         />
       ))}
 

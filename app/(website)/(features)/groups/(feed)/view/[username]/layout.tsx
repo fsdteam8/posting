@@ -33,9 +33,21 @@ const Layout = async ({ children, params }: Props) => {
 
       // optional: handle non-2xx better
       const json = (await res.json()) as GetSingleGroupResponse;
+
       return json;
     },
   });
+
+  const base = `/groups/view/${username}`;
+
+  const navItems = [
+    { label: "About", href: `${base}/about` },
+    { label: "Discussion", href: base }, // index
+
+    { label: "Featured", href: `${base}/announcements` },
+    { label: "People", href: `${base}/members` },
+    { label: "Media", href: `${base}/media` },
+  ];
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
@@ -49,7 +61,7 @@ const Layout = async ({ children, params }: Props) => {
           accessToken={cu.user.accessToken}
           loggedinUserId={cu.user.id}
         />
-        <GroupTabNavigation groupId={username}>
+        <GroupTabNavigation groupId={username} navItems={navItems} base={base}>
           <></>
         </GroupTabNavigation>
       </Card>

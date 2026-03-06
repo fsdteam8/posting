@@ -164,6 +164,9 @@ const JoinedGroupContainer = ({ accessToken, limit = 12 }: Props) => {
             key={item._id}
             data={item}
             accessToken={accessToken}
+            onViewClick={() =>
+              router.push(`/groups/view/${item.groupUserName}`)
+            }
           />
         ))}
       </div>

@@ -51,14 +51,48 @@ export function useDeleteGroup({
       }
 
       // remove from "joined-group" cache
-      queryClient.invalidateQueries({
-        queryKey: ["joined-group", accessToken],
-      });
+
+      queryClient.setQueryData(
+        ["joined-group", accessToken],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (oldData: any) => {
+          if (!oldData) return oldData;
+
+          return {
+            ...oldData,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              data: page.data.filter((g: any) => g._id !== groupId),
+            })),
+          };
+        },
+      );
 
       // ✅ on the future just remove loggedInUserFrom member
       if (cu) {
         queryClient.invalidateQueries({ queryKey: ["group", cu.username] });
       }
+
+      // remove from /groups/manage
+      queryClient.setQueryData(
+        ["my-admin-groups", accessToken],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (oldData: any) => {
+          if (!oldData) return oldData;
+
+          return {
+            ...oldData,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              data: page.data.filter((g: any) => g._id !== groupId),
+            })),
+          };
+        },
+      );
 
       toast.success("Group Deleted");
       cb?.();

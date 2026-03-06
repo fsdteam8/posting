@@ -13,6 +13,7 @@ const Page = async ({ params }: { params: { groupUserName: string } }) => {
       <PeopleCard
         accessToken={cu.user.accessToken}
         groupUserName={groupUserName}
+        variant="manage"
       />
     </div>
   );

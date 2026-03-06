@@ -6,6 +6,7 @@ import { FileText, Loader2, Plus } from "lucide-react";
 import { User } from "next-auth";
 import { useState } from "react";
 import GroupRuleCreateModal from "./group-create-modal";
+import GroupRulesList from "./group-rule-list";
 
 interface Props {
   groupUserName: string;
@@ -45,16 +46,21 @@ const GroupRulesContainer = ({ groupUserName, cu }: Props) => {
           <Empty onButtonClick={() => setOpen((p) => !p)} />
         </div>
       );
-    } else if (rules.length > 0) {
+    } else {
       content = (
-        <div className="h-[92vh] flex justify-center items-center">data</div>
+        <GroupRulesList
+          rules={rules}
+          groupId={groupUserName}
+          accessToken={cu.accessToken}
+          onCreateClick={() => setOpen((p) => !p)}
+        />
       );
     }
   }
 
   return (
     <>
-      {content}{" "}
+      {content}
       <GroupRuleCreateModal
         open={open}
         onOpenChange={setOpen}
@@ -73,7 +79,7 @@ interface EmptyProps {
 
 const Empty = ({ onButtonClick }: EmptyProps) => {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 text-center max-w-sm mx-auto ">
+    <div className="bg-white border border-gray-200 rounded-lg p-6 text-center max-w-sm mx-auto">
       <div className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-gray-50 border border-gray-200 mb-4">
         <FileText className="w-5 h-5 text-gray-400" />
       </div>

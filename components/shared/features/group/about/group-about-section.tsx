@@ -52,11 +52,11 @@ export function GroupAboutSection({
       </h2>
 
       {/* Description */}
-      {group.rules?.length > 0 && (
+      {/* {group.rules?.length > 0 && (
         <p className="text-[13px] text-muted-foreground leading-snug mb-4">
           {group.rules[0]}
         </p>
-      )}
+      )} */}
 
       <div className="space-y-4">
         <Row

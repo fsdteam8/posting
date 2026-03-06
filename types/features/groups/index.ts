@@ -31,7 +31,7 @@ export interface Group {
   category: string;
   privacy: "public" | "private" | "closed";
 
-  rules: string[];
+  rules: GroupRule[];
 
   // ✅ new fields
   location: string; // default: ""
@@ -58,6 +58,16 @@ export interface Group {
     public_id: string;
   };
 }
+
+export type GroupRule = {
+  _id: string;
+  title: string;
+  description: string;
+  order: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export interface GroupUser {
   _id: string;

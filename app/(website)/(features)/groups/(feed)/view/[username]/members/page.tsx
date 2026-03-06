@@ -10,7 +10,11 @@ const Page = async ({ params }: { params: { username: string } }) => {
   const { username } = await params;
   return (
     <div>
-      <PeopleCard accessToken={cu.user.accessToken} groupUserName={username} />
+      <PeopleCard
+        accessToken={cu.user.accessToken}
+        groupUserName={username}
+        variant="view"
+      />
     </div>
   );
 };

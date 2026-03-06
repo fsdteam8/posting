@@ -11,9 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useAddGroupAdmin } from "@/hooks/features/groups/api/use-add-group-admin";
 import { useGetSingleGroup } from "@/hooks/features/groups/api/use-get-single-group-info";
-import { ChevronDown, Loader2, MoreHorizontal, Search } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, Loader2, Search } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface Member {
   id: string;
@@ -77,17 +80,51 @@ const mockMembers: Member[] = [
 interface Props {
   accessToken: string;
   groupUserName: string;
+  variant: "manage" | "view";
 }
 
-export default function PeopleCard({ accessToken, groupUserName }: Props) {
+export default function PeopleCard({
+  accessToken,
+  groupUserName,
+  variant,
+}: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All statuses");
+
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error, isRefetching, refetch } =
     useGetSingleGroup({
       accessToken,
       username: groupUserName,
     });
+
+  const { mutate: addAdmin, isPending } = useAddGroupAdmin({
+    groupId: groupUserName,
+    accessToken: accessToken,
+  });
+
+  const onGroupMemberAdd = (id: string) => {
+    // call it with the target user id
+    addAdmin(id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["group", groupUserName] });
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    });
+  };
+
+  const isAdmin = (id: string) => {
+    const admins = data?.data.admins || [];
+
+    const find = admins.find((item) => item._id === id);
+
+    const admin = Boolean(find);
+
+    return admin;
+  };
 
   let content;
 
@@ -198,20 +235,17 @@ export default function PeopleCard({ accessToken, groupUserName }: Props) {
               </div>
 
               {/* Action Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="h-5 w-5 text-gray-600" />
+              {variant === "manage" &&
+                (isAdmin(member._id) ? (
+                  <Button>Remove from Admin</Button>
+                ) : (
+                  <Button
+                    onClick={() => onGroupMemberAdd(member._id)}
+                    disabled={isPending}
+                  >
+                    Add As Admin
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Invite as Admin</DropdownMenuItem>
-                  <DropdownMenuItem>Suspend in group</DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600">
-                    Remove member
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                ))}
             </div>
           ))}
         </div>

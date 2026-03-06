@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateGroupRule } from "@/hooks/features/groups/api/rules/use-create-group-rule";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const exampleRules = [
@@ -68,6 +69,7 @@ export default function GroupRuleCreateModal({
   groupUserName,
   accessToken,
 }: GroupRuleCreateModalProps) {
+  const queryClient = useQueryClient();
   const form = useForm<RuleFormValues>({
     resolver: zodResolver(ruleFormSchema),
     defaultValues: { title: "", description: "" },
@@ -79,6 +81,7 @@ export default function GroupRuleCreateModal({
     onSuccess: () => {
       form.reset();
       onOpenChange?.(false);
+      queryClient.invalidateQueries({ queryKey: ["group", groupUserName] });
     },
   });
 

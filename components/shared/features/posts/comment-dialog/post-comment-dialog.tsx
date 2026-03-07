@@ -330,6 +330,8 @@ export function PostCommentDialog({
                 postId={post._id}
                 accessToken={accessToken}
                 currentUserAvatar={CURRENT_USER_AVATAR}
+                currentUserId={loggedInUserId}
+                isAdmin={false}
               />
             ))}
 

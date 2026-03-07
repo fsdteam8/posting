@@ -17,6 +17,7 @@ export interface MentionableMember {
 export interface MappedCommentAuthor {
   name: string;
   avatar: string;
+  _id: string;
 }
 
 export interface MappedComment {

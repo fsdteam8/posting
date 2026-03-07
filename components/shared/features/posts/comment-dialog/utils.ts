@@ -56,6 +56,7 @@ export function mapComment(c: Comment, loggedInUserId?: string): MappedComment {
     author: {
       name: `${c.author.firstName} ${c.author.lastName}`.trim(),
       avatar: c.author.profileImage?.url ?? "",
+      _id: c.author._id,
     },
     content: c.content,
     likes: c.reactionCount,

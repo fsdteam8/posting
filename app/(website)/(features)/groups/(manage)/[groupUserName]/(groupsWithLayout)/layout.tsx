@@ -34,19 +34,20 @@ const Layout = async ({ children, params }: Props) => {
   ];
 
   // ✅ Prefetch on server
-  await queryClient.prefetchQuery({
+  const groupData = await queryClient.fetchQuery({
     queryKey: ["group", groupUserName],
     queryFn: async () => {
       const res = await fetch(`${baseURL}/groups/username/${groupUserName}`, {
         headers: { Authorization: `Bearer ${cu.user.accessToken}` },
       });
-
-      // optional: handle non-2xx better
       const json = (await res.json()) as GetSingleGroupResponse;
-
       return json;
     },
   });
+
+  // ✅ Guard: only admins can access this layout
+  const isAdmin = groupData?.data?.admins?.some((a) => a._id === cu.user.id);
+  if (!isAdmin) redirect(`/groups/view/${groupUserName}`);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

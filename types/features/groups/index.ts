@@ -54,6 +54,8 @@ export interface Group {
   memberMeta: MemberMeta[];
   currentUserMeta: CurrentUserMeta;
 
+  isJoined: boolean;
+
   coverImage: {
     url: string;
     public_id: string;

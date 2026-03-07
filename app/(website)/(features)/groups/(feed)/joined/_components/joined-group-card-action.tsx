@@ -34,7 +34,6 @@ const JoinedGroupCardAction = ({ data, accessToken, isAdmin }: Props) => {
   const { mutate: deleteGroup, isPending: isDeleting } = useDeleteGroup({
     groupId: data._id,
     accessToken,
-
     cb: () => {
       setDeleteOpen(false);
     },
@@ -50,7 +49,6 @@ const JoinedGroupCardAction = ({ data, accessToken, isAdmin }: Props) => {
   });
 
   const handleDelete = () => {
-    // TODO: hook/API for delete group
     deleteGroup();
   };
 
@@ -58,7 +56,7 @@ const JoinedGroupCardAction = ({ data, accessToken, isAdmin }: Props) => {
     <div>
       <Menubar>
         <MenubarMenu>
-          <MenubarTrigger className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md  text-[#050505] transition-colors ">
+          <MenubarTrigger className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-foreground transition-colors">
             <MoreHorizontal className="h-5 w-5" />
           </MenubarTrigger>
           <MenubarContent>

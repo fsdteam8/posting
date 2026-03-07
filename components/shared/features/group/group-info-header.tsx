@@ -54,6 +54,7 @@ export default function GroupInfoHeader({
 
     const isJoined = Boolean(isJoinedInfo);
 
+    const whoCanInvite = group.whoCanInvite;
     content = (
       <div className="bg-fb-bg-card px-4 pt-5 pb-3">
         <h1 className="text-2xl sm:text-[28px] font-bold text-fb-text-primary leading-tight">
@@ -102,7 +103,8 @@ export default function GroupInfoHeader({
           {/* Action buttons */}
 
           <div className="flex items-center gap-2 mt-4 flex-wrap">
-            {(isJoined || isLoggedinUserAdmin) && (
+            {(isLoggedinUserAdmin ||
+              (isJoined && whoCanInvite === "anyone")) && (
               <Button
                 className="gap-1.5 px-4 py-1.5 text-[15px] font-semibold"
                 variant="default"

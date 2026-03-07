@@ -28,6 +28,7 @@ export interface GroupsResponse {
 export interface Group {
   _id: string;
   name: string;
+  description: string;
   category: string;
   privacy: "public" | "private" | "closed";
 
@@ -52,6 +53,8 @@ export interface Group {
   groupUserName: string;
   memberMeta: MemberMeta[];
   currentUserMeta: CurrentUserMeta;
+
+  isJoined: boolean;
 
   coverImage: {
     url: string;

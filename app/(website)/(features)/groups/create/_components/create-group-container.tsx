@@ -49,7 +49,7 @@ const CreteGroupContainer = ({ accessToken }: Props) => {
         return;
       }
 
-      router.push(`/groups/view/${data.data.groupUserName}`);
+      router.push(`/groups/${data.data.groupUserName}`);
 
       // handle success
       toast.success(data.message);

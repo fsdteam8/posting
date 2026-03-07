@@ -79,6 +79,8 @@ export function useEditPost({ postId, groupId, accessToken }: Params) {
           },
         );
       }
+
+      queryClient.invalidateQueries({ queryKey: ["pinned-posts-of-group"] });
     },
 
     onError: (error) => {

@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import DiscussionAbout from "@/components/shared/features/group/discussion/discussion-about";
 import GroupFeaturedSection from "@/components/shared/features/group/discussion/group-featured-section";
+import RecentMedia from "@/components/shared/features/group/media/recent-media";
 import PostModalContainer from "@/components/shared/features/post-modal/post-modal-container";
 import { ChevronDown } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -37,8 +38,14 @@ const Page = async ({ params }: { params: { username: string } }) => {
         />
       </div>
 
-      <div className="self-start sticky top-4 h-fit">
+      <div className="self-start sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto space-y-5 scrollbar-hide">
         <DiscussionAbout />
+
+        <RecentMedia
+          groupId={username}
+          accessToken={cu.user.accessToken}
+          username={username}
+        />
       </div>
     </div>
   );

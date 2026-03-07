@@ -281,6 +281,13 @@ const PostModalContainer = ({
     }
   }, [fixedVisibility, form]);
 
+  const isLoggedinUserAdmin = data?.data?.admins?.some(
+    (a) => a._id === profile?._id,
+  );
+
+  const whoCanPost = data?.data.whoCanPost;
+  const canPost = isLoggedinUserAdmin || whoCanPost === "anyone";
+
   // Change onSubmit to branch between create and edit
   const onSubmit = async (values: PostFormValues) => {
     try {
@@ -749,7 +756,7 @@ const PostModalContainer = ({
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild className="w-full flex-1">
-          {isEditMode ? null : (
+          {isEditMode || !canPost ? null : (
             <GroupTrigger
               accessToken={accessToken}
               onOpen={() => setOpen(true)}

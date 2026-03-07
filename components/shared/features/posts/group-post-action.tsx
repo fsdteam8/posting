@@ -4,8 +4,9 @@ import { useReactToPost } from "@/hooks/features/groups/posts/api/use-react-to-p
 import { cn } from "@/lib/utils";
 import { Post } from "@/types/features/posts";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageCircle, Share2, ThumbsUp } from "lucide-react";
+import { MessageCircle, ThumbsUp } from "lucide-react";
 import { useRef, useState } from "react";
+import { RiShareForwardLine } from "react-icons/ri";
 import OverlappingReactions from "./common/overlaping-reactions";
 
 // ─── Reaction definitions ─────────────────────────────────────────────────────
@@ -245,7 +246,7 @@ export const PostActions = ({
 
         {/* Share */}
         <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-fb-hover transition-colors">
-          <Share2 className="w-4 h-4 text-secondary-foreground" />
+          <RiShareForwardLine className="w-5 h-5 text-secondary-foreground" />
           <span className="text-[12px] font-semibold text-secondary-foreground">
             Share
           </span>

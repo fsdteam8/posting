@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { MarkAsVisitedGroup } from "@/components/shared/features/group/provider/mark-as-visited-group";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
@@ -20,6 +21,11 @@ const Layout = async ({ children, params }: Props) => {
       <main className="flex-1 overflow-y-auto">
         <div className={cn("mx-auto", "p-0")}>{children}</div>
       </main>
+
+      <MarkAsVisitedGroup
+        groupUserName={groupUserName}
+        accessToken={cu.user.accessToken}
+      />
     </div>
   );
 };

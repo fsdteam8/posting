@@ -4,17 +4,11 @@ import ErrorScreen from "@/components/shared/screens/error-screen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useAddGroupAdmin } from "@/hooks/features/groups/api/use-add-group-admin";
 import { useGetSingleGroup } from "@/hooks/features/groups/api/use-get-single-group-info";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Loader2, Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -89,7 +83,6 @@ export default function PeopleCard({
   variant,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All statuses");
 
   const queryClient = useQueryClient();
 
@@ -155,29 +148,6 @@ export default function PeopleCard({
       <CardContent className="space-y-4">
         {/* Filter and Search Section */}
         <div className="flex gap-3 items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="gap-2 bg-gray-100 border-gray-200 hover:bg-gray-100"
-              >
-                {statusFilter}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onClick={() => setStatusFilter("All statuses")}>
-                All statuses
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("Active")}>
-                Active
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("Inactive")}>
-                Inactive
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input

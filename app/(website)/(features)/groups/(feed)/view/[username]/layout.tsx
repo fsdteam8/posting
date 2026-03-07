@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import GroupCoverPhoto from "@/components/shared/features/group/group-cover-photo";
 import GroupInfoHeader from "@/components/shared/features/group/group-info-header";
 import GroupTabNavigation from "@/components/shared/features/group/group-tab-navigation";
+import { MarkAsVisitedGroup } from "@/components/shared/features/group/provider/mark-as-visited-group";
 import { Card } from "@/components/ui/card";
 import { baseURL } from "@/constants";
 import { getQueryClient } from "@/lib/tanstack-query/query-client";
@@ -67,6 +68,11 @@ const Layout = async ({ children, params }: Props) => {
       </Card>
 
       <div className="p-5 bg-[#F2F4F7]">{children}</div>
+
+      <MarkAsVisitedGroup
+        groupUserName={username}
+        accessToken={cu.user.accessToken}
+      />
     </HydrationBoundary>
   );
 };

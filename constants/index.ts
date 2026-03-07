@@ -5,6 +5,6 @@ export const DEFAULT_IMAGES = {
     cover: "/features/group/groups-default-cover-photo-2x-compressed.png",
   },
   user: {
-    avatar: "/features/user/default-avatar.png",
+    avatar: "/features/user/default-avatar.webp",
   },
 } as const;

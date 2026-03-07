@@ -121,10 +121,10 @@ const GroupTrigger = ({
 
   const USER = {
     name: profile ? `${profile.firstName} ${profile.lastName}` : "...",
-    avatarUrl:
-      profile?.profileImage?.url ||
-      `https://api.dicebear.com/9.x/avataaars/svg?seed=${profile?.firstName}&backgroundColor=b6e3f4`,
+    avatarUrl: profile?.profileImage?.url,
   };
+
+  console.log(USER);
 
   return (
     <Card className="p-2 pt-5">
@@ -240,9 +240,7 @@ const PostModalContainer = ({
 
   const USER = {
     name: profile ? `${profile.firstName} ${profile.lastName}` : "...",
-    avatarUrl:
-      profile?.profileImage?.url ||
-      `https://api.dicebear.com/9.x/avataaars/svg?seed=${profile?.firstName}&backgroundColor=b6e3f4`,
+    avatarUrl: profile?.profileImage?.url,
   };
 
   // ── Form ──────────────────────────────────────────────────────────────────

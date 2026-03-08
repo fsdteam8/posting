@@ -332,6 +332,7 @@ export function PostCommentDialog({
                 currentUserAvatar={CURRENT_USER_AVATAR}
                 currentUserId={loggedInUserId}
                 isAdmin={false}
+                members={members}
               />
             ))}
 

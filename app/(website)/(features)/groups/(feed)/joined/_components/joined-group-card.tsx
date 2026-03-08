@@ -28,11 +28,11 @@ export default function JoinedGroupCard({
     "https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg";
 
   return (
-    <div className="relative w-full max-w-101 rounded-lg border border-[#dadde1] bg-[#ffffff] shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
-      {/* ✅ Pin icon (top-right) */}
+    <div className="relative w-full max-w-101 rounded-lg border border-border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+      {/* Pin icon (top-right) */}
       {currentUserMeta?.isPinned && (
-        <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
-          <Pin className="h-4 w-4 text-[#1877f2]" />
+        <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-card shadow-sm">
+          <Pin className="h-4 w-4 text-primary" />
         </div>
       )}
 
@@ -48,10 +48,10 @@ export default function JoinedGroupCard({
         </div>
 
         <div className="flex min-w-0 flex-col">
-          <span className="truncate text-[15px] font-semibold leading-5 text-[#050505]">
+          <span className="truncate text-[15px] font-semibold leading-5 text-foreground">
             {groupName}
           </span>
-          <span className="mt-0.5 text-[13px] leading-4 text-[#65676b]">
+          <span className="mt-0.5 text-[13px] leading-4 text-muted-foreground">
             5 weeks ago
           </span>
         </div>
@@ -61,7 +61,7 @@ export default function JoinedGroupCard({
       <div className="flex items-center gap-2 px-3 pb-3 pt-1">
         <button
           onClick={onViewClick}
-          className="flex h-9 flex-1 items-center justify-center rounded-md bg-[#e7f3ff] text-[15px] font-semibold text-[#1877f2] transition-colors hover:bg-[#dbe7f2]"
+          className="flex h-9 flex-1 items-center justify-center rounded-md bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 text-[15px] font-semibold text-blue-600 dark:text-blue-400 transition-colors"
           type="button"
         >
           View group

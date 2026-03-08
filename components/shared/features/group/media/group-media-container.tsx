@@ -9,11 +9,15 @@ import {
   Search,
   VideoIcon,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { CreateAlbumModal } from "./create-album-modal";
 import PhotosTab from "./photos-tab";
 import VideosTab from "./video-tab";
+
+const CreateAlbumModal = dynamic(() => import("./create-album-modal"), {
+  ssr: false,
+});
 
 type Tab = "photos" | "videos" | "albums";
 
@@ -29,7 +33,7 @@ export function SkeletonGrid() {
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="aspect-square bg-gray-100 animate-pulse rounded-sm"
+          className="aspect-square bg-muted animate-pulse rounded-sm"
         />
       ))}
     </div>
@@ -38,14 +42,14 @@ export function SkeletonGrid() {
 
 export function EmptyState({ label }: { label: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
+    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
       <ImageIcon size={40} strokeWidth={1} />
       <p className="text-sm font-medium">No {label} yet</p>
     </div>
   );
 }
 
-// ── Albums Tab ─────────────────────────────────────────────────────────────
+// ── Albums Tab ────────────────────────────────────────────────────────────────
 
 export function AlbumsTab({
   groupId,
@@ -77,21 +81,21 @@ export function AlbumsTab({
       <div className="relative max-w-xs">
         <Search
           size={13}
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
         />
         <input
           type="text"
           value={search}
           onChange={handleSearch}
           placeholder="Search albums…"
-          className="w-full pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-gray-50 placeholder:text-gray-400"
+          className="w-full pl-7 pr-3 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-muted text-foreground placeholder:text-muted-foreground"
         />
       </div>
 
       {isLoading ? (
         <SkeletonGrid />
       ) : isError ? (
-        <p className="text-xs text-red-500 py-10 text-center">
+        <p className="text-xs text-red-500 dark:text-red-400 py-10 text-center">
           Failed to load albums.
         </p>
       ) : !data?.data?.length ? (
@@ -101,7 +105,7 @@ export function AlbumsTab({
           {data.data.map((album) => (
             <div key={album._id} className="group cursor-pointer">
               {/* Cover */}
-              <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+              <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border">
                 {album.coverImage?.url ? (
                   <Image
                     src={album.coverImage.url}
@@ -112,17 +116,17 @@ export function AlbumsTab({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Images size={28} className="text-gray-300" />
+                    <Images size={28} className="text-muted-foreground/40" />
                   </div>
                 )}
               </div>
 
               {/* Meta */}
               <div className="mt-1.5 px-0.5">
-                <p className="text-xs font-semibold text-gray-800 truncate leading-tight">
+                <p className="text-xs font-semibold text-foreground truncate leading-tight">
                   {album.title}
                 </p>
-                <p className="text-[11px] text-gray-400 mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   {album.photoCount === 0
                     ? "No photos"
                     : `${album.photoCount} ${album.photoCount === 1 ? "photo" : "photos"}`}
@@ -136,7 +140,8 @@ export function AlbumsTab({
   );
 }
 
-// ── Main Component ──────────────────────────────────────────────────────────
+// ── Main Component ────────────────────────────────────────────────────────────
+
 export function GroupMediaContainer({ groupId, accessToken }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("photos");
   const [albumModalOpen, setAlbumModalOpen] = useState(false);
@@ -148,13 +153,13 @@ export function GroupMediaContainer({ groupId, accessToken }: Props) {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-0">
-        <h2 className="text-lg font-semibold text-gray-900">Media</h2>
+        <h2 className="text-lg font-semibold text-foreground">Media</h2>
         <button
           onClick={() => setAlbumModalOpen(true)}
-          className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
         >
           <Plus size={15} />
           Create album
@@ -162,15 +167,15 @@ export function GroupMediaContainer({ groupId, accessToken }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-100 px-4 mt-3">
+      <div className="flex border-b border-border px-4 mt-3">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
               activeTab === tab.key
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {tab.icon}
@@ -197,9 +202,7 @@ export function GroupMediaContainer({ groupId, accessToken }: Props) {
         accessToken={accessToken}
         isOpen={albumModalOpen}
         onClose={() => setAlbumModalOpen(false)}
-        onSuccess={() => {
-          /* toast, refetch, etc. */
-        }}
+        onSuccess={() => {}}
       />
     </div>
   );

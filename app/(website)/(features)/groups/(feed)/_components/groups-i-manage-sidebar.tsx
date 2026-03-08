@@ -42,7 +42,7 @@ const GroupsIManageSidebar = ({ accessToken }: Props) => {
       )}
 
       {isError && (
-        <p className="text-xs text-red-500 px-2 py-2">
+        <p className="text-xs text-red-500 dark:text-red-400 px-2 py-2">
           {error?.message ?? "Failed to load groups"}
         </p>
       )}

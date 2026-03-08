@@ -4,20 +4,18 @@ import { useGetGroupPhotos } from "@/hooks/features/groups/api/media/use-get-gro
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PhotoLightbox } from "./photos-tab"; // re-export PhotoLightbox from your photos tab, or co-locate it
+import { PhotoLightbox } from "./photos-tab";
 
-// ── Skeleton ─────────────────────────────────────────────────────────────────
 function RecentMediaSkeleton() {
   return (
     <div className="grid grid-cols-4 gap-1">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-16 rounded-sm bg-gray-100 animate-pulse" />
+        <div key={i} className="h-16 rounded-sm bg-muted animate-pulse" />
       ))}
     </div>
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
 export default function RecentMedia({
   groupId,
   accessToken,
@@ -25,7 +23,7 @@ export default function RecentMedia({
 }: {
   groupId: string;
   accessToken: string;
-  username: string; // used to build the "See all" redirect URL
+  username: string;
 }) {
   const router = useRouter();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -36,13 +34,13 @@ export default function RecentMedia({
   });
 
   const photos = data?.data ?? [];
-  const preview = photos.slice(0, 4); // show max 4 in the sidebar widget
+  const preview = photos.slice(0, 4);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
       {/* Header */}
       <div className="px-4 pt-4 pb-3">
-        <h3 className="text-sm font-bold text-gray-900">Recent media</h3>
+        <h3 className="text-sm font-bold text-foreground">Recent media</h3>
       </div>
 
       {/* Grid */}
@@ -50,11 +48,11 @@ export default function RecentMedia({
         {isLoading ? (
           <RecentMediaSkeleton />
         ) : isError ? (
-          <p className="text-xs text-red-400 py-6 text-center">
+          <p className="text-xs text-red-400 dark:text-red-500 py-6 text-center">
             Failed to load media.
           </p>
         ) : preview.length === 0 ? (
-          <p className="text-xs text-gray-400 py-6 text-center">
+          <p className="text-xs text-muted-foreground py-6 text-center">
             No media yet.
           </p>
         ) : (
@@ -63,7 +61,7 @@ export default function RecentMedia({
               <div
                 key={photo.media._id}
                 onClick={() => setLightboxIndex(index)}
-                className="group relative h-24 overflow-hidden rounded-sm bg-gray-100 cursor-pointer"
+                className="group relative h-24 overflow-hidden rounded-sm bg-muted cursor-pointer"
               >
                 <Image
                   src={photo.media.url}
@@ -83,7 +81,7 @@ export default function RecentMedia({
       {!isLoading && photos.length > 0 && (
         <button
           onClick={() => router.push(`/groups/view/${username}/media`)}
-          className="w-full mt-3 py-3 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-primary/25 border-t border-gray-100 transition-colors cursor-pointer"
+          className="w-full mt-3 py-3 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-primary/10 border-t border-border transition-colors cursor-pointer"
         >
           See all
         </button>

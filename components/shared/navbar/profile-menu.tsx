@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
+import { DisplayAccessibility } from "./subMenu/display-accessibility";
 
 interface UserProfile {
   name: string;
@@ -41,6 +42,8 @@ interface ProfileMenuProps {
   onSwitchIdentity: (identity: { type: "user" | "page"; id?: string }) => void;
 }
 
+type Panel = "main" | "display";
+
 export function ProfileMenu({
   user,
   pages,
@@ -48,6 +51,7 @@ export function ProfileMenu({
   onSwitchIdentity,
 }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
+  const [panel, setPanel] = useState<Panel>("main");
 
   const currentName =
     activeIdentity.type === "user"
@@ -60,8 +64,14 @@ export function ProfileMenu({
       : (pages.find((p) => p.id === activeIdentity.id)?.avatarUrl ??
         user.avatarUrl);
 
+  // Reset panel when popover closes
+  const handleOpenChange = (val: boolean) => {
+    setOpen(val);
+    if (!val) setPanel("main");
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           className="flex items-center gap-2 rounded-full p-0.5 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -85,121 +95,128 @@ export function ProfileMenu({
         className="w-90 rounded-xl border bg-card p-0 shadow-xl"
       >
         <ScrollArea className="max-h-[calc(100vh-80px)]">
-          <div className="p-4">
-            {/* Profile Card */}
-            <div className="rounded-lg border bg-card shadow-sm">
-              <button
-                onClick={() => {
-                  onSwitchIdentity({ type: "user" });
-                  setOpen(false);
-                }}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-t-lg p-3 text-left transition-colors hover:bg-secondary",
-                  activeIdentity.type === "user" && "bg-secondary",
-                )}
-              >
-                <Avatar className="size-9">
-                  <AvatarImage src={user.avatarUrl} alt={user.name} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                    {user.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-[15px] font-semibold text-foreground">
-                  {user.name}
-                </span>
-              </button>
-
-              {/* Pages */}
-              {pages.map((page) => (
+          {panel === "display" ? (
+            <DisplayAccessibility onBack={() => setPanel("main")} />
+          ) : (
+            <div className="p-4">
+              {/* Profile Card */}
+              <div className="rounded-lg border bg-card shadow-sm">
                 <button
-                  key={page.id}
                   onClick={() => {
-                    onSwitchIdentity({ type: "page", id: page.id });
+                    onSwitchIdentity({ type: "user" });
                     setOpen(false);
                   }}
                   className={cn(
-                    "flex w-full items-center gap-3 border-t px-3 py-2.5 text-left transition-colors hover:bg-secondary",
-                    activeIdentity.type === "page" &&
-                      activeIdentity.id === page.id &&
-                      "bg-secondary",
+                    "flex w-full items-center gap-3 rounded-t-lg p-3 text-left transition-colors hover:bg-secondary",
+                    activeIdentity.type === "user" && "bg-secondary",
                   )}
                 >
-                  <Avatar className="size-9 rounded-lg">
-                    <AvatarImage src={page.avatarUrl} alt={page.name} />
-                    <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold text-muted-foreground">
-                      {page.name.charAt(0)}
+                  <Avatar className="size-9">
+                    <AvatarImage src={user.avatarUrl} alt={user.name} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                      {user.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-[15px] font-medium text-foreground">
-                    {page.name}
+                  <span className="text-[15px] font-semibold text-foreground">
+                    {user.name}
                   </span>
                 </button>
-              ))}
 
-              {/* See all profiles */}
-              <button className="flex w-full items-center justify-center gap-2 rounded-b-lg border-t px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-                <Users className="size-4" />
-                See all profiles
-              </button>
+                {/* Pages */}
+                {pages.map((page) => (
+                  <button
+                    key={page.id}
+                    onClick={() => {
+                      onSwitchIdentity({ type: "page", id: page.id });
+                      setOpen(false);
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 border-t px-3 py-2.5 text-left transition-colors hover:bg-secondary",
+                      activeIdentity.type === "page" &&
+                        activeIdentity.id === page.id &&
+                        "bg-secondary",
+                    )}
+                  >
+                    <Avatar className="size-9 rounded-lg">
+                      <AvatarImage src={page.avatarUrl} alt={page.name} />
+                      <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold text-muted-foreground">
+                        {page.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-[15px] font-medium text-foreground">
+                      {page.name}
+                    </span>
+                  </button>
+                ))}
+
+                {/* See all profiles */}
+                <button className="flex w-full items-center justify-center gap-2 rounded-b-lg border-t px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+                  <Users className="size-4" />
+                  See all profiles
+                </button>
+              </div>
+
+              <Separator className="my-3" />
+
+              {/* Menu Items */}
+              <nav className="flex flex-col">
+                <MenuItem
+                  icon={ExternalLink}
+                  label="Meta Business Suite"
+                  trailing="external"
+                />
+                <MenuItem
+                  icon={Settings}
+                  label="Settings & privacy"
+                  trailing="chevron"
+                />
+                <MenuItem
+                  icon={HelpCircle}
+                  label="Help & support"
+                  trailing="chevron"
+                />
+                <MenuItem
+                  icon={Moon}
+                  label="Display & accessibility"
+                  trailing="chevron"
+                  onSelect={() => setPanel("display")}
+                />
+                <MenuItem
+                  icon={MessageSquareWarning}
+                  label="Give feedback"
+                  shortcut="Ctrl B"
+                />
+                <MenuItem
+                  icon={LogOut}
+                  label="Log out"
+                  onSelect={() =>
+                    signOut({
+                      redirectTo: "/login",
+                    })
+                  }
+                />
+              </nav>
+
+              {/* Footer */}
+              <div className="mt-3 flex flex-wrap gap-1 text-[11px] text-muted-foreground">
+                <span className="cursor-pointer hover:underline">Privacy</span>
+                <span>{"·"}</span>
+                <span className="cursor-pointer hover:underline">Terms</span>
+                <span>{"·"}</span>
+                <span className="cursor-pointer hover:underline">
+                  Advertising
+                </span>
+                <span>{"·"}</span>
+                <span className="cursor-pointer hover:underline">
+                  Ad Choices
+                </span>
+                <span>{"·"}</span>
+                <span className="cursor-pointer hover:underline">Cookies</span>
+                <span>{"·"}</span>
+                <span className="cursor-pointer hover:underline">More</span>
+              </div>
             </div>
-
-            <Separator className="my-3" />
-
-            {/* Menu Items */}
-            <nav className="flex flex-col">
-              <MenuItem
-                icon={ExternalLink}
-                label="Meta Business Suite"
-                trailing="external"
-              />
-              <MenuItem
-                icon={Settings}
-                label="Settings & privacy"
-                trailing="chevron"
-              />
-              <MenuItem
-                icon={HelpCircle}
-                label="Help & support"
-                trailing="chevron"
-              />
-              <MenuItem
-                icon={Moon}
-                label="Display & accessibility"
-                trailing="chevron"
-              />
-              <MenuItem
-                icon={MessageSquareWarning}
-                label="Give feedback"
-                shortcut="Ctrl B"
-              />
-              <MenuItem
-                icon={LogOut}
-                label="Log out"
-                onSelect={() =>
-                  signOut({
-                    redirectTo: "/login",
-                  })
-                }
-              />
-            </nav>
-
-            {/* Footer */}
-            <div className="mt-3 flex flex-wrap gap-1 text-[11px] text-muted-foreground">
-              <span className="cursor-pointer hover:underline">Privacy</span>
-              <span>{"·"}</span>
-              <span className="cursor-pointer hover:underline">Terms</span>
-              <span>{"·"}</span>
-              <span className="cursor-pointer hover:underline">
-                Advertising
-              </span>
-              <span>{"·"}</span>
-              <span className="cursor-pointer hover:underline">Ad Choices</span>
-              <span>{"·"}</span>
-              <span className="cursor-pointer hover:underline">Cookies</span>
-              <span>{"·"}</span>
-              <span className="cursor-pointer hover:underline">More</span>
-            </div>
-          </div>
+          )}
         </ScrollArea>
       </PopoverContent>
     </Popover>

@@ -9,15 +9,15 @@ import { useCallback, useRef, useState } from "react";
 export interface MediaFile {
   id: string;
   file?: File;
-  url: string; // object URL for preview
+  url: string;
   type: "image" | "video";
 }
 
 interface MediaUploaderProps {
   value: MediaFile[];
   onChange: (files: MediaFile[]) => void;
-  maxFiles?: number; // default 10
-  maxSizeMB?: number; // default 50
+  maxFiles?: number;
+  maxSizeMB?: number;
   draggerOpen?: boolean;
 }
 
@@ -40,7 +40,7 @@ function detectType(file: File): "image" | "video" {
 function toMediaFile(file: File): MediaFile {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    file, // still set for new uploads
+    file,
     url: URL.createObjectURL(file),
     type: detectType(file),
   };
@@ -75,7 +75,6 @@ const SinglePreview = ({
       />
     )}
 
-    {/* Overlay controls */}
     <button
       type="button"
       onClick={() => onRemove(item.id)}
@@ -88,7 +87,7 @@ const SinglePreview = ({
       <button
         type="button"
         onClick={onAddMore}
-        className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-white/90 hover:bg-white text-fb-text text-[12px] font-semibold px-3 py-1.5 rounded-full shadow transition-colors"
+        className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-background/90 hover:bg-background text-foreground text-[12px] font-semibold px-3 py-1.5 rounded-full shadow transition-colors"
       >
         <Plus className="w-3.5 h-3.5" /> Add more
       </button>
@@ -122,7 +121,6 @@ const MediaThumb = ({
       <img src={item.url} alt="" className="w-full h-full object-cover" />
     )}
 
-    {/* Video badge */}
     {item.type === "video" && (
       <div className="absolute bottom-1.5 left-1.5 bg-black/60 rounded px-1.5 py-0.5 flex items-center gap-1">
         <Film className="w-3 h-3 text-white" />
@@ -130,7 +128,6 @@ const MediaThumb = ({
       </div>
     )}
 
-    {/* Remove btn */}
     <button
       type="button"
       onClick={() => onRemove(item.id)}
@@ -139,7 +136,6 @@ const MediaThumb = ({
       <X className="w-3.5 h-3.5" />
     </button>
 
-    {/* Count overlay (e.g. "+3") */}
     {overlay}
   </div>
 );
@@ -160,7 +156,6 @@ const MultiPreview = ({
   const shown = items.slice(0, 5);
   const extra = total - 5;
 
-  // Layout variants based on count
   const gridClass =
     {
       2: "grid grid-cols-2 gap-1",
@@ -239,12 +234,11 @@ const MultiPreview = ({
         )}
       </div>
 
-      {/* Add more row */}
       {canAddMore && (
         <button
           type="button"
           onClick={onAddMore}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-gray-300 hover:bg-gray-50 text-[12px] font-semibold text-fb-text-secondary transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-border hover:bg-muted text-[12px] font-semibold text-muted-foreground transition-colors"
         >
           <Plus className="w-3.5 h-3.5" /> Add more photos/videos
         </button>
@@ -253,7 +247,7 @@ const MultiPreview = ({
   );
 };
 
-// ─── Drop zone (empty state) ──────────────────────────────────────────────────
+// ─── Drop zone ────────────────────────────────────────────────────────────────
 
 const DropZone = ({
   isDragging,
@@ -277,18 +271,18 @@ const DropZone = ({
     className={cn(
       "w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors",
       isDragging
-        ? "border-primary bg-blue-50"
-        : "border-gray-300 bg-gray-50 hover:bg-gray-100",
+        ? "border-primary bg-primary/10"
+        : "border-border bg-muted/50 hover:bg-muted",
     )}
   >
-    <div className="flex items-center gap-2 text-fb-text-secondary">
+    <div className="flex items-center gap-2 text-muted-foreground">
       <ImageIcon className="w-5 h-5" />
       <Film className="w-5 h-5" />
     </div>
-    <p className="text-[13px] font-semibold text-fb-text-secondary">
+    <p className="text-[13px] font-semibold text-muted-foreground">
       Add photos/videos
     </p>
-    <p className="text-[11px] text-gray-400">or drag and drop</p>
+    <p className="text-[11px] text-muted-foreground/60">or drag and drop</p>
   </div>
 );
 
@@ -325,7 +319,6 @@ export const MediaUploader = ({
       });
 
       setErrors(errs);
-
       const next = [...value, ...valid].slice(0, maxFiles);
       onChange(next);
     },
@@ -335,7 +328,7 @@ export const MediaUploader = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     processFiles(files);
-    e.target.value = ""; // reset so same file can be re-added
+    e.target.value = "";
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -352,13 +345,12 @@ export const MediaUploader = ({
 
   const handleRemove = (id: string) => {
     const removed = value.find((f) => f.id === id);
-    if (removed?.file) URL.revokeObjectURL(removed.url); // only revoke blob URLs
+    if (removed?.file) URL.revokeObjectURL(removed.url);
     onChange(value.filter((f) => f.id !== id));
   };
 
   return (
     <div className="space-y-2">
-      {/* Hidden file input */}
       <input
         ref={inputRef}
         type="file"
@@ -368,7 +360,6 @@ export const MediaUploader = ({
         onChange={handleInputChange}
       />
 
-      {/* Empty state */}
       {value.length === 0 && draggerOpen && (
         <DropZone
           onFiles={processFiles}
@@ -380,7 +371,6 @@ export const MediaUploader = ({
         />
       )}
 
-      {/* Single preview */}
       {value.length === 1 && (
         <SinglePreview
           item={value[0]}
@@ -390,7 +380,6 @@ export const MediaUploader = ({
         />
       )}
 
-      {/* Multi preview */}
       {value.length > 1 && (
         <MultiPreview
           items={value}
@@ -401,20 +390,18 @@ export const MediaUploader = ({
         />
       )}
 
-      {/* Error messages */}
       {errors.length > 0 && (
         <div className="space-y-0.5">
           {errors.map((e, i) => (
-            <p key={i} className="text-[11px] text-red-500">
+            <p key={i} className="text-[11px] text-red-500 dark:text-red-400">
               {e}
             </p>
           ))}
         </div>
       )}
 
-      {/* File count indicator */}
       {value.length > 0 && (
-        <p className="text-[11px] text-fb-text-secondary text-right">
+        <p className="text-[11px] text-muted-foreground text-right">
           {value.length}/{maxFiles} files
         </p>
       )}

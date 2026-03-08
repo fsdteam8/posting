@@ -61,9 +61,10 @@ export default function GroupsSidebar({ accessToken }: Props) {
         <Button
           className="
     w-full
-    bg-blue-50
-    hover:bg-blue-100
+    bg-blue-50 hover:bg-blue-100
+    dark:bg-blue-950 dark:hover:bg-blue-900
     text-blue-600
+    dark:text-blue-400
     transition-colors duration-200
   "
           onClick={() => router.push("/groups/create")}

@@ -24,6 +24,7 @@ export default function GroupCard({
 }: GroupCardProps) {
   const [isJoined, setIsJoined] = useState(false);
   const router = useRouter();
+
   const { mutate, isPending } = useMutation({
     mutationKey: ["discover-group-joining"],
     mutationFn: () =>
@@ -39,22 +40,21 @@ export default function GroupCard({
         toast.error(data.message);
         return;
       }
-
-      // handle success
       setIsJoined(true);
     },
     onError: (err) => {
       toast.error(err.message);
     },
   });
+
   const memberCount = group.members.length;
   const displayMembers = group.members.slice(0, 3);
   const remainingMembers = Math.max(0, group.members.length - 3);
 
   return (
-    <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-lg">
-      {/* Cover Image Container */}
-      <div className="relative h-40 w-full bg-linear-to-br from-slate-200 to-slate-300">
+    <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-card border border-border shadow-lg">
+      {/* Cover Image */}
+      <div className="relative h-40 w-full bg-muted">
         {group.coverImage?.url && (
           <Image
             src={group.coverImage.url}
@@ -63,44 +63,34 @@ export default function GroupCard({
             className="object-cover"
           />
         )}
-        {/* Semi-transparent overlay for better text visibility */}
         <div className="absolute inset-0 bg-black/20" />
-
-        {/* Group Name/Logo Overlay */}
-        {/* <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <h3 className="text-3xl font-bold text-white drop-shadow-lg">
-              {group.name}
-            </h3>
-          </div>
-        </div> */}
 
         {/* Close Button */}
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute right-3 top-3 rounded-full bg-white/80 p-1.5 transition-all hover:bg-white"
+            className="absolute right-3 top-3 rounded-full bg-background/80 p-1.5 transition-all hover:bg-background"
             aria-label="Close"
           >
-            <X className="h-5 w-5 text-slate-700" />
+            <X className="h-5 w-5 text-foreground" />
           </button>
         )}
       </div>
 
-      {/* Content Container */}
+      {/* Content */}
       <div className="space-y-4 p-5">
         {/* Stats */}
         <div className="space-y-1">
           <h3
-            className="font-semibold cursor-pointer hover:text-primary transition duration-300"
+            className="font-semibold cursor-pointer hover:text-primary transition duration-300 text-foreground"
             onClick={() => router.push(`/groups/view/${group.groupUserName}`)}
           >
             {group.name}
           </h3>
-          <p className="text-sm font-medium text-slate-600">
+          <p className="text-sm font-medium text-muted-foreground">
             {formatCount(memberCount)} members • 10+ posts a day
           </p>
-          <p className="text-xs text-slate-500">{group.category}</p>
+          <p className="text-xs text-muted-foreground">{group.category}</p>
         </div>
 
         {/* Members Preview */}
@@ -108,7 +98,6 @@ export default function GroupCard({
           <div className="flex -space-x-2">
             {displayMembers.map((member) => {
               const profileImage = member.profileImage.url;
-
               if (!profileImage) return;
               return (
                 <div key={member._id} className="relative h-8 w-8 shrink-0">
@@ -116,23 +105,25 @@ export default function GroupCard({
                     src={member.profileImage.url}
                     alt={`${member.firstName} ${member.lastName}`}
                     fill
-                    className="rounded-full border-2 border-white object-cover"
+                    className="rounded-full border-2 border-card object-cover"
                   />
                 </div>
               );
             })}
           </div>
-          <p className="text-sm text-slate-700">
-            <span className="font-medium">{displayMembers[0]?.firstName}</span>
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">
+              {displayMembers[0]?.firstName}
+            </span>
             {remainingMembers > 0 && (
-              <span className="text-slate-600">
+              <span>
                 {" "}
                 and {remainingMembers} friend{remainingMembers > 1 ? "s" : ""}{" "}
                 are members
               </span>
             )}
             {remainingMembers === 0 && displayMembers.length > 1 && (
-              <span className="text-slate-600">
+              <span>
                 {" "}
                 and {displayMembers.length - 1} friend
                 {displayMembers.length - 1 > 1 ? "s" : ""} are members
@@ -145,11 +136,7 @@ export default function GroupCard({
         {isJoined ? (
           <Button
             onClick={() => router.push(`/groups/view/${group._id}`)}
-            className="w-full
-    bg-blue-50
-    hover:bg-blue-100
-    text-blue-600
-    transition-colors duration-200"
+            className="w-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400 transition-colors duration-200"
           >
             Visit Group
           </Button>
@@ -157,7 +144,7 @@ export default function GroupCard({
           <Button
             onClick={() => mutate()}
             disabled={isPending || isJoined}
-            className="w-full bg-slate-200 text-slate-800 hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+            className="w-full bg-muted text-foreground hover:bg-muted/70 disabled:opacity-50 transition-colors"
           >
             {isPending && <Loader2 className="animate-spin" />} Join Group
           </Button>

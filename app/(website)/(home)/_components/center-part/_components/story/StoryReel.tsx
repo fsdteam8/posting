@@ -27,11 +27,7 @@ const CARD_WIDTH = 118; // px
 const CARD_GAP = 12; // px
 const SCROLL_AMOUNT = (CARD_WIDTH + CARD_GAP) * 3; // scroll 3 cards at a time
 
-export function StoryReel({
-  accessToken,
-  currentUser,
-  onViewStory,
-}: StoryReelProps) {
+export function StoryReel({ accessToken, currentUser }: StoryReelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -105,6 +101,12 @@ export function StoryReel({
     scrollRef.current?.scrollBy({ left: SCROLL_AMOUNT, behavior: "smooth" });
   };
 
+  const handleViewStory = (story: Story, ownerId: string) => {
+    // storyId  → the specific story clicked
+    // on       → the owner/user whose story group to open
+    router.push(`/stories/view/${story._id}?on=${ownerId}`);
+  };
+
   return (
     <div className="relative w-full select-none">
       {/* Left arrow */}
@@ -153,7 +155,7 @@ export function StoryReel({
             <StoryCard
               key={i}
               story={story}
-              onClick={() => onViewStory?.(story)}
+              onClick={() => handleViewStory(story, story.user._id)}
             />
           ))}
 

@@ -1,6 +1,6 @@
 import { ReactionType } from "@/components/shared/features/posts/group-post-action";
 import { baseURL } from "@/constants";
-import { Story, StoryUser } from "@/types/features/feed/story";
+import { StoryGroup } from "@/types/features/feed/story";
 import { useQuery } from "@tanstack/react-query";
 
 interface Params {
@@ -13,15 +13,10 @@ export interface StoryReaction {
   _id: string;
 }
 
-export interface StoryGroup {
-  user: StoryUser;
-  stories: Story[];
-}
-
 interface GetActiveStoriesResponse {
   success: boolean;
   message: string;
-  data: StoryGroup[];
+  data: StoryGroup[]; // ← use shared type
 }
 
 export function useGetActiveStories({ accessToken }: Params) {

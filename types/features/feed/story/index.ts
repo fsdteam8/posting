@@ -44,3 +44,8 @@ export interface Story {
   updatedAt: string;
   __v: number;
 }
+
+export interface StoryGroup {
+  user: StoryUser;
+  stories: Story[];
+}

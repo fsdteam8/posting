@@ -2,12 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import {
-  StoryGroup,
-  useGetActiveStories,
-} from "@/hooks/features/feed/story/use-get-active-story";
+import { useGetActiveStories } from "@/hooks/features/feed/story/use-get-active-story";
 import { useGetMyStories } from "@/hooks/features/feed/story/use-get-my-stories";
-import { Story } from "@/types/features/feed/story";
+import { Story, StoryGroup } from "@/types/features/feed/story";
 import { useRouter } from "nextjs-toploader/app";
 import { CreateStoryCard } from "./CreateStoryCard";
 import { StoryCard } from "./StoryCard";
@@ -104,7 +101,7 @@ export function StoryReel({ accessToken, currentUser }: StoryReelProps) {
   const handleViewStory = (story: Story, ownerId: string) => {
     // storyId  → the specific story clicked
     // on       → the owner/user whose story group to open
-    router.push(`/stories/view/${story._id}?on=${ownerId}`);
+    router.push(`/stories/view/${story._id}?userId=${ownerId}`);
   };
 
   return (

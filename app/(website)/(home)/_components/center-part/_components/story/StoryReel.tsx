@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useGetActiveStories } from "@/hooks/features/feed/story/use-get-active-story";
+import {
+  StoryGroup,
+  useGetActiveStories,
+} from "@/hooks/features/feed/story/use-get-active-story";
 import { useGetMyStories } from "@/hooks/features/feed/story/use-get-my-stories";
 import { Story } from "@/types/features/feed/story";
 import { useRouter } from "nextjs-toploader/app";
@@ -42,7 +45,7 @@ export function StoryReel({
     useGetActiveStories({ accessToken });
 
   const myStories = myStoriesData?.data ?? [];
-  const activeStories = activeStoriesData?.data ?? [];
+  const activeStories: StoryGroup[] = activeStoriesData?.data ?? [];
 
   // Merge: show logged-in user's latest story first, then others (excluding current user's)
   const mergedStories: (Story & {
@@ -58,12 +61,19 @@ export function StoryReel({
     });
   }
 
-  activeStories.forEach((story) => {
-    // Skip current user's stories since already shown above
-    if (story.user === currentUser?._id) return;
-    if (!mergedStories.find((s) => s._id === story._id)) {
-      mergedStories.push(story);
-    }
+  activeStories.forEach((item) => {
+    // Skip current user's stories
+    if (item.user._id === currentUser?._id) return;
+
+    // Get first (latest) story
+    const firstStory = item.stories?.[0];
+    if (!firstStory) return;
+
+    mergedStories.push({
+      ...firstStory,
+      ownerName: `${item.user.firstName ?? ""}`.trim() || "Unknown",
+      ownerAvatar: item.user.profileImage?.url || "",
+    });
   });
 
   const isLoading = myStoriesLoading || activeStoriesLoading;
@@ -139,9 +149,9 @@ export function StoryReel({
 
         {/* Story cards */}
         {!isLoading &&
-          mergedStories.map((story) => (
+          mergedStories.map((story, i) => (
             <StoryCard
-              key={story._id}
+              key={i}
               story={story}
               onClick={() => onViewStory?.(story)}
             />

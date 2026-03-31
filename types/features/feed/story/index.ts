@@ -17,9 +17,20 @@ export interface StoryMedia {
   thumbnail: string;
 }
 
+export interface StoryUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  profileImage: {
+    public_id: string;
+    url: string;
+  };
+}
+
 export interface Story {
   _id: string;
-  user: string;
+  user: StoryUser;
   media: StoryMedia[];
   viewers: string[];
   privacy: PrivacyType;

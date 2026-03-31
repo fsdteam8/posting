@@ -1,4 +1,7 @@
+"use client";
+
 import FeedPostModalContainer from "@/components/shared/features/post-modal/feed-post-modal-container";
+import { useProfile } from "@/hooks/profile/use-profile";
 import { Session } from "next-auth";
 import FeedPostContainer from "./_components/FeedPostContainer";
 import { StoryReel } from "./_components/story";
@@ -8,6 +11,12 @@ interface Props {
 }
 
 const CenterPartContainer = ({ user }: Props) => {
+  const accessToken = user.accessToken;
+
+  const { data: profile } = useProfile(accessToken);
+
+  if (!profile) return;
+
   return (
     <div className="py-4 space-y-4">
       <FeedPostModalContainer accessToken={user.accessToken!} />
@@ -15,9 +24,9 @@ const CenterPartContainer = ({ user }: Props) => {
       <StoryReel
         accessToken={user.accessToken}
         currentUser={{
-          _id: user.id,
-          name: user.firstName,
-          avatar: user.image ?? "",
+          _id: profile?._id,
+          name: profile.firstName,
+          avatar: profile.profileImage.url ?? "",
         }}
       />
 

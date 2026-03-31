@@ -37,7 +37,7 @@ export function StoryCard({ story, onClick }: StoryCardProps) {
 
       {/* Avatar */}
       <div className="absolute top-3 left-3">
-        <div className="relative w-9 h-9 rounded-full border-4 border-[#1877f2] overflow-hidden bg-gray-300">
+        <div className="relative w-8 h-8 rounded-full border-4 border-[#1877f2] overflow-hidden bg-gray-300">
           {story.ownerAvatar ? (
             <Image
               src={story.ownerAvatar}
@@ -64,8 +64,8 @@ export function StoryCard({ story, onClick }: StoryCardProps) {
       )}
 
       {/* Owner name */}
-      <div className="absolute bottom-3 left-2 right-2">
-        <p className="text-white text-xs font-semibold leading-tight truncate">
+      <div className="absolute bottom-3 left-2">
+        <p className="text-white text-[11px] font-semibold leading-tight truncate">
           {story.ownerName ?? "Unknown"}
         </p>
       </div>

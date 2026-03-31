@@ -39,7 +39,7 @@ export interface Story {
   backgroundColor: string;
   replyCount: number;
   expiresAt: string;
-  reactions: StoryReaction[]; // ← was string[], must be StoryReaction[]
+  reactions: StoryReaction[];
   createdAt: string;
   updatedAt: string;
   __v: number;

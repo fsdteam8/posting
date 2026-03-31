@@ -33,6 +33,16 @@ const REACTIONS = [
   { emoji: "😡", type: "angry" as const },
 ];
 
+// add this just above the component or alongside the other helpers
+export function getMyReaction(
+  story: Story,
+  currentUserId: string,
+): string | null {
+  const found = story.reactions.find((r) => r.user === currentUserId);
+  if (!found) return null;
+  return REACTIONS.find((r) => r.type === found.type)?.emoji ?? null;
+}
+
 interface Props {
   stories: Story[];
   user: StoryUser;
@@ -61,6 +71,7 @@ export function StoryViewer({
   user,
   initialStoryId,
   accessToken,
+  currentUserId,
   onPrevGroup,
   onNextGroup,
   hasPrevGroup,
@@ -79,7 +90,9 @@ export function StoryViewer({
   const [isMuted, setIsMuted] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [showReactions, setShowReactions] = useState(false);
-  const [sentReaction, setSentReaction] = useState<string | null>(null);
+  const [sentReaction, setSentReaction] = useState<string | null>(() =>
+    getMyReaction(stories[initialIndex], currentUserId),
+  );
 
   // progressRef stores the real progress value.
   // The interval reads/writes this ref directly so we never need to
@@ -146,7 +159,7 @@ export function StoryViewer({
     // Reset when story changes
     progressRef.current = 0;
     setProgress(0);
-    setSentReaction(null);
+    setSentReaction(getMyReaction(stories[currentIndex], currentUserId)); // ← replace the null reset
     setShowReactions(false);
 
     if (timerRef.current) clearInterval(timerRef.current);
@@ -179,9 +192,9 @@ export function StoryViewer({
       { storyId: currentStory._id, type },
       {
         onSuccess: () => {
-          setSentReaction(REACTIONS.find((r) => r.type === type)?.emoji ?? "");
+          const emoji = REACTIONS.find((r) => r.type === type)?.emoji ?? "";
+          setSentReaction(emoji); // ← stays selected, no setTimeout to clear it
           setShowReactions(false);
-          setTimeout(() => setSentReaction(null), 2000);
         },
       },
     );
@@ -356,11 +369,11 @@ export function StoryViewer({
         </div>
 
         {/* Floating reaction */}
-        {sentReaction && (
+        {/* {showReactions && (
           <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
             <span className="text-6xl animate-bounce">{sentReaction}</span>
           </div>
-        )}
+        )} */}
 
         {/* Bottom bar */}
         <div className="absolute bottom-0 left-0 right-0 z-10 px-3 pb-4">
@@ -413,7 +426,7 @@ export function StoryViewer({
               }}
               className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm border border-white/30 flex items-center justify-center text-lg hover:bg-white/20 transition-colors"
             >
-              😊
+              {sentReaction ?? "😊"}
             </button>
           </div>
         </div>

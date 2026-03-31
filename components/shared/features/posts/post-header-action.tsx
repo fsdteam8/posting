@@ -60,7 +60,7 @@ const PostHeaderAction = ({
     groupId: groupId,
   });
 
-  const { mutate: deletePost, isPending: isDeleting } = useDeletePost({
+  const { mutateAsync: deletePost, isPending: isDeleting } = useDeletePost({
     postId: data._id,
     groupId,
     accessToken,
@@ -72,8 +72,12 @@ const PostHeaderAction = ({
     accessToken,
   });
 
-  const handleDelete = () => {
-    deletePost();
+  const handleDelete = async () => {
+    const res = await deletePost();
+
+    if (res.success) {
+      setDeleteOpen(false);
+    }
   };
 
   const isCreator = data.author._id === loggedinUserId;

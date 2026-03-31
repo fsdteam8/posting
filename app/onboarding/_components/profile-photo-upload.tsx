@@ -38,7 +38,7 @@ export default function ProfilePhotoUpload({ accessToken }: Props) {
   const { mutate, isPending } = useMutation({
     mutationKey: ["onboarding-avatar"],
     mutationFn: async (formdata: FormData) => {
-      const res = await fetch(`${baseURL}/users/update-profile`, {
+      const res = await fetch(`${baseURL}/users/`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${accessToken}`,

@@ -70,7 +70,7 @@ export default function InterestSelectionForm({ accessToken }: Props) {
     useMutation({
       mutationKey: ["update-profile"],
       mutationFn: () =>
-        fetch(`${baseURL}/users/update-profile`, {
+        fetch(`${baseURL}/users/`, {
           method: "PUT",
           headers: {
             "content-type": "application/json",

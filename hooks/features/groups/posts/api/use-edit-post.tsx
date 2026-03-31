@@ -1,6 +1,7 @@
 "use client";
 
 import { baseURL } from "@/constants";
+import { FeedPostsResponse } from "@/types/features/feed";
 import { GroupPostsResponse, Post } from "@/types/features/posts";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -78,9 +79,24 @@ export function useEditPost({ postId, groupId, accessToken }: Params) {
             };
           },
         );
+
+        queryClient.invalidateQueries({ queryKey: ["pinned-posts-of-group"] });
       }
 
-      queryClient.invalidateQueries({ queryKey: ["pinned-posts-of-group"] });
+      // ✅ Update feed-posts cache (always — post may appear in feed too)
+      queryClient.setQueryData<InfiniteData<FeedPostsResponse>>(
+        ["feed-posts"],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((p) => (p._id === postId ? updatedPost : p)),
+            })),
+          };
+        },
+      );
     },
 
     onError: (error) => {

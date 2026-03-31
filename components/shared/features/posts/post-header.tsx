@@ -21,14 +21,14 @@ const visibilityIcon = {
 interface PostHeaderProps {
   post: Post;
   accessToken: string;
-  groupId: string;
+  groupId?: string;
   loggedinUserId: string;
 }
 
 export const PostHeader = ({
   post,
   accessToken,
-  groupId,
+  groupId = "",
   loggedinUserId,
 }: PostHeaderProps) => {
   const { author, createdAt, visibility, feeling, activity } = post;

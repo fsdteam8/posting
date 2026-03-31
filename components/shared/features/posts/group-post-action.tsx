@@ -30,7 +30,7 @@ interface PostActionsProps {
   accessToken: string;
   onCommentClick?: () => void;
   loggedInUserId: string;
-  groupId: string;
+  groupId?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ export const PostActions = ({
   accessToken,
   onCommentClick,
   loggedInUserId,
-  groupId,
+  groupId = "",
 }: PostActionsProps) => {
   const { reactionCount, commentCount, shareCount, _id: postId } = post;
 

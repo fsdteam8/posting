@@ -1,6 +1,7 @@
 "use client";
 
 import { baseURL } from "@/constants";
+import { FeedPostsResponse } from "@/types/features/feed";
 import { GroupPostsResponse } from "@/types/features/posts";
 import {
   InfiniteData,
@@ -60,6 +61,21 @@ export function useDeletePost({ postId, groupId, accessToken }: Params) {
         (old) => {
           if (!old) return old;
 
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.filter((post) => post._id !== postId),
+            })),
+          };
+        },
+      );
+
+      // ✅ Remove from feed-posts cache (always)
+      queryClient.setQueryData<InfiniteData<FeedPostsResponse>>(
+        ["feed-posts"],
+        (old) => {
+          if (!old) return old;
           return {
             ...old,
             pages: old.pages.map((page) => ({

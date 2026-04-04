@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import CenterPartContainer from "./_components/center-part/center-part-container";
 import LeftSidebar from "./_components/left-sidebar/left-sidebar";
 import { RightSidebar } from "./_components/right-sidebar/right-side-card";
 
@@ -20,7 +21,9 @@ export default async function HomeLayout() {
       </div>
 
       {/* Center Feed */}
-      <div className="w-full max-w-170 px-0 sm:px-4">Center</div>
+      <div className="w-full max-w-170 px-0 sm:px-4">
+        <CenterPartContainer user={cu.user} />
+      </div>
 
       {/* Right Sidebar */}
       <div className="hidden w-[320px] shrink-0 xl:block px-4">

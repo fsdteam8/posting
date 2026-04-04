@@ -12,7 +12,7 @@ interface PostCardProps {
   post: Post;
   accessToken: string;
   loggedInUserId: string;
-  groupId: string;
+  groupId?: string;
 }
 
 const CHAR_LIMIT = 350;
@@ -21,7 +21,7 @@ const GroupPostCard = ({
   post,
   accessToken,
   loggedInUserId,
-  groupId,
+  groupId = "",
 }: PostCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [commentDialogOpen, setCommentDialogOpen] = useState(false);

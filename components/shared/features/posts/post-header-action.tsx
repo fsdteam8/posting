@@ -36,14 +36,14 @@ const AlertModal = dynamic(() => import("@/components/ui/custom/alert-modal"), {
 interface Props {
   data: Post;
   accessToken: string;
-  groupId: string;
+  groupId?: string;
   loggedinUserId: string;
 }
 
 const PostHeaderAction = ({
   data,
   accessToken,
-  groupId,
+  groupId = "",
   loggedinUserId,
 }: Props) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -60,7 +60,7 @@ const PostHeaderAction = ({
     groupId: groupId,
   });
 
-  const { mutate: deletePost, isPending: isDeleting } = useDeletePost({
+  const { mutateAsync: deletePost, isPending: isDeleting } = useDeletePost({
     postId: data._id,
     groupId,
     accessToken,
@@ -72,8 +72,12 @@ const PostHeaderAction = ({
     accessToken,
   });
 
-  const handleDelete = () => {
-    deletePost();
+  const handleDelete = async () => {
+    const res = await deletePost();
+
+    if (res.success) {
+      setDeleteOpen(false);
+    }
   };
 
   const isCreator = data.author._id === loggedinUserId;
@@ -221,8 +225,8 @@ const PostHeaderAction = ({
       {editOpen && (
         <PostModalContainer
           accessToken={accessToken}
-          username={data.group._id} // or however you get the group username
-          app="group"
+          username={groupId || data.author.username}
+          app={groupId ? "group" : "profile"}
           initialData={data}
           externalOpen={editOpen}
           onExternalOpenChange={setEditOpen}

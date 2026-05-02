@@ -1,19 +1,25 @@
-import { Users2 } from "lucide-react";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { FriendsSidebar } from "./_components/friends-sidebar";
+import { PeopleYouMayKnow } from "./_components/people-you-may-know";
 
-const Page = () => {
+const Page = async () => {
+  const cu = await auth();
+
+  if (!cu || !cu.user || !cu.user.accessToken) redirect("/login");
+
+  const accessToken = cu.user.accessToken as string;
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="flex flex-col items-center text-center gap-3">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10">
-          <Users2 className="size-8 text-primary" />
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto flex gap-4 px-4 py-6">
+        {/* Sidebar */}
+        <FriendsSidebar />
 
-        <h1 className="text-3xl font-bold tracking-tight">Friends</h1>
-
-        <p className="max-w-md text-sm text-muted-foreground">
-          This is the Friends page. Posts, links, and items you’ve saved will
-          appear here.
-        </p>
+        {/* Main content */}
+        <main className="flex-1 space-y-8 min-w-0">
+          <PeopleYouMayKnow accessToken={accessToken} />
+        </main>
       </div>
     </div>
   );

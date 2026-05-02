@@ -29,3 +29,41 @@ export type NonFriendsApiRes = {
   data: NonFriend[];
   pagination: Pagination;
 };
+
+// ── Friend Requests ──────────────────────────────────────────
+
+export type FriendRequestUser = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  profileImage: ProfileImage;
+};
+
+export type FriendRequest = {
+  _id: string;
+  requester: FriendRequestUser;
+  recipient: FriendRequestUser;
+  status: "pending" | "accepted" | "declined";
+  blockedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+};
+
+export type FriendRequestsApiRes = {
+  success: boolean;
+  message: string;
+  data: FriendRequest[];
+};
+
+export type RespondFriendRequestPayload = {
+  requestId: string;
+  action: "accept" | "decline";
+};
+
+export type RespondFriendRequestApiRes = {
+  success: boolean;
+  message: string;
+  data?: unknown;
+};

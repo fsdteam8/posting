@@ -1,6 +1,9 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { FriendsSidebar } from "./_components/friends-sidebar";
+import {
+  FriendsMobileNav,
+  FriendsSidebar,
+} from "./_components/friends-sidebar";
 import { PeopleYouMayKnow } from "./_components/people-you-may-know";
 
 const Page = async () => {
@@ -11,9 +14,13 @@ const Page = async () => {
   const accessToken = cu.user.accessToken as string;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto flex gap-4 px-4 py-6">
-        {/* Sidebar */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Mobile sticky nav — renders above everything, full width */}
+      <FriendsMobileNav />
+
+      {/* Page body */}
+      <div className="max-w-7xl w-full mx-auto flex gap-4 px-4 py-6">
+        {/* Desktop sidebar — only visible on md+ inside the flex row */}
         <FriendsSidebar />
 
         {/* Main content */}

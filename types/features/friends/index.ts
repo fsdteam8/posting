@@ -44,7 +44,7 @@ export type FriendRequest = {
   _id: string;
   requester: FriendRequestUser;
   recipient: FriendRequestUser;
-  status: "pending" | "accepted" | "declined";
+  status: "pending" | "accepted" | "declined" | "cancelled";
   blockedBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -101,5 +101,28 @@ export type UnfriendApiRes = {
   message: string;
   data: {
     friendId: string;
+  };
+};
+
+// ── Sent Requests ────────────────────────────────────────────
+
+export type SentRequestsApiRes = {
+  success: boolean;
+  message: string;
+  data: FriendRequest[];
+};
+
+export type CancelFriendRequestApiRes = {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    requester: string;
+    recipient: string;
+    status: "cancelled";
+    blockedBy: string | null;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
   };
 };

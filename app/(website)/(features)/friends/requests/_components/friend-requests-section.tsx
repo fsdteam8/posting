@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-
+import { Button } from "@/components/ui/button";
 import { useGetFriendRequests } from "@/hooks/features/friends/use-get-friend-requests";
 import { useRespondFriendRequest } from "@/hooks/features/friends/use-respond-friend-request";
-import { AlertCircle, UserCheck } from "lucide-react";
+import { AlertCircle, Send, UserCheck } from "lucide-react";
+import { useState } from "react";
 import { FriendRequestCard } from "./friend-request-card";
 import { FriendRequestCardSkeleton } from "./friend-request-card-skeleton";
+import { SentRequestsModal } from "./sent-requests-modal";
 
 type FriendRequestsSectionProps = {
   accessToken: string;
@@ -15,14 +16,13 @@ type FriendRequestsSectionProps = {
 export function FriendRequestsSection({
   accessToken,
 }: FriendRequestsSectionProps) {
-  // Track which requestId is being acted on and what action
   const [pendingState, setPendingState] = useState<{
     requestId: string;
     action: "accept" | "decline";
   } | null>(null);
 
-  // Optimistically hide resolved cards
   const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
+  const [sentModalOpen, setSentModalOpen] = useState(false);
 
   const { data, isLoading, isError, error } = useGetFriendRequests({
     accessToken,
@@ -49,13 +49,27 @@ export function FriendRequestsSection({
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold tracking-tight">Friend Requests</h2>
-        {!isLoading && visibleRequests.length > 0 && (
-          <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {visibleRequests.length}
-          </span>
-        )}
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-bold tracking-tight">Friend Requests</h2>
+          {!isLoading && visibleRequests.length > 0 && (
+            <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              {visibleRequests.length}
+            </span>
+          )}
+        </div>
+
+        {/* View sent requests — link-style button on the right */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-auto px-2 py-1 text-xs text-primary hover:text-primary hover:bg-primary/10 gap-1.5 font-medium"
+          onClick={() => setSentModalOpen(true)}
+        >
+          <Send className="size-3" />
+          View sent requests
+        </Button>
       </div>
 
       {/* Error state */}
@@ -102,6 +116,13 @@ export function FriendRequestsSection({
           </p>
         </div>
       )}
+
+      {/* Sent requests modal */}
+      <SentRequestsModal
+        open={sentModalOpen}
+        onOpenChange={setSentModalOpen}
+        accessToken={accessToken}
+      />
     </section>
   );
 }

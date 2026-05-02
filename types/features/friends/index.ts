@@ -67,3 +67,39 @@ export type RespondFriendRequestApiRes = {
   message: string;
   data?: unknown;
 };
+
+// ── All Friends ──────────────────────────────────────────────
+
+export type Friend = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  bio: string;
+  profileImage: ProfileImage;
+  followers: string[];
+  isOnline: boolean;
+  lastActiveAt: string;
+  username: string;
+  mutualFriendsCount: number;
+  mutualFriends: string[];
+};
+
+export type AllFriendsMeta = {
+  totalFriends: number;
+};
+
+export type AllFriendsApiRes = {
+  success: boolean;
+  message: string;
+  data: Friend[];
+  meta: AllFriendsMeta;
+  pagination: Pagination;
+};
+
+export type UnfriendApiRes = {
+  success: boolean;
+  message: string;
+  data: {
+    friendId: string;
+  };
+};

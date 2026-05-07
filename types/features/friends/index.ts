@@ -126,3 +126,21 @@ export type CancelFriendRequestApiRes = {
     __v: number;
   };
 };
+
+// ── Suggestions ──────────────────────────────────────────────
+
+export type Suggestion = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  bio: string;
+  profileImage: ProfileImage;
+  followers: string[];
+  username: string;
+};
+
+export type SuggestionsApiRes = {
+  success: boolean;
+  message: string;
+  data: Suggestion[];
+};

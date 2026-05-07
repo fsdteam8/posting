@@ -99,7 +99,7 @@ export function AllFriendsSection({ accessToken }: AllFriendsSectionProps) {
       )}
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4  gap-3">
         {isLoading
           ? Array.from({ length: 10 }).map((_, i) => (
               <FriendRequestCardSkeleton key={i} />

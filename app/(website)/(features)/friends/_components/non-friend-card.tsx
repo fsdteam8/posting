@@ -26,8 +26,8 @@ export function NonFriendCard({
   return (
     <div className="flex flex-col items-center rounded-lg border bg-card shadow-sm overflow-hidden">
       {/* Profile image area */}
-      <div className="relative w-full h-32 bg-muted">
-        <Avatar className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 size-16 border-4 border-background ring-2 ring-primary/20">
+      <div className="relative w-full h-20 bg-muted shrink-0">
+        <Avatar className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 size-14 border-4 border-background ring-2 ring-primary/20">
           {hasAvatar && (
             <AvatarImage
               src={user.profileImage.url}
@@ -41,20 +41,24 @@ export function NonFriendCard({
         </Avatar>
       </div>
 
-      {/* Info */}
-      <div className="mt-10 px-3 pb-3 flex flex-col items-center w-full gap-1 text-center">
-        <p className="font-semibold text-sm leading-tight line-clamp-1">
+      {/* Info — flex-1 fills remaining space, buttons pushed to bottom via mt-auto */}
+      <div className="flex flex-col flex-1 items-center w-full px-3 pt-9 pb-3 text-center">
+        <p className="font-semibold text-sm leading-tight line-clamp-1 w-full">
           {fullName}
         </p>
 
-        {user.mutualFriendsCount > 0 && (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Users className="size-3" />
-            {user.mutualFriendsCount} mutual
-          </span>
-        )}
+        {/* Always reserve space so cards stay same height with/without mutual */}
+        <div className="h-4.5 flex items-center justify-center mt-1">
+          {user.mutualFriendsCount > 0 && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Users className="size-3" />
+              {user.mutualFriendsCount} mutual
+            </span>
+          )}
+        </div>
 
-        <div className="flex flex-col gap-1.5 w-full mt-2">
+        {/* mt-auto always pins buttons to the bottom */}
+        <div className="flex flex-col gap-1.5 w-full mt-auto pt-2">
           <Button
             size="sm"
             className="w-full text-xs h-7"

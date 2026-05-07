@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Cake, Home, Lightbulb, List, UserCheck, Users } from "lucide-react";
+import { Home, Lightbulb, UserCheck, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,8 +10,8 @@ const NAV_ITEMS = [
   { label: "Friend Requests", href: "/friends/requests", icon: UserCheck },
   { label: "Suggestions", href: "/friends/suggestions", icon: Lightbulb },
   { label: "All Friends", href: "/friends/all", icon: Users },
-  { label: "Birthdays", href: "/friends/birthdays", icon: Cake },
-  { label: "Custom List", href: "/friends/lists", icon: List },
+  // { label: "Birthdays", href: "/friends/birthdays", icon: Cake },
+  // { label: "Custom List", href: "/friends/lists", icon: List },
 ];
 
 /** Shown on md+ screens as a left sidebar inside the flex row */

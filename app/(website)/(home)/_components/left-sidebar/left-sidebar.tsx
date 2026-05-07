@@ -7,76 +7,31 @@ import { useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import {
-  Bookmark,
-  CalendarDays,
-  ChevronDown,
-  ChevronUp,
-  Flame,
-  MoreHorizontal,
-  Newspaper,
-  Star,
-} from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { useProfile } from "@/hooks/profile/use-profile";
 
 type SidebarItem = {
-  icon: string | StaticImageData; // local image src (from import)
+  icon: string | StaticImageData;
   label: string;
   href: string;
   iconClassName?: string;
 };
 
 const mainItems: SidebarItem[] = [
-  { icon: "/home/icons/play.png", label: "Watch", href: "/reels" },
-  { icon: "/home/icons/events.png", label: "Events", href: "/events" },
-  { icon: "/home/icons/friends.png", label: "Friends", href: "/friends" },
+  { icon: "/home/icons/groups.png", label: "Groups", href: "/groups" },
+  { icon: "/home/icons/play.png", label: "Reels", href: "/reels" },
+  { icon: "/home/icons/bookmark.png", label: "Save", href: "/saved" },
+  { icon: "/home/icons/pages.png", label: "Pages", href: "/pages" },
+  { icon: "/home/icons/events.png", label: "Event", href: "/events" },
+  { icon: "/home/icons/birthday.png", label: "Birthday", href: "/birthday" },
   { icon: "/home/icons/clock.png", label: "Memories", href: "/memories" },
+  { icon: "/home/icons/spaces.png", label: "Spaces", href: "/spaces" },
 ];
 
 const expandedItems: SidebarItem[] = [
-  { icon: "/home/icons/bookmark.png", label: "Saved", href: "/saved" },
-  { icon: "/home/icons/groups.png", label: "Groups", href: "/groups" },
-];
-
-interface ShortcutItem {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  color: string;
-  href: string;
-}
-
-const shortcuts: ShortcutItem[] = [
-  {
-    icon: Flame,
-    label: "Most Visited Group",
-    color: "bg-orange-100 text-orange-600",
-    href: "/groups/most-visited",
-  },
-  {
-    icon: Star,
-    label: "Recently Active",
-    color: "bg-yellow-100 text-yellow-600",
-    href: "/groups/recent",
-  },
-  {
-    icon: Newspaper,
-    label: "Groups New Posts",
-    color: "bg-blue-100 text-primary",
-    href: "/groups/new-posts",
-  },
-  {
-    icon: Bookmark,
-    label: "Saved Items",
-    color: "bg-pink-100 text-pink-600",
-    href: "/saved",
-  },
-  {
-    icon: CalendarDays,
-    label: "Events this Week",
-    color: "bg-red-100 text-red-500",
-    href: "/events/week",
-  },
+  { icon: "/home/icons/offers.png", label: "Offers", href: "/offers" },
+  { icon: "/home/icons/poke.png", label: "Poke's", href: "/pokes" },
 ];
 
 interface Props {
@@ -97,16 +52,15 @@ export default function LeftSidebar({ accessToken }: Props) {
   };
 
   return (
-    <aside className="flex flex-col gap-2 py-4 pr-2">
+    <aside className="w-full py-4">
       {/* User Profile */}
       <Link
         href="/profile"
         className={cn(
-          "group flex items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors",
-          "hover:bg-muted/60",
+          "mb-4 flex items-center gap-3 rounded-2xl px-3 py-2 transition-colors hover:bg-muted/50",
         )}
       >
-        <Avatar className="size-9 ring-1 ring-border group-hover:ring-primary/30 transition">
+        <Avatar className="size-10 ring-1 ring-border">
           <AvatarImage src={USER.avatarUrl} alt={USER.name} />
           <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
             {USER.name.charAt(0)}
@@ -118,33 +72,24 @@ export default function LeftSidebar({ accessToken }: Props) {
         </span>
       </Link>
 
-      {/* Main Nav Items */}
-      {mainItems.map((item) => (
-        <SidebarRow
-          key={item.label}
-          item={item}
-          active={pathname === item.href}
-        />
-      ))}
+      {/* Grid Layout */}
+      <div className="grid grid-cols-2 gap-3">
+        {mainItems.map((item) => (
+          <SidebarCard
+            key={item.label}
+            item={item}
+            active={pathname === item.href}
+          />
+        ))}
 
-      {/* Expandable Items */}
-      <div
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          expanded
-            ? "grid-rows-[1fr] opacity-100"
-            : "grid-rows-[0fr] opacity-0",
-        )}
-      >
-        <div className="overflow-hidden">
-          {expandedItems.map((item) => (
-            <SidebarRow
+        {expanded &&
+          expandedItems.map((item) => (
+            <SidebarCard
               key={item.label}
               item={item}
               active={pathname === item.href}
             />
           ))}
-        </div>
       </div>
 
       {/* See More / Less */}
@@ -152,101 +97,56 @@ export default function LeftSidebar({ accessToken }: Props) {
         type="button"
         onClick={() => setExpanded((v) => !v)}
         className={cn(
-          "flex items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors",
-          "hover:bg-muted/60",
+          "mt-5 flex h-10 w-full items-center justify-center rounded-xl border border-border bg-background text-sm font-medium text-muted-foreground transition hover:bg-muted/60",
         )}
       >
-        <span className="flex size-9 items-center justify-center rounded-full bg-muted/40 text-foreground">
-          {expanded ? (
-            <ChevronUp className="size-5" />
-          ) : (
-            <ChevronDown className="size-5" />
-          )}
-        </span>
-        <span className="text-[15px] font-medium text-foreground">
-          {expanded ? "See Less" : "See More"}
-        </span>
-      </button>
-
-      {/* Separator */}
-      <div className="mx-2 my-1 border-t border-border" />
-
-      {/* Shortcuts Section */}
-      <div className="flex items-center justify-between px-2 py-1">
-        <span className="text-[17px] font-semibold text-foreground">
-          Shortcuts
-        </span>
-        <button className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/60">
-          <MoreHorizontal className="size-5" />
-        </button>
-      </div>
-
-      {shortcuts.map((shortcut) => (
-        <Link
-          key={shortcut.label}
-          href={shortcut.href}
-          className={cn(
-            "group flex items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors",
-            "hover:bg-muted/60",
-          )}
-        >
-          <span
-            className={cn(
-              "flex size-9 items-center justify-center rounded-lg",
-              shortcut.color,
-            )}
-          >
-            <shortcut.icon className="size-5" />
-          </span>
-          <span className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-            {shortcut.label}
-          </span>
-        </Link>
-      ))}
-
-      {/* See More for shortcuts */}
-      <button className="flex items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/60">
-        <span className="flex size-9 items-center justify-center rounded-full bg-muted/40 text-foreground">
-          <ChevronDown className="size-5" />
-        </span>
-        <span className="text-[15px] font-medium text-foreground">
-          See More
-        </span>
+        {expanded ? (
+          <>
+            <ChevronUp className="mr-1 size-4" />
+            See Less
+          </>
+        ) : (
+          <>
+            <ChevronDown className="mr-1 size-4" />
+            See More
+          </>
+        )}
       </button>
     </aside>
   );
 }
 
-function SidebarRow({ item, active }: { item: SidebarItem; active: boolean }) {
+function SidebarCard({ item, active }: { item: SidebarItem; active: boolean }) {
   return (
     <Link
       href={item.href}
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-2 py-2 text-left transition-all",
-        active ? "bg-primary/10 ring-1 ring-primary/20" : "hover:bg-muted/60",
+        "group flex h-23.75 flex-col items-center justify-center rounded-2xl border bg-background p-3 text-center shadow-sm transition-all",
+        "hover:-translate-y-0.5 hover:shadow-md",
+        active && "border-primary/30 bg-primary/5",
       )}
     >
-      <span
+      <div
         className={cn(
-          "flex size-9 items-center justify-center rounded-lg transition",
+          "mb-2 flex size-11 items-center justify-center rounded-xl transition",
           active ? "bg-primary/10" : "bg-transparent",
         )}
       >
         <Image
           src={item.icon}
           alt={item.label}
-          width={22}
-          height={22}
+          width={30}
+          height={30}
           className={cn(
-            "opacity-90 transition group-hover:opacity-100",
+            "object-contain opacity-90 transition group-hover:opacity-100",
             active && "opacity-100",
           )}
         />
-      </span>
+      </div>
 
       <span
         className={cn(
-          "text-[15px] font-medium transition",
+          "text-[14px] font-medium leading-none transition",
           active ? "text-primary" : "text-foreground",
         )}
       >

@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { PeopleYouMayKnow } from "./_components/people-you-may-know";
+import { FriendRequestsSection } from "./_components/friend-requests-section";
 
-const Page = async () => {
+const FriendRequestsPage = async () => {
   const cu = await auth();
 
   if (!cu || !cu.user || !cu.user.accessToken) redirect("/login");
@@ -11,9 +11,9 @@ const Page = async () => {
 
   return (
     <div className="space-y-8">
-      <PeopleYouMayKnow accessToken={accessToken} />
+      <FriendRequestsSection accessToken={accessToken} />
     </div>
   );
 };
 
-export default Page;
+export default FriendRequestsPage;

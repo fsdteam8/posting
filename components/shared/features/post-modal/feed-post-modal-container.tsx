@@ -148,62 +148,48 @@ const FeedTrigger = ({
   const avatarUrl = profile?.profileImage?.url;
 
   return (
-    <Card className="p-2 pt-5">
-      <div className="px-5 py-0">
-        <div className="flex items-center gap-x-2">
-          {avatarUrl ? (
-            <Image
-              src={avatarUrl}
-              width={40}
-              height={40}
-              alt={firstName}
-              className="rounded-full object-cover shrink-0"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-muted shrink-0" />
-          )}
-          <Button
-            variant="secondary"
-            className="flex-1 rounded-full justify-start text-muted-foreground font-normal"
-            onClick={onOpen}
-          >
-            What&apos;s on your mind{firstName ? `, ${firstName}` : ""}?
-          </Button>
-        </div>
-      </div>
+    <Card className="px-4 py-3 shadow-sm rounded-full hover:bg-muted transition-colors duration-200">
+      <div className="flex items-center gap-x-3">
+        {/* Avatar */}
+        {avatarUrl ? (
+          <Image
+            src={avatarUrl}
+            width={40}
+            height={40}
+            alt={firstName}
+            className="rounded-full object-cover shrink-0"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-muted shrink-0" />
+        )}
 
-      <div className="border-t border-border mt-3 pt-1">
-        <div className="flex justify-between">
-          <Button
-            variant="ghost"
-            className="flex-1 transition-colors duration-300"
+        {/* Pill input placeholder */}
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex-1 text-left bg-muted/60  transition-colors duration-200 rounded-full px-4 py-2 text-sm text-muted-foreground"
+        >
+          Tell us what&apos;s now with you?
+        </button>
+
+        {/* Icon actions */}
+        <div className="flex items-center gap-x-1 shrink-0">
+          <button
+            type="button"
+            title="Feeling/activity"
+            onClick={onFeelingTrigger}
+            className="p-2 rounded-full hover:bg-muted transition-colors duration-200"
+          >
+            <Smile className="w-5 h-5 text-yellow-400" />
+          </button>
+          <button
+            type="button"
+            title="Add photo/video"
             onClick={onPhotoTrigger}
+            className="p-2 rounded-full hover:bg-muted transition-colors duration-200"
           >
             <ImageIcon className="w-5 h-5 text-[#45bd62]" />
-            <span className="text-[13px] sm:text-[15px] font-semibold text-muted-foreground">
-              Photo/Video
-            </span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex-1 transition-colors duration-300"
-            onClick={onOpen}
-          >
-            <UserPlus className="w-5 h-5 text-primary" />
-            <span className="text-[13px] sm:text-[15px] font-semibold text-muted-foreground">
-              Tag Friends
-            </span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex-1 transition-colors duration-300"
-            onClick={onFeelingTrigger}
-          >
-            <Smile className="w-5 h-5 text-[#f7b928]" />
-            <span className="text-[13px] sm:text-[15px] font-semibold text-muted-foreground">
-              Feeling/Activity
-            </span>
-          </Button>
+          </button>
         </div>
       </div>
     </Card>

@@ -19,8 +19,6 @@ const CenterPartContainer = ({ user }: Props) => {
 
   return (
     <div className="py-4 space-y-4">
-      <FeedPostModalContainer accessToken={user.accessToken!} />
-
       <StoryReel
         accessToken={user.accessToken}
         currentUser={{
@@ -29,6 +27,8 @@ const CenterPartContainer = ({ user }: Props) => {
           avatar: profile.profileImage.url ?? "",
         }}
       />
+
+      <FeedPostModalContainer accessToken={user.accessToken!} />
 
       {/* your feed posts list will go here */}
       <FeedPostContainer

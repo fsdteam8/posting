@@ -1,5 +1,6 @@
 "use client";
 
+import { useGetNotifications } from "@/hooks/features/notifications/api/use-get-notifications";
 import { useProfile } from "@/hooks/profile/use-profile";
 import { Bell, Menu, MessageCircle, Plus } from "lucide-react";
 import Link from "next/link";
@@ -7,6 +8,7 @@ import { useState } from "react";
 import { IconButton } from "./icon-button";
 import { NavLinks } from "./nav-links";
 import { NavSearch } from "./nav-search";
+import { NotificationPanel } from "./notification-panel";
 import { ProfileMenu } from "./profile-menu";
 
 const PAGES = [
@@ -35,6 +37,10 @@ export default function Navbar({ accessToken }: Props) {
   }>({
     type: "page",
   });
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const { data: notifData } = useGetNotifications({ accessToken, limit: 1 });
+  const unreadCount = notifData?.meta?.unreadCount ?? 0;
 
   const { data: profile } = useProfile(accessToken);
 
@@ -75,7 +81,20 @@ export default function Navbar({ accessToken }: Props) {
         <div className="hidden sm:flex items-center gap-2">
           <IconButton icon={Plus} label="Create" />
           <IconButton icon={MessageCircle} label="Messenger" badge={3} />
-          <IconButton icon={Bell} label="Notifications" badge={5} />
+          <div className="relative">
+            <IconButton
+              icon={Bell}
+              label="Notifications"
+              badge={unreadCount}
+              onClick={() => setShowNotifications((prev) => !prev)}
+            />
+            {showNotifications && (
+              <NotificationPanel
+                accessToken={accessToken}
+                onClose={() => setShowNotifications(false)}
+              />
+            )}
+          </div>
         </div>
         <div className="flex sm:hidden">
           <IconButton icon={Menu} label="Menu" />

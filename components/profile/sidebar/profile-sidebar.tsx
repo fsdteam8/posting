@@ -29,8 +29,16 @@ export function ProfileSidebar({
         isOwner={isOwner}
         accessToken={accessToken}
       />
-      <EducationCard profile={profile} isOwner={isOwner} />
-      <ContactInfoCard profile={profile} isOwner={isOwner} />
+      <EducationCard
+        profile={profile}
+        isOwner={isOwner}
+        accessToken={accessToken}
+      />
+      <ContactInfoCard
+        profile={profile}
+        isOwner={isOwner}
+        accessToken={accessToken}
+      />
       <WorkCard profile={profile} isOwner={isOwner} />
       <PhotosWidget photos={photos} basePath={basePath} />
     </div>

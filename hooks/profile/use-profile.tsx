@@ -23,6 +23,20 @@ interface PrivacySettings {
   whoCanSendFriendRequest: string;
 }
 
+export interface Education {
+  school: string;
+  degree: string;
+  fieldOfStudy: string;
+  from: Date;
+  to: Date;
+  current: boolean;
+}
+
+export interface SocialUrl {
+  platform: string;
+  url: string;
+}
+
 export interface Profile {
   _id: string;
   role: string;
@@ -53,8 +67,8 @@ export interface Profile {
   languages: string[];
   skills: string[];
   works: unknown[];
-  socialLinks: unknown[];
-  education: unknown[];
+  socialLinks: SocialUrl[];
+  education: Education[];
   blockedUsers: string[];
   followers: string[];
   following: string[];

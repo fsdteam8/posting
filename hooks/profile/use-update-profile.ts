@@ -1,5 +1,5 @@
 import { baseURL } from "@/constants";
-import { Profile } from "@/hooks/profile/use-profile";
+import { Education, Profile, SocialUrl } from "@/hooks/profile/use-profile";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -29,7 +29,10 @@ type UpdateProfilePayload = Partial<
     | "skills"
     | "isOnboarded"
   >
->;
+> & {
+  education?: Education[];
+  socialLinks?: SocialUrl[];
+};
 
 export function useUpdateProfile({ accessToken }: { accessToken: string }) {
   const queryClient = useQueryClient();

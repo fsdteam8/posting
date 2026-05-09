@@ -9,12 +9,13 @@ import { SponsoredCard } from "./sponsor-card";
 export function RightSidebar() {
   return (
     <aside className="flex flex-col gap-4 py-4 pl-2">
+      <BirthdaysCard />
+      <Separator />
       <SponsoredCard ads={sponsoredAds} />
       <Separator />
       <FriendRequestCard requests={friendRequests} />
       <Separator />
-      <BirthdaysCard />
-      <Separator />
+
       <ContactsCard contacts={contacts} />
     </aside>
   );

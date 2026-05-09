@@ -1,9 +1,9 @@
 "use client";
 
+import TimelinePostContainer from "@/components/profile/posts/timeline-post-container";
 import { ProfileSidebar } from "@/components/profile/sidebar/profile-sidebar";
 import FeedPostModalContainer from "@/components/shared/features/post-modal/feed-post-modal-container";
 import { useProfile } from "@/hooks/profile/use-profile";
-import FeedPostContainer from "../../(home)/_components/center-part/_components/FeedPostContainer";
 
 interface ProfilePageClientProps {
   accessToken: string;
@@ -36,13 +36,14 @@ export function ProfilePageClient({
       <div className="flex-1 min-w-0 flex flex-col gap-3">
         <FeedPostModalContainer accessToken={accessToken} />
 
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className=" rounded-2xl  overflow-hidden">
           <div className="flex items-center justify-between px-4 pt-4 pb-2">
             <h2 className="text-[15px] font-bold text-gray-900">Feed</h2>
           </div>
           <div className="px-1 pb-1">
-            <FeedPostContainer
+            <TimelinePostContainer
               accessToken={accessToken}
+              targetUserId={userId}
               loggedinUser={userId}
             />
           </div>

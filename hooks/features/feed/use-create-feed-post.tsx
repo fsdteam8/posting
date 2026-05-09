@@ -1,11 +1,12 @@
 import { baseURL } from "@/constants";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Params {
   accessToken: string;
 }
 
 export function useCreateFeedPost({ accessToken }: Params) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["create-feed-post"],
     mutationFn: async (body: FormData) => {
@@ -26,6 +27,11 @@ export function useCreateFeedPost({ accessToken }: Params) {
       }
 
       return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["timeline-posts", "feed-posts"],
+      });
     },
   });
 }

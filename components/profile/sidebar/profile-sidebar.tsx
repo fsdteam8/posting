@@ -24,7 +24,11 @@ export function ProfileSidebar({
   return (
     <div className="flex flex-col gap-3 w-full">
       <BioCard profile={profile} isOwner={isOwner} accessToken={accessToken} />
-      <PersonalDetailsCard profile={profile} isOwner={isOwner} />
+      <PersonalDetailsCard
+        profile={profile}
+        isOwner={isOwner}
+        accessToken={accessToken}
+      />
       <EducationCard profile={profile} isOwner={isOwner} />
       <ContactInfoCard profile={profile} isOwner={isOwner} />
       <WorkCard profile={profile} isOwner={isOwner} />

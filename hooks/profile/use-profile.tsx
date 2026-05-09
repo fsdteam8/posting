@@ -32,6 +32,16 @@ export interface Education {
   current: boolean;
 }
 
+export interface Work {
+  title: string;
+  company: string;
+  location: string;
+  from: Date;
+  to: Date;
+  current: boolean;
+  description: string;
+}
+
 export interface SocialUrl {
   platform: string;
   url: string;
@@ -66,7 +76,7 @@ export interface Profile {
   hobbies: string[];
   languages: string[];
   skills: string[];
-  works: unknown[];
+  works: Work[];
   socialLinks: SocialUrl[];
   education: Education[];
   blockedUsers: string[];

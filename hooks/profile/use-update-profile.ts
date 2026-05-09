@@ -1,5 +1,10 @@
 import { baseURL } from "@/constants";
-import { Education, Profile, SocialUrl } from "@/hooks/profile/use-profile";
+import {
+  Education,
+  Profile,
+  SocialUrl,
+  Work,
+} from "@/hooks/profile/use-profile";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -32,6 +37,7 @@ type UpdateProfilePayload = Partial<
 > & {
   education?: Education[];
   socialLinks?: SocialUrl[];
+  works?: Work[];
 };
 
 export function useUpdateProfile({ accessToken }: { accessToken: string }) {

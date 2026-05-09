@@ -39,7 +39,7 @@ export function ProfileSidebar({
         isOwner={isOwner}
         accessToken={accessToken}
       />
-      <WorkCard profile={profile} isOwner={isOwner} />
+      <WorkCard profile={profile} isOwner={isOwner} accessToken={accessToken} />
       <PhotosWidget photos={photos} basePath={basePath} />
     </div>
   );

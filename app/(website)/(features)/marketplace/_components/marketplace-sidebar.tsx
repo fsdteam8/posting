@@ -1,156 +1,168 @@
 "use client";
 
+/**
+ * MarketplaceSidebar
+ *
+ * Static nav column on md+, content of the mobile drawer on smaller screens.
+ *
+ * Active state
+ * ────────────
+ * The `activeNavItem` prop drives which nav button is highlighted.
+ * It is always derived from `usePathname()` in MarketplaceShell —
+ * never from local component state — so it stays in sync with the URL
+ * even on browser back/forward navigation.
+ *
+ *   activeNavItem === "browse"      → Browse All highlighted
+ *   activeNavItem === "my-listings" → Your Listings highlighted
+ *   activeNavItem === "create"      → Create New Listing highlighted
+ */
+
+import { useGetMarketplaceMeta } from "@/hooks/features/marketplace/api/use-get-marketplace-meta";
 import { cn } from "@/lib/utils";
-import { ListingStatus } from "@/types/features/marketplace";
-import {
-  Car,
-  ChevronRight,
-  Home,
-  Package,
-  Plus,
-  ShoppingBag,
-  Tag,
-  Zap,
-} from "lucide-react";
+import type { ListingStatus } from "@/types/features/marketplace";
+import { Grid2X2, List, PlusCircle, Store, Tag } from "lucide-react";
+import type { MarketplaceNavItem } from "./marketplace-shell";
 
-const CATEGORIES = [
-  "Vehicles",
-  "Property Rentals",
-  "Apparel",
-  "Classifieds",
-  "Electronics",
-  "Entertainment",
-  "Family",
-  "Free Stuff",
-  "Garden & Outdoor",
-  "Hobbies",
-  "Home Goods",
-  "Home Improvement Supplies",
-  "Home Sales",
-  "Musical Instruments",
-  "Office Supplies",
-  "Pet Supplies",
-  "Sporting Goods",
-  "Toys & Games",
-  "Buy and sell groups",
-];
+// ─── Props ────────────────────────────────────────────────────────────────────
 
-type Props = {
+interface MarketplaceSidebarProps {
+  // ── Route-aware active nav ──────────────────────────────────────────────────
+  /** Which top-level nav item is currently active. Derived from usePathname(). */
+  activeNavItem: MarketplaceNavItem;
+
+  // ── Category filter ─────────────────────────────────────────────────────────
   activeCategory: string | null;
   onCategoryChange: (cat: string | null) => void;
-  activeStatus: ListingStatus | null;
-  onStatusChange: (s: ListingStatus | null) => void;
+
+  // ── Nav callbacks ───────────────────────────────────────────────────────────
+  onBrowseClick: () => void;
   onCreateClick: () => void;
   onMyListingsClick: () => void;
-};
+
+  // ── Status filter (kept for API compatibility, used on my-listings page) ───
+  activeStatus?: ListingStatus | null;
+  onStatusChange?: (status: ListingStatus | null) => void;
+}
+
+// ─── Sidebar nav item helper ──────────────────────────────────────────────────
+
+interface NavButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}
+
+function NavButton({ icon, label, active, onClick }: NavButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-medium transition-colors text-left",
+        active
+          ? "bg-blue-50 text-blue-700"
+          : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800",
+      )}
+    >
+      <span
+        className={cn(
+          "w-4 h-4 shrink-0",
+          active ? "text-blue-600" : "text-neutral-400",
+        )}
+      >
+        {icon}
+      </span>
+      {label}
+    </button>
+  );
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function MarketplaceSidebar({
+  activeNavItem,
   activeCategory,
   onCategoryChange,
+  onBrowseClick,
   onCreateClick,
   onMyListingsClick,
-}: Props) {
+  activeStatus,
+  onStatusChange,
+}: MarketplaceSidebarProps) {
+  const { data } = useGetMarketplaceMeta();
+  const categories: string[] = data?.data?.categories ?? [];
+
   return (
-    <aside className="w-55 shrink-0 hidden md:flex flex-col gap-1 border-r border-neutral-100 pr-3 py-4 h-full overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-[13px] font-semibold text-neutral-800">
+    <div className="w-52 py-3 px-2 flex flex-col gap-4">
+      {/* ── Top nav ──────────────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-0.5">
+        <p className="px-3 mb-1 text-[10.5px] font-semibold text-neutral-400 uppercase tracking-wider">
           Marketplace
-        </span>
-        <button
+        </p>
+
+        <NavButton
+          icon={<Grid2X2 className="w-4 h-4" />}
+          label="Browse All"
+          // Active only on the exact /marketplace route
+          active={activeNavItem === "browse"}
+          onClick={onBrowseClick}
+        />
+
+        <NavButton
+          icon={<List className="w-4 h-4" />}
+          label="Your Listings"
+          // Active only on /marketplace/my-listing
+          active={activeNavItem === "my-listings"}
+          onClick={onMyListingsClick}
+        />
+
+        <NavButton
+          icon={<PlusCircle className="w-4 h-4" />}
+          label="Create New Listing"
+          // Active only on /marketplace/create
+          active={activeNavItem === "create"}
           onClick={onCreateClick}
-          className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 font-medium"
-        >
-          <Plus className="w-3 h-3" />
-          New
-        </button>
+        />
       </div>
 
-      {/* Nav links */}
-      <nav className="flex flex-col gap-0.5 mb-3">
-        {[
-          { label: "Browse all", icon: ShoppingBag, value: null },
-          { label: "Notifications", icon: Zap, value: "notifications" },
-          { label: "Inbox", icon: Tag, value: "inbox" },
-        ].map((item) => (
+      {/* ── Category filter (only relevant on the browse route) ──────────── */}
+      {categories.length > 0 && (
+        <div className="flex flex-col gap-0.5">
+          <p className="px-3 mb-1 text-[10.5px] font-semibold text-neutral-400 uppercase tracking-wider">
+            Categories
+          </p>
+
+          {/* "All" clears the category filter */}
           <button
-            key={item.label}
-            onClick={() => {
-              if (item.value === null) onCategoryChange(null);
-            }}
+            onClick={() => onCategoryChange(null)}
             className={cn(
-              "flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors w-full text-left",
-              activeCategory === item.value &&
-                "bg-blue-50 text-blue-700 font-medium",
+              "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[12px] transition-colors text-left",
+              activeCategory === null
+                ? "bg-blue-50 text-blue-700 font-medium"
+                : "text-neutral-600 hover:bg-neutral-100",
             )}
           >
-            <item.icon className="w-3.5 h-3.5 shrink-0" />
-            {item.label}
+            <Store className="w-3.5 h-3.5 shrink-0" />
+            All categories
           </button>
-        ))}
 
-        <button
-          onClick={onMyListingsClick}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors w-full text-left"
-        >
-          <Package className="w-3.5 h-3.5 shrink-0" />
-          Your listings
-        </button>
-      </nav>
-
-      {/* Create listing CTA */}
-      <button
-        onClick={onCreateClick}
-        className="flex items-center gap-2 mx-1 mb-3 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-medium transition-colors cursor-pointer"
-      >
-        <Plus className="w-3.5 h-3.5" />
-        Create new listing
-      </button>
-
-      <div className="px-1 mb-1">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
-          Top categories
-        </span>
-      </div>
-
-      {[
-        { label: "Vehicles", icon: Car },
-        { label: "Home Sales", icon: Home },
-        { label: "Electronics", icon: Zap },
-      ].map((item) => (
-        <button
-          key={item.label}
-          onClick={() => onCategoryChange(item.label)}
-          className={cn(
-            "flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors w-full text-left",
-            activeCategory === item.label &&
-              "bg-blue-50 text-blue-700 font-medium",
-          )}
-        >
-          <item.icon className="w-3.5 h-3.5 shrink-0" />
-          {item.label}
-        </button>
-      ))}
-
-      <div className="px-1 mt-2 mb-1">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
-          All categories
-        </span>
-      </div>
-
-      {CATEGORIES.map((cat) => (
-        <button
-          key={cat}
-          onClick={() => onCategoryChange(cat)}
-          className={cn(
-            "flex items-center justify-between px-2 py-1.5 rounded-md text-[12px] text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors w-full text-left group",
-            activeCategory === cat && "bg-blue-50 text-blue-700 font-medium",
-          )}
-        >
-          <span>{cat}</span>
-          <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
-      ))}
-    </aside>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => onCategoryChange(cat)}
+              className={cn(
+                "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[12px] transition-colors text-left",
+                activeCategory === cat
+                  ? "bg-blue-50 text-blue-700 font-medium"
+                  : "text-neutral-600 hover:bg-neutral-100",
+              )}
+            >
+              <Tag className="w-3.5 h-3.5 shrink-0 opacity-60" />
+              <span className="truncate">{cat}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

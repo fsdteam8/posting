@@ -91,7 +91,7 @@ export default function CreateListingPage({ accessToken }: Props) {
 
     if (!res.success) return;
 
-    router.push("/marketplace/your-listing");
+    router.push("/marketplace/my-listing");
   }
 
   return (

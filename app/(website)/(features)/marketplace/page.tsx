@@ -81,11 +81,5 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   // Hand everything to the interactive client shell. The server has done its
   // work — from here on, MarketplaceClient owns state and interactivity.
 
-  return (
-    <MarketplaceClient
-      meta={meta}
-      accessToken={cu.user.accessToken}
-      initialCategory={initialCategory}
-    />
-  );
+  return <MarketplaceClient meta={meta} accessToken={cu.user.accessToken} />;
 }

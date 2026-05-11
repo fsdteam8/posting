@@ -15,6 +15,7 @@ import ListingLocationStep from "./listing-location-step";
 import ListingTypeStep from "./listing-type-step";
 
 import { useGetMarketplaceMeta } from "@/hooks/features/marketplace/api/use-get-marketplace-meta";
+import { useRouter } from "nextjs-toploader/app";
 import {
   CreateListingFormValues,
   createListingSchema,
@@ -28,11 +29,13 @@ type Props = {
 export default function CreateListingPage({ accessToken }: Props) {
   const [step, setStep] = useState<"type" | "details" | "location">("type");
 
+  const router = useRouter();
+
   const { data } = useGetMarketplaceMeta();
 
   const meta = data?.data;
 
-  const { mutate, isPending } = useCreateListing({
+  const { mutateAsync, isPending } = useCreateListing({
     accessToken,
   });
 
@@ -61,8 +64,8 @@ export default function CreateListingPage({ accessToken }: Props) {
     setStep("details");
   }
 
-  function onSubmit(values: ParsedCreateListingFormValues) {
-    mutate({
+  async function onSubmit(values: ParsedCreateListingFormValues) {
+    const res = await mutateAsync({
       title: values.title,
       description: values.description,
       listingType: values.listingType,
@@ -85,6 +88,10 @@ export default function CreateListingPage({ accessToken }: Props) {
         postalCode: values.postalCode,
       },
     });
+
+    if (!res.success) return;
+
+    router.push("/marketplace/your-listing");
   }
 
   return (

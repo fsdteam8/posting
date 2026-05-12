@@ -160,81 +160,83 @@ export function MarketplaceShell({
       {/* ── Main content ───────────────────────────────────────────────────── */}
       <main className="flex-1 min-w-0 flex flex-col">
         {/* ── Sticky top bar ───────────────────────────────────────────────── */}
-        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-neutral-100 px-4 py-2.5">
-          <div className="flex items-center gap-2">
-            {/* Hamburger — mobile only */}
-            <button
-              className="md:hidden p-1.5 rounded-md hover:bg-neutral-100"
-              onClick={openMobileSidebar}
-            >
-              <Menu className="w-4 h-4 text-neutral-600" />
-            </button>
+        {pathname === "/marketplace" && (
+          <div className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-neutral-100 px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              {/* Hamburger — mobile only */}
+              <button
+                className="md:hidden p-1.5 rounded-md hover:bg-neutral-100"
+                onClick={openMobileSidebar}
+              >
+                <Menu className="w-4 h-4 text-neutral-600" />
+              </button>
 
-            {/* Search input */}
-            {showSearch && (
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
-                <Input
-                  value={searchValue}
-                  onChange={(e) => onSearchChange?.(e.target.value)}
-                  placeholder="Search marketplace..."
-                  className="h-8 pl-8 text-[12.5px] bg-neutral-50 border-neutral-200"
-                />
+              {/* Search input */}
+              {showSearch && (
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+                  <Input
+                    value={searchValue}
+                    onChange={(e) => onSearchChange?.(e.target.value)}
+                    placeholder="Search marketplace..."
+                    className="h-8 pl-8 text-[12.5px] bg-neutral-50 border-neutral-200"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center gap-1.5 ml-auto">
+                {/* Active category pill */}
+                {activeCategory && (
+                  <button
+                    onClick={() => setActiveCategory(null)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[11.5px] font-medium border border-blue-100 hover:bg-blue-100 transition-colors"
+                  >
+                    {activeCategory}
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+
+                {topBarExtra}
+
+                {/* Sort dropdown */}
+                {showSort && (
+                  <Select
+                    value={sortValue}
+                    onValueChange={(v) => onSortChange?.(v)}
+                  >
+                    <SelectTrigger className="h-8 w-27.5 text-[12px] bg-neutral-50 border-neutral-200">
+                      <SlidersHorizontal className="w-3 h-3 mr-1" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest" className="text-[12px]">
+                        Newest
+                      </SelectItem>
+                      <SelectItem value="price_asc" className="text-[12px]">
+                        Price: Low
+                      </SelectItem>
+                      <SelectItem value="price_desc" className="text-[12px]">
+                        Price: High
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Create listing CTA — hidden on mobile (FAB handles it) */}
+                {showCreateButton && (
+                  <Button
+                    onClick={handleCreateClick}
+                    size="sm"
+                    className="h-8 text-[12px] gap-1.5 hidden sm:flex"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Create listing
+                  </Button>
+                )}
               </div>
-            )}
-
-            <div className="flex items-center gap-1.5 ml-auto">
-              {/* Active category pill */}
-              {activeCategory && (
-                <button
-                  onClick={() => setActiveCategory(null)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[11.5px] font-medium border border-blue-100 hover:bg-blue-100 transition-colors"
-                >
-                  {activeCategory}
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-
-              {topBarExtra}
-
-              {/* Sort dropdown */}
-              {showSort && (
-                <Select
-                  value={sortValue}
-                  onValueChange={(v) => onSortChange?.(v)}
-                >
-                  <SelectTrigger className="h-8 w-27.5 text-[12px] bg-neutral-50 border-neutral-200">
-                    <SlidersHorizontal className="w-3 h-3 mr-1" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest" className="text-[12px]">
-                      Newest
-                    </SelectItem>
-                    <SelectItem value="price_asc" className="text-[12px]">
-                      Price: Low
-                    </SelectItem>
-                    <SelectItem value="price_desc" className="text-[12px]">
-                      Price: High
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-
-              {/* Create listing CTA — hidden on mobile (FAB handles it) */}
-              {showCreateButton && (
-                <Button
-                  onClick={handleCreateClick}
-                  size="sm"
-                  className="h-8 text-[12px] gap-1.5 hidden sm:flex"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Create listing
-                </Button>
-              )}
             </div>
           </div>
-        </div>
+        )}
 
         {/* ── Route page content ───────────────────────────────────────────── */}
         <div className="flex-1 px-4 py-4">{children}</div>

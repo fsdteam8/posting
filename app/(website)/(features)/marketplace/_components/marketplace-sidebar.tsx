@@ -21,6 +21,7 @@ import { useGetMarketplaceMeta } from "@/hooks/features/marketplace/api/use-get-
 import { cn } from "@/lib/utils";
 import type { ListingStatus } from "@/types/features/marketplace";
 import { Grid2X2, List, PlusCircle, Store, Tag } from "lucide-react";
+import { usePathname } from "next/navigation";
 import type { MarketplaceNavItem } from "./marketplace-shell";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -86,11 +87,10 @@ export function MarketplaceSidebar({
   onBrowseClick,
   onCreateClick,
   onMyListingsClick,
-  activeStatus,
-  onStatusChange,
 }: MarketplaceSidebarProps) {
   const { data } = useGetMarketplaceMeta();
   const categories: string[] = data?.data?.categories ?? [];
+  const pathname = usePathname();
 
   return (
     <div className="w-52 py-3 px-2 flex flex-col gap-4">
@@ -126,7 +126,7 @@ export function MarketplaceSidebar({
       </div>
 
       {/* ── Category filter (only relevant on the browse route) ──────────── */}
-      {categories.length > 0 && (
+      {categories.length > 0 && pathname === "/marketplace" && (
         <div className="flex flex-col gap-0.5">
           <p className="px-3 mb-1 text-[10.5px] font-semibold text-neutral-400 uppercase tracking-wider">
             Categories

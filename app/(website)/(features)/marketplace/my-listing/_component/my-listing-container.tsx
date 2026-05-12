@@ -8,7 +8,7 @@ interface Props {
 const MyListingContainer = ({ accessToken }: Props) => {
   return (
     <>
-      <MyListingsPanel accessToken={accessToken} onEdit={(listing) => {}} />
+      <MyListingsPanel accessToken={accessToken} onEdit={() => {}} />
     </>
   );
 };

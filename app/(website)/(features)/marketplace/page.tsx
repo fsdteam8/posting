@@ -65,7 +65,7 @@ type PageProps = {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function MarketplacePage({ searchParams }: PageProps) {
+export default async function MarketplacePage({}: PageProps) {
   const cu = await auth();
 
   // Kick off meta fetch — async, so Next.js can stream the shell immediately
@@ -73,10 +73,6 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   const meta = await getMarketplaceMeta();
 
   if (!cu || !cu.user || !cu.user.accessToken) redirect("/");
-
-  // ── Initial category pre-selected from URL query param ──────────────────────
-  // e.g. /marketplace?category=Electronics  →  initialCategory = "Electronics"
-  const initialCategory = searchParams?.category ?? null;
 
   // Hand everything to the interactive client shell. The server has done its
   // work — from here on, MarketplaceClient owns state and interactivity.

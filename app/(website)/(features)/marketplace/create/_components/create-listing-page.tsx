@@ -97,7 +97,7 @@ export default function CreateListingPage({ accessToken }: Props) {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Create Listing</h1>
+        <h1 className="text-2xl font-semibold">Create Listing</h1>
 
         <p className="mt-2 text-muted-foreground">
           Create a marketplace listing and start selling.

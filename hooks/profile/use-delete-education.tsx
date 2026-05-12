@@ -1,5 +1,4 @@
 import { baseURL } from "@/constants";
-import { Education, Profile, SocialUrl } from "@/hooks/profile/use-profile";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -8,46 +7,23 @@ type ApiResponse = {
   message: string;
 };
 
-type UpdateProfilePayload = Partial<
-  Pick<
-    Profile,
-    | "bio"
-    | "firstName"
-    | "lastName"
-    | "phone"
-    | "address"
-    | "username"
-    | "dob"
-    | "gender"
-    | "website"
-    | "currentCity"
-    | "hometown"
-    | "relationshipStatus"
-    | "interests"
-    | "hobbies"
-    | "languages"
-    | "skills"
-    | "isOnboarded"
-  >
-> & {
-  education?: Education[];
-  socialLinks?: SocialUrl[];
-};
-
-export function useUpdateProfile({ accessToken }: { accessToken: string }) {
+export function useDeleteEducation({ accessToken }: { accessToken: string }) {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse, Error, UpdateProfilePayload>({
-    mutationKey: ["update-profile"],
+  return useMutation<ApiResponse, Error, { educationId: string }>({
+    mutationKey: ["delete-education"],
 
-    mutationFn: async (payload) => {
+    mutationFn: async ({ educationId }) => {
       const res = await fetch(`${baseURL}/users/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          educationId,
+          deleteEducation: true,
+        }),
       });
 
       if (!res.ok) {
@@ -64,11 +40,11 @@ export function useUpdateProfile({ accessToken }: { accessToken: string }) {
 
     onSuccess: (res) => {
       if (!res.success) {
-        toast.error(res.message ?? "Update failed");
+        toast.error(res.message ?? "Failed to delete education");
         return;
       }
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast.success(res.message || "Profile updated");
+      toast.success(res.message || "Education deleted");
     },
 
     onError: (err) => {

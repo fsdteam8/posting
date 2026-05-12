@@ -24,6 +24,7 @@ interface PrivacySettings {
 }
 
 export interface Education {
+  _id?: string;
   school: string;
   degree: string;
   fieldOfStudy: string;
@@ -33,6 +34,7 @@ export interface Education {
 }
 
 export interface Work {
+  _id?: string;
   title: string;
   company: string;
   location: string;

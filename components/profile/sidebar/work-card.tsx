@@ -1,7 +1,9 @@
 "use client";
 
+import { useAddWork } from "@/hooks/profile/use-add-work";
+import { useDeleteWork } from "@/hooks/profile/use-delete-work";
+import { useEditWork } from "@/hooks/profile/use-edit-work";
 import { Profile, Work } from "@/hooks/profile/use-profile";
-import { useUpdateProfile } from "@/hooks/profile/use-update-profile";
 import {
   Briefcase,
   Check,
@@ -13,7 +15,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,7 +26,8 @@ interface WorkCardProps {
 }
 
 interface WorkFormEntry {
-  id: string;
+  // undefined = new entry (use addWork), string = existing (use workId)
+  _id: string | undefined;
   title: string;
   company: string;
   location: string;
@@ -70,9 +73,22 @@ function getDuration(
   return parts.join(" ");
 }
 
-function makeEmpty(id: string): WorkFormEntry {
+function workToFormEntry(w: Work): WorkFormEntry {
   return {
-    id,
+    _id: w._id,
+    title: w.title ?? "",
+    company: w.company ?? "",
+    location: w.location ?? "",
+    from: toInputDate(w.from),
+    to: toInputDate(w.to),
+    current: Boolean(w.current),
+    description: w.description ?? "",
+  };
+}
+
+function makeEmptyEntry(): WorkFormEntry {
+  return {
+    _id: undefined,
     title: "",
     company: "",
     location: "",
@@ -83,83 +99,80 @@ function makeEmpty(id: string): WorkFormEntry {
   };
 }
 
-function toFormEntries(works: Work[]): WorkFormEntry[] {
-  return works.map((w, i) => ({
-    id: String(i),
-    title: w.title ?? "",
-    company: w.company ?? "",
-    location: w.location ?? "",
-    from: toInputDate(w.from),
-    to: toInputDate(w.to),
-    current: Boolean(w.current),
-    description: w.description ?? "",
-  }));
-}
+function entryToWorkPayload(e: WorkFormEntry): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    workTitle: e.title.trim(),
+    workCompany: e.company.trim(),
+    workLocation: e.location.trim(),
+    workCurrent: Boolean(e.current),
+    workDescription: e.description.trim(),
+  };
 
-function toPayload(entries: WorkFormEntry[]): Partial<Work>[] {
-  return (
-    entries
-      .filter((e) => e.title.trim())
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .map(({ id: _id, ...e }) => ({
-        title: e.title.trim(),
-        company: e.company.trim(),
-        location: e.location.trim(),
-        from: e.from ? new Date(e.from) : undefined,
-        to: e.current ? undefined : e.to ? new Date(e.to) : undefined,
-        current: Boolean(e.current),
-        description: e.description.trim(),
-      }))
-  );
+  if (e.from) payload.workFrom = new Date(e.from).toISOString();
+  if (!e.current && e.to) payload.workTo = new Date(e.to).toISOString();
+
+  return payload;
 }
 
 const inputCls =
   "w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all";
 
-// ─── Single work entry form ───────────────────────────────────────────────────
+// ─── Single entry form ────────────────────────────────────────────────────────
 
 function WorkEntryForm({
   entry,
   index,
-  total,
+  isNew,
+  isSaving,
+  onSave,
+  onCancel,
   onChange,
-  onRemove,
 }: {
   entry: WorkFormEntry;
   index: number;
-  total: number;
-  onChange: (
-    id: string,
-    key: keyof WorkFormEntry,
-    value: string | boolean,
-  ) => void;
-  onRemove: (id: string) => void;
+  isNew: boolean;
+  isSaving: boolean;
+  onSave: () => void;
+  onCancel: () => void;
+  onChange: (key: keyof WorkFormEntry, value: string | boolean) => void;
 }) {
   const uid = useId();
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3 flex flex-col gap-2.5">
+    <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-3 flex flex-col gap-2.5">
       {/* Entry header */}
       <div className="flex items-center justify-between">
         <span className="text-[11.5px] font-semibold text-gray-400 uppercase tracking-wide">
-          Work {index + 1}
+          {isNew ? "New Work Experience" : `Edit Work ${index + 1}`}
         </span>
-        {total > 1 && (
+        <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={() => onRemove(entry.id)}
-            className="p-1 rounded-lg hover:bg-red-50 transition-colors cursor-pointer bg-transparent border-0"
-            aria-label="Remove entry"
+            onClick={onCancel}
+            disabled={isSaving}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer bg-transparent border-0 disabled:opacity-50"
           >
-            <Trash2 size={13} className="text-red-400" />
+            <X size={13} className="text-gray-400" />
           </button>
-        )}
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={isSaving || !entry.title.trim()}
+            className="p-1.5 rounded-lg hover:bg-green-50 transition-colors cursor-pointer bg-transparent border-0 disabled:opacity-50"
+          >
+            {isSaving ? (
+              <Loader2 size={13} className="text-green-500 animate-spin" />
+            ) : (
+              <Check size={13} className="text-green-500" />
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Title — required */}
+      {/* Title */}
       <input
         value={entry.title}
-        onChange={(e) => onChange(entry.id, "title", e.target.value)}
+        onChange={(e) => onChange("title", e.target.value)}
         placeholder="Job title *"
         className={inputCls}
       />
@@ -167,7 +180,7 @@ function WorkEntryForm({
       {/* Company */}
       <input
         value={entry.company}
-        onChange={(e) => onChange(entry.id, "company", e.target.value)}
+        onChange={(e) => onChange("company", e.target.value)}
         placeholder="Company name"
         className={inputCls}
       />
@@ -180,13 +193,13 @@ function WorkEntryForm({
         />
         <input
           value={entry.location}
-          onChange={(e) => onChange(entry.id, "location", e.target.value)}
+          onChange={(e) => onChange("location", e.target.value)}
           placeholder="Location (e.g. New York, NY)"
           className={`${inputCls} pl-8`}
         />
       </div>
 
-      {/* From / To dates */}
+      {/* From / To */}
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
           <label
@@ -199,7 +212,7 @@ function WorkEntryForm({
             id={`${uid}-from`}
             type="date"
             value={entry.from}
-            onChange={(e) => onChange(entry.id, "from", e.target.value)}
+            onChange={(e) => onChange("from", e.target.value)}
             className={inputCls}
           />
         </div>
@@ -215,7 +228,7 @@ function WorkEntryForm({
             type="date"
             value={entry.to}
             disabled={entry.current}
-            onChange={(e) => onChange(entry.id, "to", e.target.value)}
+            onChange={(e) => onChange("to", e.target.value)}
             className={`${inputCls} disabled:opacity-40 disabled:cursor-not-allowed`}
           />
         </div>
@@ -226,7 +239,7 @@ function WorkEntryForm({
         <input
           type="checkbox"
           checked={entry.current}
-          onChange={(e) => onChange(entry.id, "current", e.target.checked)}
+          onChange={(e) => onChange("current", e.target.checked)}
           className="size-3.5 rounded accent-blue-500 cursor-pointer"
         />
         <span className="text-[12.5px] text-gray-600">
@@ -237,7 +250,7 @@ function WorkEntryForm({
       {/* Description */}
       <textarea
         value={entry.description}
-        onChange={(e) => onChange(entry.id, "description", e.target.value)}
+        onChange={(e) => onChange("description", e.target.value)}
         placeholder="Description (optional)"
         rows={2}
         className={`${inputCls} resize-none`}
@@ -248,52 +261,83 @@ function WorkEntryForm({
 
 // ─── Display entry (view mode) ────────────────────────────────────────────────
 
-function WorkEntryDisplay({ work }: { work: Work }) {
+function WorkEntryDisplay({
+  work,
+  isOwner,
+  isDeleting,
+  onEdit,
+  onDelete,
+}: {
+  work: Work;
+  isOwner: boolean;
+  isDeleting: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   const from = formatDisplayDate(work.from);
   const to = work.current ? "Present" : formatDisplayDate(work.to);
   const duration = getDuration(work.from, work.to, work.current);
 
   return (
-    <div className="flex items-start gap-3">
-      {/* Icon */}
+    <div className="flex items-start gap-3 group">
       <div className="size-9 rounded-full bg-orange-50 flex items-center justify-center shrink-0 mt-0.5">
         <Briefcase size={15} className="text-orange-400" />
       </div>
 
       <div className="min-w-0 flex-1">
-        {/* Title */}
-        <p className="text-[13px] font-semibold text-gray-800 leading-snug">
-          {work.title}
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold text-gray-800 leading-snug">
+              {work.title}
+            </p>
+            {work.company && (
+              <p className="text-[12px] text-gray-600 mt-0.5">{work.company}</p>
+            )}
+            {from && (
+              <p className="text-[11.5px] text-gray-400 mt-0.5">
+                {from}
+                {to ? ` – ${to}` : ""}
+                {duration ? ` · ${duration}` : ""}
+              </p>
+            )}
+            {work.location && (
+              <p className="inline-flex items-center gap-1 text-[11.5px] text-gray-400 mt-0.5">
+                <MapPin size={11} />
+                {work.location}
+              </p>
+            )}
+            {work.description && (
+              <p className="text-[12px] text-gray-500 mt-1 leading-relaxed line-clamp-2">
+                {work.description}
+              </p>
+            )}
+          </div>
 
-        {/* Company */}
-        {work.company && (
-          <p className="text-[12px] text-gray-600 mt-0.5">{work.company}</p>
-        )}
-
-        {/* Date range + duration */}
-        {from && (
-          <p className="text-[11.5px] text-gray-400 mt-0.5">
-            {from}
-            {to ? ` – ${to}` : ""}
-            {duration ? ` · ${duration}` : ""}
-          </p>
-        )}
-
-        {/* Location */}
-        {work.location && (
-          <p className="inline-flex items-center gap-1 text-[11.5px] text-gray-400 mt-0.5">
-            <MapPin size={11} />
-            {work.location}
-          </p>
-        )}
-
-        {/* Description */}
-        {work.description && (
-          <p className="text-[12px] text-gray-500 mt-1 leading-relaxed line-clamp-2">
-            {work.description}
-          </p>
-        )}
+          {/* Edit + Delete icons — visible on hover */}
+          {isOwner && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+              <button
+                onClick={onEdit}
+                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer bg-transparent border-0"
+                aria-label="Edit this work entry"
+              >
+                <Pencil size={13} className="text-gray-400" />
+              </button>
+              <button
+                onClick={onDelete}
+                disabled={isDeleting}
+                className="p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer bg-transparent border-0 disabled:opacity-50"
+                aria-label="Delete this work entry"
+              >
+                {isDeleting ? (
+                  <Loader2 size={13} className="text-red-400 animate-spin" />
+                ) : (
+                  <Trash2 size={13} className="text-red-400" />
+                )}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -302,57 +346,78 @@ function WorkEntryDisplay({ work }: { work: Work }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function WorkCard({ profile, isOwner, accessToken }: WorkCardProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [entries, setEntries] = useState<WorkFormEntry[]>(() =>
-    toFormEntries(profile.works ?? []),
-  );
 
-  const { mutate, isPending } = useUpdateProfile({ accessToken });
+  // editingId:
+  //   null      = nothing is being edited
+  //   "new"     = new entry form is open
+  //   string    = _id of the existing entry being edited
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // form state for whichever entry is open
+  const [formEntry, setFormEntry] = useState<WorkFormEntry>(makeEmptyEntry);
+
+  const { mutate: addWork, isPending: isAdding } = useAddWork({ accessToken });
+  const { mutate: editWork, isPending: isEditing } = useEditWork({
+    accessToken,
+  });
+  const { mutate: deleteWork } = useDeleteWork({
+    accessToken,
+  });
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const works = profile.works ?? [];
   const hasMore = works.length > 1;
+  const isSaving = isAdding || isEditing;
 
-  // Re-sync form when profile refetches
-  useEffect(() => {
-    if (!isEditing) setEntries(toFormEntries(profile.works ?? []));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile]);
+  // ── Handlers ──
 
-  // ── Form helpers ──
-
-  const handleChange = (
-    id: string,
-    key: keyof WorkFormEntry,
-    value: string | boolean,
-  ) => {
-    setEntries((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, [key]: value } : e)),
-    );
+  const openAdd = () => {
+    setFormEntry(makeEmptyEntry());
+    setEditingId("new");
   };
 
-  const handleAdd = () => {
-    setEntries((prev) => [...prev, makeEmpty(String(Date.now()))]);
+  const openEdit = (work: Work) => {
+    setFormEntry(workToFormEntry(work));
+    setEditingId(work._id!);
   };
 
-  const handleRemove = (id: string) => {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+  const closeForm = () => {
+    setEditingId(null);
+    setFormEntry(makeEmptyEntry());
+  };
+
+  const handleDelete = (workId: string) => {
+    setDeletingId(workId);
+    deleteWork({ workId }, { onSettled: () => setDeletingId(null) });
+  };
+
+  const handleChange = (key: keyof WorkFormEntry, value: string | boolean) => {
+    setFormEntry((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = () => {
-    mutate(
-      { works: toPayload(entries) as Work[] },
-      {
-        onSuccess: (res) => {
-          if (res.success) setIsEditing(false);
-        },
-      },
-    );
-  };
+    const payload = entryToWorkPayload(formEntry);
 
-  const handleCancel = () => {
-    setEntries(toFormEntries(profile.works ?? []));
-    setIsEditing(false);
+    if (editingId === "new") {
+      // ── ADD ──
+      addWork(payload as never, {
+        onSuccess: (res) => {
+          if (res.success) closeForm();
+        },
+      });
+    } else if (editingId) {
+      // ── EDIT ──
+      editWork(
+        { workId: editingId, ...payload },
+        {
+          onSuccess: (res) => {
+            if (res.success) closeForm();
+          },
+        },
+      );
+    }
   };
 
   return (
@@ -361,127 +426,125 @@ export function WorkCard({ profile, isOwner, accessToken }: WorkCardProps) {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-[15px] font-bold text-gray-900">Work</h3>
 
-        {isOwner && !isEditing && (
+        {isOwner && editingId === null && (
           <button
-            onClick={() => {
-              if (entries.length === 0) setEntries([makeEmpty("0")]);
-              setIsEditing(true);
-            }}
+            onClick={openAdd}
             className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer bg-transparent border-0"
-            aria-label="Edit work"
+            aria-label="Add work"
           >
-            <Pencil size={14} className="text-gray-400" />
+            <Plus size={14} className="text-gray-400" />
           </button>
-        )}
-
-        {isOwner && isEditing && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={handleCancel}
-              disabled={isPending}
-              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer bg-transparent border-0 disabled:opacity-50"
-            >
-              <X size={14} className="text-gray-400" />
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={isPending}
-              className="p-1.5 rounded-lg hover:bg-green-50 transition-colors cursor-pointer bg-transparent border-0 disabled:opacity-50"
-            >
-              {isPending ? (
-                <Loader2 size={14} className="text-green-500 animate-spin" />
-              ) : (
-                <Check size={14} className="text-green-500" />
-              )}
-            </button>
-          </div>
         )}
       </div>
 
-      {/* ── View Mode ── */}
-      {!isEditing && (
-        <>
-          {works.length === 0 ? (
-            <div>
-              {isOwner ? (
-                <button
-                  onClick={() => {
-                    setEntries([makeEmpty("0")]);
-                    setIsEditing(true);
-                  }}
-                  className="text-[13px] text-blue-400 hover:underline cursor-pointer bg-transparent border-0 p-0 italic"
-                >
-                  + Add work experience
-                </button>
-              ) : (
-                <p className="text-[13px] text-gray-400 italic">
-                  No work experience added.
-                </p>
-              )}
-            </div>
+      {/* ── Empty state ── */}
+      {works.length === 0 &&
+        editingId === null &&
+        (isOwner ? (
+          <button
+            onClick={openAdd}
+            className="text-[13px] text-blue-400 hover:underline cursor-pointer bg-transparent border-0 p-0 italic"
+          >
+            + Add work experience
+          </button>
+        ) : (
+          <p className="text-[13px] text-gray-400 italic">
+            No work experience added.
+          </p>
+        ))}
+
+      {/* ── Existing entries ── */}
+      {works.length > 0 && (
+        <div className="flex flex-col gap-3">
+          {/* First entry — always visible */}
+          {editingId === works[0]._id ? (
+            <WorkEntryForm
+              entry={formEntry}
+              index={0}
+              isNew={false}
+              isSaving={isSaving}
+              onSave={handleSave}
+              onCancel={closeForm}
+              onChange={handleChange}
+            />
           ) : (
-            <div className="flex flex-col gap-3">
-              {/* Always show first entry */}
-              <WorkEntryDisplay work={works[0]} />
+            <WorkEntryDisplay
+              work={works[0]}
+              isOwner={isOwner}
+              isDeleting={deletingId === works[0]._id}
+              onEdit={() => openEdit(works[0])}
+              onDelete={() => handleDelete(works[0]._id!)}
+            />
+          )}
 
-              {/* Animated expand for the rest */}
-              {hasMore && (
-                <div
-                  className={[
-                    "flex flex-col gap-3 overflow-hidden transition-all duration-300 ease-in-out",
-                    expanded ? "max-h-500 opacity-100" : "max-h-0 opacity-0",
-                  ].join(" ")}
-                >
-                  {works.slice(1).map((work, i) => (
-                    <WorkEntryDisplay key={i} work={work} />
-                  ))}
-                </div>
-              )}
-
-              {/* See more / See less */}
-              {hasMore && (
-                <button
-                  onClick={() => setExpanded((p) => !p)}
-                  className="inline-flex items-center gap-1 text-[12.5px] text-blue-500 hover:underline cursor-pointer bg-transparent border-0 p-0 w-fit mt-0.5 transition-colors"
-                >
-                  {expanded
-                    ? "See less"
-                    : `See more work (${works.length - 1} more)`}
-                  <ChevronDown
-                    size={13}
-                    className={`transition-transform duration-300 ${
-                      expanded ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-              )}
+          {/* Remaining entries — animated expand */}
+          {hasMore && (
+            <div
+              className={[
+                "flex flex-col gap-3 overflow-hidden transition-all duration-300 ease-in-out",
+                expanded ? "max-h-500 opacity-100" : "max-h-0 opacity-0",
+              ].join(" ")}
+            >
+              {works
+                .slice(1)
+                .map((work, i) =>
+                  editingId === work._id ? (
+                    <WorkEntryForm
+                      key={work._id}
+                      entry={formEntry}
+                      index={i + 1}
+                      isNew={false}
+                      isSaving={isSaving}
+                      onSave={handleSave}
+                      onCancel={closeForm}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    <WorkEntryDisplay
+                      key={work._id}
+                      work={work}
+                      isOwner={isOwner}
+                      isDeleting={deletingId === work._id}
+                      onEdit={() => openEdit(work)}
+                      onDelete={() => handleDelete(work._id!)}
+                    />
+                  ),
+                )}
             </div>
           )}
-        </>
+
+          {/* See more / See less */}
+          {hasMore && editingId === null && (
+            <button
+              onClick={() => setExpanded((p) => !p)}
+              className="inline-flex items-center gap-1 text-[12.5px] text-blue-500 hover:underline cursor-pointer bg-transparent border-0 p-0 w-fit mt-0.5"
+            >
+              {expanded
+                ? "See less"
+                : `See more work (${works.length - 1} more)`}
+              <ChevronDown
+                size={13}
+                className={`transition-transform duration-300 ${
+                  expanded ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+          )}
+        </div>
       )}
 
-      {/* ── Edit Mode ── */}
-      {isEditing && (
-        <div className="flex flex-col gap-3">
-          {entries.map((entry, i) => (
-            <WorkEntryForm
-              key={entry.id}
-              entry={entry}
-              index={i}
-              total={entries.length}
-              onChange={handleChange}
-              onRemove={handleRemove}
-            />
-          ))}
-
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="inline-flex items-center gap-1.5 text-[12.5px] text-blue-500 hover:text-blue-700 cursor-pointer bg-transparent border-0 p-0 w-fit font-medium transition-colors"
-          >
-            <Plus size={13} />
-            Add another work experience
-          </button>
+      {/* ── New entry form ── */}
+      {editingId === "new" && (
+        <div className="mt-3">
+          <WorkEntryForm
+            entry={formEntry}
+            index={works.length}
+            isNew={true}
+            isSaving={isSaving}
+            onSave={handleSave}
+            onCancel={closeForm}
+            onChange={handleChange}
+          />
         </div>
       )}
     </div>

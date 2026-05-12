@@ -24,6 +24,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "nextjs-toploader/app";
 import { useState } from "react";
 
 type Props = {
@@ -51,6 +52,8 @@ export function MyListingsPanel({ accessToken, onEdit }: Props) {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<ListingStatus | "all">("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const router = useRouter()
 
   const { data, isLoading, isError } = useGetMyListings({
     accessToken,
@@ -198,7 +201,7 @@ export function MyListingsPanel({ accessToken, onEdit }: Props) {
                 <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                   {onEdit && (
                     <button
-                      onClick={() => onEdit(listing)}
+                      onClick={() => router.push(`/marketplace/my-listing/${listing._id}`)}
                       className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition-colors"
                     >
                       <Pencil className="w-3.5 h-3.5" />

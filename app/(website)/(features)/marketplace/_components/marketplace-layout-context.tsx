@@ -6,13 +6,18 @@
  * Shared client-side state that lives at the layout level so every
  * marketplace route (browse, create, my-listing, detail, …) can:
  *
- *  - read / set the active category
+ *  - read / set the active category filter
+ *  - read / set the search input value      ← new
+ *  - read / set the sort order              ← new
  *  - open / close the mobile sidebar drawer
  *
  * Usage
  * ─────
- *  // In any child component:
- *  const { activeCategory, setActiveCategory } = useMarketplaceLayout();
+ *  const {
+ *    activeCategory, setActiveCategory,
+ *    searchValue, setSearchValue,
+ *    sortValue, setSortValue,
+ *  } = useMarketplaceLayout();
  */
 
 import {
@@ -26,10 +31,21 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type MarketplaceSortValue = "newest" | "price_asc" | "price_desc";
+
 interface MarketplaceLayoutState {
   /** Currently selected category filter — null means "all". */
   activeCategory: string | null;
   setActiveCategory: (cat: string | null) => void;
+
+  /** Controlled value of the search Input in MarketplaceShell.
+   *  The browse page debounces this before passing it to the API. */
+  searchValue: string;
+  setSearchValue: (value: string) => void;
+
+  /** Current sort selection from the Sort dropdown in MarketplaceShell. */
+  sortValue: MarketplaceSortValue;
+  setSortValue: (value: MarketplaceSortValue) => void;
 
   /** Whether the mobile sidebar drawer is open. */
   mobileSidebarOpen: boolean;
@@ -48,7 +64,7 @@ const MarketplaceLayoutContext = createContext<MarketplaceLayoutState | null>(
 
 interface MarketplaceLayoutProviderProps {
   children: ReactNode;
-  /** Seed the category from the URL search param (passed down from layout.tsx). */
+  /** Seed the category from the URL ?category= param (passed from layout.tsx). */
   initialCategory?: string | null;
 }
 
@@ -59,6 +75,8 @@ export function MarketplaceLayoutProvider({
   const [activeCategory, setActiveCategory] = useState<string | null>(
     initialCategory,
   );
+  const [searchValue, setSearchValue] = useState("");
+  const [sortValue, setSortValue] = useState<MarketplaceSortValue>("newest");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const openMobileSidebar = useCallback(() => setMobileSidebarOpen(true), []);
@@ -72,6 +90,10 @@ export function MarketplaceLayoutProvider({
     () => ({
       activeCategory,
       setActiveCategory,
+      searchValue,
+      setSearchValue,
+      sortValue,
+      setSortValue,
       mobileSidebarOpen,
       openMobileSidebar,
       closeMobileSidebar,
@@ -79,6 +101,8 @@ export function MarketplaceLayoutProvider({
     }),
     [
       activeCategory,
+      searchValue,
+      sortValue,
       mobileSidebarOpen,
       openMobileSidebar,
       closeMobileSidebar,

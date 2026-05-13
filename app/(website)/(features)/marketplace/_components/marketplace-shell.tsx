@@ -5,7 +5,10 @@
  *
  * Renders the persistent two-column shell that wraps every marketplace route.
  * Active nav state is derived from `usePathname()` so the sidebar highlights
- * the correct item on every route automatically:
+ * the correct item on every route automatically.
+ *
+ * Search and sort are read/written directly from MarketplaceLayoutContext so
+ * MarketplaceBrowsePage reacts to them without any prop threading.
  *
  *   /marketplace            → "Browse All" active
  *   /marketplace/my-listing → "Your Listings" active
@@ -25,7 +28,10 @@ import { cn } from "@/lib/utils";
 import { Menu, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useMarketplaceLayout } from "./marketplace-layout-context";
+import {
+  useMarketplaceLayout,
+  type MarketplaceSortValue,
+} from "./marketplace-layout-context";
 import { MarketplaceSidebar } from "./marketplace-sidebar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -34,25 +40,21 @@ export type MarketplaceNavItem = "browse" | "my-listings" | "create";
 
 interface MarketplaceShellProps {
   children: ReactNode;
+  /** Hide the search input — useful on create / detail pages. */
   showSearch?: boolean;
+  /** Hide the sort dropdown — useful on non-browse pages. */
   showSort?: boolean;
+  /** Hide the "Create listing" button and mobile FAB. */
   showCreateButton?: boolean;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  sortValue?: string;
-  onSortChange?: (value: string) => void;
+  /** Optional extra controls injected into the right side of the top bar. */
   topBarExtra?: ReactNode;
 }
 
-// ─── Pathname → active nav item ───────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
  * Maps the current URL pathname to one of the three sidebar nav items.
- *
- * /marketplace            → "browse"
- * /marketplace/my-listing → "my-listings"
- * /marketplace/create     → "create"
- * anything else           → "browse"  (safe fallback)
+ * Derived fresh on every render via usePathname() — no stale state possible.
  */
 function getActiveNavItem(pathname: string): MarketplaceNavItem {
   if (pathname === "/marketplace/my-listing") return "my-listings";
@@ -67,28 +69,28 @@ export function MarketplaceShell({
   showSearch = true,
   showSort = true,
   showCreateButton = true,
-  searchValue = "",
-  onSearchChange,
-  sortValue = "newest",
-  onSortChange,
   topBarExtra,
 }: MarketplaceShellProps) {
   const router = useRouter();
-
-  // usePathname re-renders this component whenever the route changes,
-  // so activeNavItem is always derived fresh — no stale state possible.
   const pathname = usePathname();
   const activeNavItem = getActiveNavItem(pathname);
 
+  // ── Context ─────────────────────────────────────────────────────────────────
+  // All shared state lives here. The shell WRITES search/sort/category;
+  // MarketplaceBrowsePage READS them. Single source of truth, no prop drilling.
   const {
     activeCategory,
     setActiveCategory,
+    searchValue,
+    setSearchValue,
+    sortValue,
+    setSortValue,
     mobileSidebarOpen,
     openMobileSidebar,
     closeMobileSidebar,
   } = useMarketplaceLayout();
 
-  // ── Navigation helpers ────────────────────────────────────────────────────
+  // ── Navigation ───────────────────────────────────────────────────────────────
 
   function handleBrowseClick() {
     closeMobileSidebar();
@@ -110,11 +112,18 @@ export function MarketplaceShell({
     closeMobileSidebar();
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Search clear ─────────────────────────────────────────────────────────────
+  // Clears the context value so the browse page's debounce effect fires with ""
+  // and the query resets to all listings.
+  function handleSearchClear() {
+    setSearchValue("");
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex h-full min-h-screen bg-white">
-      {/* ── Mobile sidebar backdrop ────────────────────────────────────────── */}
+      {/* ── Mobile sidebar backdrop ──────────────────────────────────────────── */}
       {mobileSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/20 md:hidden"
@@ -122,7 +131,8 @@ export function MarketplaceShell({
         />
       )}
 
-      {/* ── Sidebar ────────────────────────────────────────────────────────── */}
+      {/* ── Sidebar ──────────────────────────────────────────────────────────── */}
+      {/* Mobile: fixed drawer. md+: static column.                              */}
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-60 bg-white border-r border-neutral-100 flex flex-col transition-transform duration-200",
@@ -130,7 +140,7 @@ export function MarketplaceShell({
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        {/* Mobile drawer header */}
+        {/* Mobile drawer header — hidden on desktop */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 md:hidden">
           <span className="text-[13px] font-semibold text-neutral-800">
             Marketplace
@@ -142,14 +152,9 @@ export function MarketplaceShell({
 
         <div className="flex-1 overflow-y-auto">
           <MarketplaceSidebar
-            // ── Route-aware active nav ──────────────────────────────────────
-            // Derived from usePathname() above — always matches the real URL.
-            // The old "view" string state that caused stale highlights is gone.
             activeNavItem={activeNavItem}
-            // ── Category filter ─────────────────────────────────────────────
             activeCategory={activeCategory}
             onCategoryChange={handleCategoryChange}
-            // ── Nav callbacks ───────────────────────────────────────────────
             onBrowseClick={handleBrowseClick}
             onCreateClick={handleCreateClick}
             onMyListingsClick={handleMyListingsClick}
@@ -157,9 +162,9 @@ export function MarketplaceShell({
         </div>
       </div>
 
-      {/* ── Main content ───────────────────────────────────────────────────── */}
+      {/* ── Main content ─────────────────────────────────────────────────────── */}
       <main className="flex-1 min-w-0 flex flex-col">
-        {/* ── Sticky top bar ───────────────────────────────────────────────── */}
+        {/* ── Sticky top bar — browse page only ───────────────────────────── */}
         {pathname === "/marketplace" && (
           <div className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-neutral-100 px-4 py-2.5">
             <div className="flex items-center gap-2">
@@ -171,21 +176,31 @@ export function MarketplaceShell({
                 <Menu className="w-4 h-4 text-neutral-600" />
               </button>
 
-              {/* Search input */}
+              {/* Search input — writes directly to context.
+                  MarketplaceBrowsePage debounces the value before the API call. */}
               {showSearch && (
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
                   <Input
                     value={searchValue}
-                    onChange={(e) => onSearchChange?.(e.target.value)}
+                    onChange={(e) => setSearchValue(e.target.value)}
                     placeholder="Search marketplace..."
-                    className="h-8 pl-8 text-[12.5px] bg-neutral-50 border-neutral-200"
+                    className="h-8 pl-8 pr-7 text-[12.5px] bg-neutral-50 border-neutral-200"
                   />
+                  {/* Clear button — only visible when there is text */}
+                  {searchValue && (
+                    <button
+                      onClick={handleSearchClear}
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                    >
+                      <X className="w-3 h-3 text-neutral-400 hover:text-neutral-600 transition-colors" />
+                    </button>
+                  )}
                 </div>
               )}
 
               <div className="flex items-center gap-1.5 ml-auto">
-                {/* Active category pill */}
+                {/* Active category pill — tap X to clear */}
                 {activeCategory && (
                   <button
                     onClick={() => setActiveCategory(null)}
@@ -198,14 +213,17 @@ export function MarketplaceShell({
 
                 {topBarExtra}
 
-                {/* Sort dropdown */}
+                {/* Sort dropdown — writes directly to context.
+                    The browse page reads sortValue and maps it to the API param. */}
                 {showSort && (
                   <Select
                     value={sortValue}
-                    onValueChange={(v) => onSortChange?.(v)}
+                    onValueChange={(v) =>
+                      setSortValue(v as MarketplaceSortValue)
+                    }
                   >
                     <SelectTrigger className="h-8 w-27.5 text-[12px] bg-neutral-50 border-neutral-200">
-                      <SlidersHorizontal className="w-3 h-3 mr-1" />
+                      <SlidersHorizontal className="w-3 h-3 mr-1 shrink-0" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -222,7 +240,7 @@ export function MarketplaceShell({
                   </Select>
                 )}
 
-                {/* Create listing CTA — hidden on mobile (FAB handles it) */}
+                {/* Create listing — hidden on mobile (FAB handles it) */}
                 {showCreateButton && (
                   <Button
                     onClick={handleCreateClick}
@@ -238,7 +256,7 @@ export function MarketplaceShell({
           </div>
         )}
 
-        {/* ── Route page content ───────────────────────────────────────────── */}
+        {/* ── Page content ─────────────────────────────────────────────────── */}
         <div className="flex-1 px-4 py-4">{children}</div>
 
         {/* ── Mobile FAB ───────────────────────────────────────────────────── */}

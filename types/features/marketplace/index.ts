@@ -174,3 +174,30 @@ export type CreateListingPayload = {
 };
 
 export type UpdateListingPayload = Partial<CreateListingPayload>;
+
+// ─── Browse listings ──────────────────────────────────────────────────────────
+
+export type SortBy = "recent" | "price_asc" | "price_desc";
+
+export type BrowseListingsParams = {
+  limit?: number;
+  q?: string; // full-text search query
+  category?: string; // filter by category string
+  sortBy?: SortBy;
+};
+
+export type BrowseListingsPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+};
+
+// Single page shape — matches what the API returns per request.
+// useInfiniteQuery receives one of these per page fetch.
+export type BrowseListingsPage = {
+  success: boolean;
+  message: string;
+  data: MarketplaceListing[];
+  pagination: BrowseListingsPagination;
+};

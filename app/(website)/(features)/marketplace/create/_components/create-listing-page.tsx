@@ -7,38 +7,50 @@ import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 
 import { useCreateListing } from "@/hooks/features/marketplace/api/use-create-listing";
+import { useGetMarketplaceMeta } from "@/hooks/features/marketplace/api/use-get-marketplace-meta";
 
 import { ListingType } from "@/types/features/marketplace";
 
+import { useRouter } from "nextjs-toploader/app";
+
 import ListingDetailsStep from "./listing-details-step";
 import ListingLocationStep from "./listing-location-step";
+import { type PhotoFile } from "./listing-media-uploader";
 import ListingTypeStep from "./listing-type-step";
-
-import { useGetMarketplaceMeta } from "@/hooks/features/marketplace/api/use-get-marketplace-meta";
-import { useRouter } from "nextjs-toploader/app";
 import {
   CreateListingFormValues,
   createListingSchema,
   ParsedCreateListingFormValues,
 } from "./schema";
 
+// ─── Props ────────────────────────────────────────────────────────────────────
+
 type Props = {
   accessToken: string;
 };
 
-export default function CreateListingPage({ accessToken }: Props) {
-  const [step, setStep] = useState<"type" | "details" | "location">("type");
+// ─── Component ────────────────────────────────────────────────────────────────
 
+export default function CreateListingPage({ accessToken }: Props) {
   const router = useRouter();
 
-  const { data } = useGetMarketplaceMeta();
+  // ── Step navigation ────────────────────────────────────────────────────────
+  const [step, setStep] = useState<"type" | "details" | "location">("type");
 
+  // ── Media state ────────────────────────────────────────────────────────────
+  // Lifted here (not inside ListingDetailsStep) so files survive when the user
+  // navigates back from the location step. On submit they are extracted as
+  // plain File objects and appended to FormData by the hook.
+  const [photos, setPhotos] = useState<PhotoFile[]>([]);
+  const [video, setVideo] = useState<File | null>(null);
+
+  // ── Data ───────────────────────────────────────────────────────────────────
+  const { data } = useGetMarketplaceMeta();
   const meta = data?.data;
 
-  const { mutateAsync, isPending } = useCreateListing({
-    accessToken,
-  });
+  const { mutateAsync, isPending } = useCreateListing({ accessToken });
 
+  // ── Form ───────────────────────────────────────────────────────────────────
   const form = useForm<
     CreateListingFormValues,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,7 +58,6 @@ export default function CreateListingPage({ accessToken }: Props) {
     ParsedCreateListingFormValues
   >({
     resolver: zodResolver(createListingSchema),
-
     defaultValues: {
       listingType: "item",
       isNegotiable: true,
@@ -55,9 +66,10 @@ export default function CreateListingPage({ accessToken }: Props) {
       currency: "USD",
       deliveryOptions: [],
     },
-
     mode: "onChange",
   });
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
 
   function handleTypeSelect(type: ListingType) {
     form.setValue("listingType", type);
@@ -79,14 +91,16 @@ export default function CreateListingPage({ accessToken }: Props) {
       hideFromFriends: values.hideFromFriends,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       deliveryOptions: values.deliveryOptions as any,
-
-      location: {
-        address: values.address,
-        city: values.city,
-        state: values.state,
-        country: values.country,
-        postalCode: values.postalCode,
-      },
+      address: values.address,
+      city: values.city,
+      state: values.state,
+      country: values.country,
+      postalCode: values.postalCode,
+      // ── Media ──────────────────────────────────────────────────────────────
+      // PhotoFile wraps the raw File with a preview URL for the UI.
+      // The hook only needs the File — extract it here before passing down.
+      photos: photos.map((p) => p.file),
+      video: video ?? undefined,
     });
 
     if (!res.success) return;
@@ -94,11 +108,12 @@ export default function CreateListingPage({ accessToken }: Props) {
     router.push("/marketplace/my-listing");
   }
 
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">Create Listing</h1>
-
         <p className="mt-2 text-muted-foreground">
           Create a marketplace listing and start selling.
         </p>
@@ -129,6 +144,12 @@ export default function CreateListingPage({ accessToken }: Props) {
               <ListingDetailsStep
                 form={form}
                 meta={meta}
+                // Pass media state down so the uploader renders inside the step
+                // but files are owned here and survive back-navigation.
+                photos={photos}
+                onPhotosChange={setPhotos}
+                video={video}
+                onVideoChange={setVideo}
                 onNext={() => setStep("location")}
               />
             )}

@@ -221,13 +221,11 @@ export default function CreateListingDialog({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         deliveryOptions: values.deliveryOptions as any,
 
-        location: {
-          address: values.address,
-          city: values.city,
-          state: values.state,
-          country: values.country,
-          postalCode: values.postalCode,
-        },
+        address: values.address,
+        city: values.city,
+        state: values.state,
+        country: values.country,
+        postalCode: values.postalCode,
       },
       {
         onSuccess: (res) => {

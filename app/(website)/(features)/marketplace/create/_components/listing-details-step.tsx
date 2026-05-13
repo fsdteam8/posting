@@ -25,39 +25,72 @@ import { MarketplaceMeta } from "@/types/features/marketplace";
 
 import { ChevronRight } from "lucide-react";
 
+import { DELIVERY_OPTIONS } from "./constants";
 import { CreateListingFormValues } from "./schema";
 
-import { DELIVERY_OPTIONS } from "./constants";
+// ── Media uploader ─────────────────────────────────────────────────────────────
+// Imported here so the photo/video section sits naturally inside the details step
+// rather than floating outside the form card.
+import { ListingMediaUploader, type PhotoFile } from "./listing-media-uploader";
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 type Props = {
   form: UseFormReturn<CreateListingFormValues>;
   meta: MarketplaceMeta | undefined;
+  // Media state is lifted to CreateListingPage so it survives step navigation
+  // and is available when onSubmit builds the FormData payload.
+  photos: PhotoFile[];
+  onPhotosChange: (photos: PhotoFile[]) => void;
+  video: File | null;
+  onVideoChange: (video: File | null) => void;
   onNext: () => void;
 };
 
-export default function ListingDetailsStep({ form, meta, onNext }: Props) {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function ListingDetailsStep({
+  form,
+  meta,
+  photos,
+  onPhotosChange,
+  video,
+  onVideoChange,
+  onNext,
+}: Props) {
   const selectedType = form.watch("listingType");
 
   return (
     <div className="grid gap-5">
-      {/* Title */}
+      {/* ── Media uploader ────────────────────────────────────────────────── */}
+      {/* Sits at the top — matches Figma where photos are the first thing
+          a seller adds. State is owned by the parent so files survive when
+          the user navigates back from the location step.                    */}
+      <div className="space-y-1">
+        <ListingMediaUploader
+          photos={photos}
+          onPhotosChange={onPhotosChange}
+          video={video}
+          onVideoChange={onVideoChange}
+        />
+      </div>
+
+      {/* ── Title ─────────────────────────────────────────────────────────── */}
       <FormField
         control={form.control}
         name="title"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Title</FormLabel>
-
             <FormControl>
               <Input {...field} placeholder="What are you selling?" />
             </FormControl>
-
             <FormMessage />
           </FormItem>
         )}
       />
 
-      {/* Price */}
+      {/* ── Price + Currency ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
@@ -65,7 +98,6 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Price</FormLabel>
-
               <FormControl>
                 <Input
                   type="number"
@@ -74,7 +106,6 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
                   onChange={(e) => field.onChange(e.target.value)}
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
@@ -86,14 +117,12 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Currency</FormLabel>
-
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                 </FormControl>
-
                 <SelectContent>
                   {["USD", "EUR", "GBP"].map((c) => (
                     <SelectItem key={c} value={c}>
@@ -107,21 +136,19 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
         />
       </div>
 
-      {/* Category */}
+      {/* ── Category ──────────────────────────────────────────────────────── */}
       <FormField
         control={form.control}
         name="category"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Category</FormLabel>
-
             <Select value={field.value} onValueChange={field.onChange}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
               </FormControl>
-
               <SelectContent>
                 {(meta?.categories ?? []).map((cat) => (
                   <SelectItem key={cat} value={cat}>
@@ -130,13 +157,12 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
                 ))}
               </SelectContent>
             </Select>
-
             <FormMessage />
           </FormItem>
         )}
       />
 
-      {/* Condition */}
+      {/* ── Condition — hidden for property listing types ─────────────────── */}
       {selectedType !== "home_sale" && selectedType !== "home_rent" && (
         <FormField
           control={form.control}
@@ -144,14 +170,12 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Condition</FormLabel>
-
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select condition" />
                   </SelectTrigger>
                 </FormControl>
-
                 <SelectContent>
                   {(meta?.conditions ?? []).map((c) => (
                     <SelectItem key={c} value={c}>
@@ -165,14 +189,13 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
         />
       )}
 
-      {/* Description */}
+      {/* ── Description ───────────────────────────────────────────────────── */}
       <FormField
         control={form.control}
         name="description"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Description</FormLabel>
-
             <FormControl>
               <Textarea
                 {...field}
@@ -184,10 +207,9 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
         )}
       />
 
-      {/* Delivery */}
+      {/* ── Delivery options ──────────────────────────────────────────────── */}
       <div className="space-y-3">
         <FormLabel>Delivery options</FormLabel>
-
         <div className="grid grid-cols-2 gap-3">
           {DELIVERY_OPTIONS.map((opt) => (
             <FormField
@@ -196,14 +218,12 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
               name="deliveryOptions"
               render={({ field }) => {
                 const checked = field.value?.includes(opt.value) ?? false;
-
                 return (
                   <label className="flex items-center gap-2 rounded-xl border p-3 text-sm">
                     <Checkbox
                       checked={checked}
                       onCheckedChange={(v) => {
                         const current = field.value ?? [];
-
                         field.onChange(
                           v
                             ? [...current, opt.value]
@@ -211,7 +231,6 @@ export default function ListingDetailsStep({ form, meta, onNext }: Props) {
                         );
                       }}
                     />
-
                     {opt.label}
                   </label>
                 );

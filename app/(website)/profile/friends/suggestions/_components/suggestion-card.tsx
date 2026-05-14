@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Suggestion } from "@/types/features/friends";
 import { UserPlus, X } from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
 
 type SuggestionCardProps = {
   suggestion: Suggestion;
@@ -22,6 +23,12 @@ export function SuggestionCard({
   const initials =
     `${suggestion.firstName[0] ?? ""}${suggestion.lastName[0] ?? ""}`.toUpperCase();
   const hasAvatar = !!suggestion.profileImage?.url;
+
+  const router = useRouter();
+
+  const onProfileGo = () => {
+    router.push(`/public/profile/${suggestion.username}`);
+  };
 
   return (
     <div className="flex flex-col items-center rounded-xl border bg-card shadow-sm overflow-hidden transition-shadow hover:shadow-md">
@@ -43,7 +50,10 @@ export function SuggestionCard({
 
       {/* Info */}
       <div className="mt-10 px-3 pb-4 flex flex-col items-center w-full gap-1 text-center">
-        <p className="font-semibold text-sm leading-tight line-clamp-1">
+        <p
+          className="font-semibold text-sm leading-tight line-clamp-1 cursor-pointer hover:text-primary"
+          onClick={onProfileGo}
+        >
           {fullName}
         </p>
 

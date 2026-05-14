@@ -2,13 +2,13 @@
 
 import { Profile } from "@/hooks/profile/use-profile";
 import {
+  ArrowLeft,
   BadgeCheck,
-  BookmarkPlus,
   ChevronDown,
-  Eye,
+  MessageCircle,
   MoreHorizontal,
-  PenLine,
-  Search,
+  UserCheck,
+  UserPlus,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +18,9 @@ import { useRouter } from "nextjs-toploader/app";
 interface ProfileHeaderProps {
   profile: Profile;
   isOwner: boolean;
-  basePath: string; // "/profile" for owner, "/profile/username" for public
+  basePath: string;
+  // required only when isOwner is false
+  loggedInUserId?: string;
 }
 
 const TABS = [
@@ -28,12 +30,14 @@ const TABS = [
   { label: "Photos", href: "/photos" },
 ];
 
-export function ProfileHeader({
+export default function PublicProfileHeader({
   profile,
   isOwner,
   basePath,
+  loggedInUserId,
 }: ProfileHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const getTabHref = (suffix: string) => `${basePath}${suffix}`;
 
@@ -51,11 +55,9 @@ export function ProfileHeader({
   const formatCount = (n: number) =>
     n >= 1000 ? `${(n / 1000).toFixed(0)}K` : String(n);
 
-  const router = useRouter();
-
-  const TogglePublicProfile = () => {
-    router.push(`/public/profile/${profile.username}`);
-  };
+  // Check if logged-in user is already a friend/follower of this profile
+  const isConnected =
+    loggedInUserId && profile.followers?.includes(loggedInUserId);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-visible">
@@ -94,7 +96,7 @@ export function ProfileHeader({
         </div>
 
         {/* Name + Stats */}
-        <div className="pb-2.5 flex-1 min-w-0 ">
+        <div className="pb-2.5 flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg font-bold text-gray-900 whitespace-nowrap">
               {fullName}
@@ -110,34 +112,51 @@ export function ProfileHeader({
           </p>
         </div>
 
-        {/* Owner Actions */}
-        {isOwner && (
-          <div className="flex items-center gap-2 pb-2.5 shrink-0 ml-auto">
+        {/* ── Public Profile Actions ── */}
+        <div className="flex items-center gap-2 pb-2.5 shrink-0 ml-auto">
+          {/* Back to Profile */}
+          {isOwner && (
             <button
-              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-semibold px-3.5 py-1.75 rounded-lg transition-colors cursor-pointer border-0 whitespace-nowrap"
-              onClick={() => router.push("/stories/create")}
+              className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap"
+              onClick={() => {
+                router.back();
+              }}
             >
-              <BookmarkPlus size={14} />
-              Add Story
+              <ArrowLeft size={14} />
+              Back to Profile
             </button>
-            <button className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap">
-              <PenLine size={14} />
-              Edit Profile
-            </button>
+          )}
+
+          {isConnected ? (
             <button
-              className="inline-flex items-center justify-center size-8.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-500 rounded-lg transition-colors cursor-pointer bg-transparent"
-              onClick={TogglePublicProfile}
+              className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap disabled:opacity-50"
+              disabled={isOwner}
             >
-              <Eye size={15} />
+              <UserCheck size={14} className="text-green-500" />
+              Friends
             </button>
-            <button className="inline-flex items-center justify-center size-8.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-500 rounded-lg transition-colors cursor-pointer bg-transparent">
-              <Search size={15} />
+          ) : (
+            <button
+              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-semibold px-3.5 py-1.75 rounded-lg transition-colors cursor-pointer border-0 whitespace-nowrap disabled:opacity-50"
+              disabled={isOwner}
+            >
+              <UserPlus size={14} />
+              Add Friend
             </button>
-            <button className="inline-flex items-center justify-center size-8.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-500 rounded-lg transition-colors cursor-pointer bg-transparent">
-              <MoreHorizontal size={15} />
-            </button>
-          </div>
-        )}
+          )}
+
+          <button
+            className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap disabled:opacity-50"
+            disabled={isOwner}
+          >
+            <MessageCircle size={14} />
+            Message
+          </button>
+
+          <button className="inline-flex items-center justify-center size-8.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-500 rounded-lg transition-colors cursor-pointer bg-transparent">
+            <MoreHorizontal size={15} />
+          </button>
+        </div>
       </div>
 
       {/* ── Tabs ── */}

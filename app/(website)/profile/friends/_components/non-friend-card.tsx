@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { NonFriend } from "@/types/features/friends";
 import { UserPlus, Users, X } from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
 
 type NonFriendCardProps = {
   user: NonFriend;
@@ -22,6 +23,11 @@ export function NonFriendCard({
   const initials =
     `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
   const hasAvatar = !!user.profileImage?.url;
+  const router = useRouter();
+
+  const onProfileGo = () => {
+    router.push(`/public/profile/${user.username}`);
+  };
 
   return (
     <div className="flex flex-col items-center rounded-lg border bg-card shadow-sm overflow-hidden">
@@ -43,7 +49,10 @@ export function NonFriendCard({
 
       {/* Info — flex-1 fills remaining space, buttons pushed to bottom via mt-auto */}
       <div className="flex flex-col flex-1 items-center w-full px-3 pt-9 pb-3 text-center">
-        <p className="font-semibold text-sm leading-tight line-clamp-1 w-full">
+        <p
+          className="font-semibold text-sm leading-tight line-clamp-1 w-full hover:text-primary cursor-pointer"
+          onClick={onProfileGo}
+        >
           {fullName}
         </p>
 

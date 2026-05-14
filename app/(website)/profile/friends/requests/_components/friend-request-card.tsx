@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FriendRequest } from "@/types/features/friends";
 import { formatDistanceToNow } from "date-fns";
 import { UserCheck, UserX, Users } from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
 
 type FriendRequestCardProps = {
   request: FriendRequest;
@@ -21,6 +22,12 @@ export function FriendRequestCard({
   isPendingAccept,
   isPendingDecline,
 }: FriendRequestCardProps) {
+  const router = useRouter();
+
+  const onProfileGo = () => {
+    router.push(`/public/profile/${request.requester.username}`);
+  };
+
   const { requester, createdAt } = request;
   const fullName = `${requester.firstName} ${requester.lastName}`;
   const initials =
@@ -50,7 +57,10 @@ export function FriendRequestCard({
 
       {/* Info */}
       <div className="mt-10 px-3 pb-4 flex flex-col items-center w-full gap-1 text-center">
-        <p className="font-semibold text-sm leading-tight line-clamp-1">
+        <p
+          className="font-semibold text-sm leading-tight line-clamp-1 hover:text-primary cursor-pointer"
+          onClick={onProfileGo}
+        >
           {fullName}
         </p>
 

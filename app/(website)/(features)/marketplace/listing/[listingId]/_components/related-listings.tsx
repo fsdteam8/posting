@@ -51,7 +51,7 @@ export function RelatedListings({ listings }: Props) {
               className="shrink-0 w-36 text-left group"
             >
               {/* Thumbnail */}
-              <div className="w-full aspect-square rounded-xl overflow-hidden bg-neutral-100 mb-2">
+              <div className="w-full relative aspect-square rounded-xl overflow-hidden bg-neutral-100 mb-2">
                 {photo ? (
                   <Image
                     src={photo}

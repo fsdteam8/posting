@@ -72,7 +72,7 @@ export function SellerInfoCard({
       {/* ── Seller profile row ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         {/* Avatar */}
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 shrink-0">
+        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-neutral-100 shrink-0">
           {seller.profileImage?.url ? (
             <Image
               src={seller.profileImage.url}

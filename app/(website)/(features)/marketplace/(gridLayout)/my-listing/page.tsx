@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import MyListingContainer from "./_component/my-listing-container";
+import { MyOffersContainer } from "./_component/my-offers-container";
+import { SavedListingsContainer } from "./_component/save-listing-container";
 
 const Page = async () => {
   const cu = await auth();
@@ -9,6 +11,10 @@ const Page = async () => {
   return (
     <div>
       <MyListingContainer accessToken={cu.user.accessToken} />
+
+      <MyOffersContainer accessToken={cu.user.accessToken} />
+
+      <SavedListingsContainer accessToken={cu.user.accessToken} />
     </div>
   );
 };

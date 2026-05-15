@@ -378,10 +378,7 @@ export function MarketplaceClient({ accessToken, initialCategory }: Props) {
           )}
 
           {view === "my-listings" && (
-            <MyListingsPanel
-              accessToken={accessToken}
-              onEdit={(listing) => setEditListing(listing)}
-            />
+            <MyListingsPanel accessToken={accessToken} />
           )}
         </div>
 

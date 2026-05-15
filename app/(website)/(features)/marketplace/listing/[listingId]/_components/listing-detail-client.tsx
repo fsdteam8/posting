@@ -151,7 +151,7 @@ export function ListingDetailClient({
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-4 pb-24 lg:pb-8">
+    <div className="max-w-7xl mx-auto px-4 py-4 pb-24 lg:pb-8">
       {/* ── Back nav ───────────────────────────────────────────────────── */}
       <button
         onClick={() => router.back()}

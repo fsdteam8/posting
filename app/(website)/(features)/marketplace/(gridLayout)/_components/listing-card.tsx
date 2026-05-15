@@ -35,7 +35,7 @@ export function ListingCard({ listing, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className="group text-left w-full flex flex-col rounded-xl border border-neutral-100 bg-white hover:shadow-md hover:border-neutral-200 transition-all duration-200 overflow-hidden"
+      className="group text-left w-full flex flex-col cursor-pointer rounded-xl border border-neutral-100 bg-white hover:shadow-md hover:border-neutral-200 transition-all duration-200 overflow-hidden"
     >
       {/* Image */}
       <div className="aspect-square w-full bg-neutral-50 relative overflow-hidden">

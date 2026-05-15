@@ -24,6 +24,7 @@ import { useBrowseListings } from "@/hooks/features/marketplace/api/use-browse-l
 import { useGetMarketplaceMeta } from "@/hooks/features/marketplace/api/use-get-marketplace-meta";
 import { cn } from "@/lib/utils";
 import type { MarketplaceListing, SortBy } from "@/types/features/marketplace";
+import { useRouter } from "nextjs-toploader/app";
 import { useCallback, useEffect, useState } from "react";
 import { MarketplaceGrid } from "./marketplace-grid";
 import { useMarketplaceLayout } from "./marketplace-layout-context";
@@ -79,6 +80,8 @@ export function MarketplaceBrowsePage({}: Props) {
     sortBy: (sortValue === "newest" ? "recent" : sortValue) as SortBy,
     limit: 20,
   });
+
+  const router = useRouter();
 
   // Flatten all fetched pages into one array for the grid
   const listings: MarketplaceListing[] =
@@ -162,8 +165,7 @@ export function MarketplaceBrowsePage({}: Props) {
         hasNextPage={hasNextPage}
         onLoadMore={handleLoadMore}
         onListingClick={(l) => {
-          // TODO: router.push(`/marketplace/${l._id}`) once detail page exists
-          console.log("Open listing:", l._id);
+          router.push(`/marketplace/listing/${l._id}`);
         }}
       />
     </>

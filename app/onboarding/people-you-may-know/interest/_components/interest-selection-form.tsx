@@ -97,7 +97,7 @@ export default function InterestSelectionForm({ accessToken }: Props) {
   const { mutate, isPending } = useMutation({
     mutationKey: ["onboarding-interest"],
     mutationFn: (data: InterestFormValues) =>
-      fetch(`${baseURL}/users/update-profile`, {
+      fetch(`${baseURL}/users`, {
         method: "PUT",
         headers: {
           "content-type": "application/json",

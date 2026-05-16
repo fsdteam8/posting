@@ -1,24 +1,40 @@
 "use client";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useCancelFriendRequest } from "@/hooks/features/friends/use-cancel-friend-request";
+import { useSendFriendRequest } from "@/hooks/features/friends/use-send-friend-request";
+import { useUnfriend } from "@/hooks/features/friends/use-unfriend";
 import { Profile } from "@/hooks/profile/use-profile";
 import {
   ArrowLeft,
   BadgeCheck,
   ChevronDown,
+  Loader2,
   MessageCircle,
   MoreHorizontal,
   UserCheck,
+  UserMinus,
   UserPlus,
+  UserX,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
+import { useState } from "react";
 
 interface ProfileHeaderProps {
   profile: Profile;
   isOwner: boolean;
   basePath: string;
+  accessToken: string;
+  // The friendship request id if a pending request exists — pass from parent if available
+  pendingRequestId?: string;
   // required only when isOwner is false
   loggedInUserId?: string;
 }
@@ -30,14 +46,93 @@ const TABS = [
   { label: "Photos", href: "/photos" },
 ];
 
+// Friendship states driven by props + local session state
+type FriendshipStatus = "none" | "request_sent" | "friends";
+
 export default function PublicProfileHeader({
   profile,
   isOwner,
   basePath,
+  accessToken,
+  pendingRequestId,
   loggedInUserId,
 }: ProfileHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Derive initial status from profile data
+  const isFriend =
+    !!loggedInUserId && !!profile.followers?.includes(loggedInUserId);
+
+  const hasPendingRequest = !!pendingRequestId;
+
+  const initialStatus: FriendshipStatus = isFriend
+    ? "friends"
+    : hasPendingRequest
+      ? "request_sent"
+      : "none";
+
+  // Local state so UI updates instantly without waiting for a profile refetch
+  const [friendshipStatus, setFriendshipStatus] =
+    useState<FriendshipStatus>(initialStatus);
+
+  // Track the request id for cancel (may come from props or be set after sending)
+  const [activeRequestId, setActiveRequestId] = useState<string | undefined>(
+    pendingRequestId,
+  );
+
+  const { mutate: sendRequest, isPending: isSending } = useSendFriendRequest({
+    accessToken,
+  });
+
+  const { mutate: cancelRequest, isPending: isCancelling } =
+    useCancelFriendRequest({ accessToken });
+
+  const { mutate: unfriend, isPending: isUnfriending } = useUnfriend({
+    accessToken,
+  });
+
+  const handleAddFriend = () => {
+    sendRequest(
+      { receiverId: profile._id },
+      {
+        onSuccess: (res) => {
+          if (res.success) {
+            setFriendshipStatus("request_sent");
+            // If the API returns the new request id, store it
+            const requestId = (res.data as { _id?: string })?._id;
+            if (requestId) setActiveRequestId(requestId);
+          }
+        },
+      },
+    );
+  };
+
+  const handleCancelRequest = () => {
+    if (!activeRequestId) return;
+    cancelRequest(
+      { requestId: activeRequestId },
+      {
+        onSuccess: (res) => {
+          if (res.success) {
+            setFriendshipStatus("none");
+            setActiveRequestId(undefined);
+          }
+        },
+      },
+    );
+  };
+
+  const handleUnfriend = () => {
+    unfriend(
+      { friendId: profile._id },
+      {
+        onSuccess: (res) => {
+          if (res.success) setFriendshipStatus("none");
+        },
+      },
+    );
+  };
 
   const getTabHref = (suffix: string) => `${basePath}${suffix}`;
 
@@ -54,10 +149,6 @@ export default function PublicProfileHeader({
 
   const formatCount = (n: number) =>
     n >= 1000 ? `${(n / 1000).toFixed(0)}K` : String(n);
-
-  // Check if logged-in user is already a friend/follower of this profile
-  const isConnected =
-    loggedInUserId && profile.followers?.includes(loggedInUserId);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-visible">
@@ -112,51 +203,107 @@ export default function PublicProfileHeader({
           </p>
         </div>
 
-        {/* ── Public Profile Actions ── */}
-        <div className="flex items-center gap-2 pb-2.5 shrink-0 ml-auto">
-          {/* Back to Profile */}
-          {isOwner && (
+        {/* ── Actions ── */}
+        {!isOwner && (
+          <div className="flex items-center gap-2 pb-2.5 shrink-0 ml-auto">
+            {/* ── Add Friend / Request Sent / Friends ── */}
+
+            {friendshipStatus === "none" && (
+              <button
+                onClick={handleAddFriend}
+                disabled={isSending}
+                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-[13px] font-semibold px-3.5 py-1.75 rounded-lg transition-colors cursor-pointer border-0 whitespace-nowrap"
+              >
+                {isSending ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <UserPlus size={14} />
+                )}
+                {isSending ? "Sending..." : "Add Friend"}
+              </button>
+            )}
+
+            {friendshipStatus === "request_sent" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    disabled={isCancelling}
+                    className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-60 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap"
+                  >
+                    {isCancelling ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <UserX size={14} className="text-amber-500" />
+                    )}
+                    {isCancelling ? "Cancelling..." : "Request Sent"}
+                    <ChevronDown size={12} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive gap-2 text-xs cursor-pointer"
+                    onClick={handleCancelRequest}
+                  >
+                    <UserX size={13} />
+                    Cancel Request
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {friendshipStatus === "friends" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    disabled={isUnfriending}
+                    className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-60 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap"
+                  >
+                    {isUnfriending ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <UserCheck size={14} className="text-green-500" />
+                    )}
+                    {isUnfriending ? "Removing..." : "Friends"}
+                    <ChevronDown size={12} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive gap-2 text-xs cursor-pointer"
+                    onClick={handleUnfriend}
+                  >
+                    <UserMinus size={13} />
+                    Unfriend
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* Message */}
+            <button className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap">
+              <MessageCircle size={14} />
+              Message
+            </button>
+
+            {/* More */}
+            <button className="inline-flex items-center justify-center size-8.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-500 rounded-lg transition-colors cursor-pointer bg-transparent">
+              <MoreHorizontal size={15} />
+            </button>
+          </div>
+        )}
+
+        {/* ── Owner: Back to Profile ── */}
+        {isOwner && (
+          <div className="flex items-center gap-2 pb-2.5 shrink-0 ml-auto">
             <button
               className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap"
-              onClick={() => {
-                router.back();
-              }}
+              onClick={() => router.back()}
             >
               <ArrowLeft size={14} />
               Back to Profile
             </button>
-          )}
-
-          {isConnected ? (
-            <button
-              className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap disabled:opacity-50"
-              disabled={isOwner}
-            >
-              <UserCheck size={14} className="text-green-500" />
-              Friends
-            </button>
-          ) : (
-            <button
-              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-semibold px-3.5 py-1.75 rounded-lg transition-colors cursor-pointer border-0 whitespace-nowrap disabled:opacity-50"
-              disabled={isOwner}
-            >
-              <UserPlus size={14} />
-              Add Friend
-            </button>
-          )}
-
-          <button
-            className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap disabled:opacity-50"
-            disabled={isOwner}
-          >
-            <MessageCircle size={14} />
-            Message
-          </button>
-
-          <button className="inline-flex items-center justify-center size-8.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-500 rounded-lg transition-colors cursor-pointer bg-transparent">
-            <MoreHorizontal size={15} />
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* ── Tabs ── */}

@@ -1,6 +1,8 @@
 "use client";
 
 import { useGetProfileByUsername } from "@/hooks/profile/use-get-profile-by-username";
+import { SentRequestsApiRes } from "@/types/features/friends";
+import { useQueryClient } from "@tanstack/react-query";
 import PublicProfileHeader from "./public-profile-header";
 
 interface PublicProfileLayoutClientProps {
@@ -16,6 +18,8 @@ export function PublicProfileLayoutClient({
   loggedInUserId,
   children,
 }: PublicProfileLayoutClientProps) {
+  const queryClient = useQueryClient();
+
   const {
     data: profile,
     isLoading,
@@ -25,9 +29,23 @@ export function PublicProfileLayoutClient({
     accessToken,
   });
 
+  // Derive pendingRequestId from the outgoing requests cache — no extra API call.
+  // This is already populated if the user visited /friends/requests in this session.
+  // If the cache is cold it returns undefined — the header handles that gracefully.
+  const sentRequestsCache = queryClient.getQueryData<SentRequestsApiRes>([
+    "friend-requests",
+    "outgoing",
+  ]);
+
+  const pendingRequest = sentRequestsCache?.data?.find(
+    (r) => r.recipient._id === profile?._id && r.status === "pending",
+  );
+
+  const pendingRequestId = pendingRequest?._id;
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#f0f2f5]">
-      {/* ── Smashing gradient blobs ── */}
+      {/* ── Gradient blobs ── */}
       <div
         className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
         aria-hidden="true"
@@ -63,6 +81,8 @@ export function PublicProfileLayoutClient({
               isOwner={profile._id === loggedInUserId}
               basePath={`/profile/${username}`}
               loggedInUserId={loggedInUserId}
+              accessToken={accessToken}
+              pendingRequestId={pendingRequestId}
             />
             <div className="w-full">{children}</div>
           </>

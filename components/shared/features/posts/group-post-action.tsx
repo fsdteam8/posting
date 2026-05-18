@@ -5,9 +5,16 @@ import { cn } from "@/lib/utils";
 import { Post } from "@/types/features/posts";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, ThumbsUp } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { RiShareForwardLine } from "react-icons/ri";
 import OverlappingReactions from "./common/overlaping-reactions";
+const SharePostModal = dynamic(
+  () => import("./comment-dialog/share-post-modal"),
+  {
+    ssr: false,
+  },
+);
 
 // ─── Reaction definitions ─────────────────────────────────────────────────────
 
@@ -43,6 +50,7 @@ export const PostActions = ({
   groupId = "",
 }: PostActionsProps) => {
   const { reactionCount, commentCount, shareCount, _id: postId } = post;
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   const [hovering, setHovering] = useState(false);
   const [activeReaction, setActiveReaction] = useState<ReactionType | null>(
@@ -245,13 +253,24 @@ export const PostActions = ({
         </button>
 
         {/* Share */}
-        <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-fb-hover transition-colors">
+        <button
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-fb-hover transition-colors"
+          onClick={() => setShareModalOpen(true)}
+        >
           <RiShareForwardLine className="w-5 h-5 text-secondary-foreground" />
           <span className="text-[12px] font-semibold text-secondary-foreground">
             Share
           </span>
         </button>
       </div>
+
+      <SharePostModal
+        post={post}
+        accessToken={accessToken}
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        loggedInUserId={loggedInUserId}
+      />
     </>
   );
 };

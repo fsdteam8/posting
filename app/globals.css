@@ -184,3 +184,27 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes blobFloat {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.97);
+  }
+  100% {
+    transform: translate(10px, -10px) scale(1.02);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}

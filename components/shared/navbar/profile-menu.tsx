@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { useRouter } from "nextjs-toploader/app";
 import { useState } from "react";
 import { DisplayAccessibility } from "./subMenu/display-accessibility";
 
@@ -70,6 +71,8 @@ export function ProfileMenu({
     if (!val) setPanel("main");
   };
 
+  const router = useRouter();
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -105,6 +108,7 @@ export function ProfileMenu({
                   onClick={() => {
                     onSwitchIdentity({ type: "user" });
                     setOpen(false);
+                    router.push("/profile");
                   }}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-t-lg p-3 text-left transition-colors hover:bg-secondary",

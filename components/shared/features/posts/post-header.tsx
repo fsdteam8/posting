@@ -5,6 +5,7 @@ import { Post } from "@/types/features/posts";
 import { formatDistanceToNow } from "date-fns";
 import { Globe, Lock, Users } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "nextjs-toploader/app";
 import {
   ACTIVITY_CATEGORIES,
   FEELINGS,
@@ -32,6 +33,7 @@ export const PostHeader = ({
   loggedinUserId,
 }: PostHeaderProps) => {
   const { author, createdAt, visibility, feeling, activity } = post;
+  const router = useRouter();
 
   const avatarUrl = author.profileImage?.url || DEFAULT_IMAGES.user.avatar;
 
@@ -62,6 +64,10 @@ export const PostHeader = ({
         }
       : null;
 
+  const onProfileGo = () => {
+    router.push(`/public/profile/${post.author.username}`);
+  };
+
   return (
     <div className="flex items-start justify-between px-4 pt-3 pb-2">
       <div className="flex items-start gap-2">
@@ -74,7 +80,10 @@ export const PostHeader = ({
         />
         <div>
           <div className="flex items-center gap-1 flex-wrap leading-tight">
-            <p className="text-[15px] font-semibold text-fb-text-primary">
+            <p
+              className="text-[15px] font-semibold text-fb-text-primary hover:text-primary cursor-pointer"
+              onClick={onProfileGo}
+            >
               {author.firstName} {author.lastName}
             </p>
             {feelingLine && (

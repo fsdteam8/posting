@@ -9,7 +9,7 @@ export default async function HomeLayout() {
 
   if (!cu || !cu.user || !cu.user.accessToken) redirect("/login");
   return (
-    <div className=" flex justify-between ">
+    <div className=" flex justify-between bg-[#F2F3F5] ">
       {/* Left Sidebar */}
       <div className="hidden w-70  shrink-0 lg:block px-4">
         <div
@@ -31,7 +31,7 @@ export default async function HomeLayout() {
           className="sticky top-14 h-[calc(100vh-56px)] overflow-y-auto scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          <RightSidebar />
+          <RightSidebar accessToken={cu.user.accessToken} />
         </div>
       </div>
     </div>

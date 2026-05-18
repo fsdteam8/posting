@@ -1,89 +1,58 @@
 "use client";
+
 import { PeopleYouMayKnowCard } from "@/components/shared/cards/friend-request/people-you-may-know-card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGetSuggestions } from "@/hooks/features/friends/use-get-suggestions";
+import { useSendFriendRequest } from "@/hooks/features/friends/use-send-friend-request";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "nextjs-toploader/app";
 import { useState } from "react";
 import OnboardingProgress from "../interest/_components/on-boarding-progress";
 
-// Mock data - replace with real data from your API
-const SUGGESTED_PEOPLE = [
-  {
-    id: "1",
-    name: "Sarah Rozario",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-    mutualFriendsCount: 8,
-  },
-  {
-    id: "2",
-    name: "Sarah Rozario",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    mutualFriendsCount: 8,
-  },
-  {
-    id: "3",
-    name: "Sarah Rozario",
-    avatar:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-    mutualFriendsCount: 8,
-  },
-  {
-    id: "4",
-    name: "Sarah Rozario",
-    avatar:
-      "https://images.unsplash.com/photo-1506362612048-46a378dd3085?w=400&h=400&fit=crop",
-    mutualFriendsCount: 8,
-  },
-  {
-    id: "5",
-    name: "Sarah Rozario",
-    avatar:
-      "https://images.unsplash.com/photo-1517836357463-d25ddfcbf042?w=400&h=400&fit=crop",
-    mutualFriendsCount: 8,
-  },
-  {
-    id: "6",
-    name: "Sarah Rozario",
-    avatar:
-      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=400&fit=crop",
-    mutualFriendsCount: 8,
-  },
-  {
-    id: "7",
-    name: "Sarah Rozario",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    mutualFriendsCount: 8,
-  },
-  {
-    id: "8",
-    name: "Sarah Rozario",
-    avatar:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-    mutualFriendsCount: 8,
-  },
-];
-
 interface Props {
   accessToken: string;
 }
 
-const PeopleYouMayKnowOnBoradingContainer = ({}: Props) => {
+const PeopleYouMayKnowOnBoardingContainer = ({ accessToken }: Props) => {
   const router = useRouter();
-  const [addedFriends, setAddedFriends] = useState<Set<string>>(new Set());
+
+  // Track which user ids have been added (for button state)
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  // Track which specific card is mid-request
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const { data, isLoading } = useGetSuggestions({
+    accessToken,
+    limit: 8,
+  });
+
+  const { mutate: sendRequest, isPending } = useSendFriendRequest({
+    accessToken,
+  });
 
   const handleAddFriend = (id: string) => {
-    setAddedFriends((prev) => new Set([...prev, id]));
-    // TODO: Call your API to add friend
+    if (addedIds.has(id) || pendingId === id) return;
+
+    setPendingId(id);
+    sendRequest(
+      { receiverId: id },
+      {
+        onSettled: () => {
+          setPendingId(null);
+          setAddedIds((prev) => new Set(prev).add(id));
+        },
+      },
+    );
   };
 
   const handleContinue = () => {
-    console.log(addedFriends);
     router.push("/onboarding/people-you-may-know/interest");
   };
+
+  const suggestions = data?.data ?? [];
+
   return (
     <div className="flex min-h-svh flex-col bg-background">
       {/* Top bar */}
@@ -99,38 +68,51 @@ const PeopleYouMayKnowOnBoradingContainer = ({}: Props) => {
 
         <OnboardingProgress currentStep={2} totalSteps={3} />
 
-        {/* Spacer for centering the progress bar */}
+        {/* Spacer to keep progress bar centred */}
         <div className="w-13" />
       </header>
 
       {/* Main content */}
       <main className="flex flex-1 flex-col items-center px-6 pt-8 pb-6">
-        <div className="flex w-full max-w-2xl flex-col items-center gap-8">
+        <div className="flex w-full max-w-4xl flex-col items-center gap-8">
           {/* Heading */}
           <div className="flex flex-col items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground text-balance text-center sm:text-3xl">
               Suggested for you
             </h1>
             <p className="max-w-md text-center text-sm leading-relaxed text-muted-foreground">
-              Built your network. Connect with people you may know to see their
+              Build your network. Connect with people you may know to see their
               updates and share your thoughts.
             </p>
           </div>
 
           {/* People grid */}
           <div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {SUGGESTED_PEOPLE.map((person) => (
-              <PeopleYouMayKnowCard
-                key={person.id}
-                id={person.id}
-                name={person.name}
-                avatar={person.avatar}
-                mutualFriendsCount={person.mutualFriendsCount}
-                onAddFriend={handleAddFriend}
-                isLoading={false}
-              />
-            ))}
+            {isLoading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <SuggestionCardSkeleton key={i} />
+                ))
+              : suggestions.map((person) => (
+                  <PeopleYouMayKnowCard
+                    key={person._id}
+                    id={person._id}
+                    name={`${person.firstName} ${person.lastName}`}
+                    avatar={person.profileImage?.url ?? ""}
+                    mutualFriendsCount={0}
+                    onAddFriend={handleAddFriend}
+                    isLoading={pendingId === person._id}
+                    isAdded={addedIds.has(person._id)}
+                  />
+                ))}
           </div>
+
+          {/* Empty state — no suggestions returned */}
+          {!isLoading && suggestions.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No suggestions available right now. You can skip and connect with
+              people later.
+            </p>
+          )}
         </div>
       </main>
 
@@ -140,19 +122,26 @@ const PeopleYouMayKnowOnBoradingContainer = ({}: Props) => {
           <Button
             variant="outline"
             className="min-w-35 rounded-full"
-            disabled={false}
             onClick={() =>
               router.push("/onboarding/people-you-may-know/interest")
             }
           >
             Skip for Now
           </Button>
+
           <Button
             className="min-w-35 rounded-full"
             onClick={handleContinue}
-            disabled={false}
+            disabled={isPending}
           >
-            Continue {false && <Loader2 className="animate-spin size-5" />}
+            {isPending ? (
+              <>
+                <Loader2 className="animate-spin size-4 mr-1.5" />
+                Please wait...
+              </>
+            ) : (
+              "Continue"
+            )}
           </Button>
         </div>
       </footer>
@@ -160,4 +149,16 @@ const PeopleYouMayKnowOnBoradingContainer = ({}: Props) => {
   );
 };
 
-export default PeopleYouMayKnowOnBoradingContainer;
+// Inline skeleton to match PeopleYouMayKnowCard dimensions
+function SuggestionCardSkeleton() {
+  return (
+    <div className="flex flex-col items-center rounded-xl border bg-card p-4 gap-3">
+      <Skeleton className="size-16 rounded-full" />
+      <Skeleton className="h-4 w-28 rounded" />
+      <Skeleton className="h-3 w-20 rounded" />
+      <Skeleton className="h-8 w-full rounded-full" />
+    </div>
+  );
+}
+
+export default PeopleYouMayKnowOnBoardingContainer;

@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, Search, X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { useRef, useState } from "react";
 
@@ -9,29 +10,42 @@ interface NavSearchProps {
 }
 
 export function NavSearch({}: NavSearchProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialize from URL only once
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
+
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [query, setQuery] = useState("");
+
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
-  const router = useRouter();
+  function handleSearch() {
+    const searchQuery = query.trim();
+
+    if (!searchQuery) {
+      router.push("/search");
+      return;
+    }
+
+    router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+  }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && query.trim()) {
-      const searchQuery = query.trim();
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    if (e.key === "Enter") {
+      handleSearch();
     }
 
     if (e.key === "Escape") {
-      setQuery("");
+      handleClear();
       inputRef.current?.blur();
     }
   }
 
   function handleMobileKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && query.trim()) {
-      const searchQuery = query.trim();
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    if (e.key === "Enter") {
+      handleSearch();
       setMobileOpen(false);
     }
 
@@ -42,24 +56,27 @@ export function NavSearch({}: NavSearchProps) {
 
   function openMobile() {
     setMobileOpen(true);
-    setTimeout(() => mobileInputRef.current?.focus(), 50);
+
+    setTimeout(() => {
+      mobileInputRef.current?.focus();
+    }, 50);
   }
 
   function closeMobile() {
     setMobileOpen(false);
-    setQuery("");
   }
 
   function handleClear() {
     setQuery("");
-    inputRef.current?.focus();
+    router.push("/search");
   }
 
   return (
     <>
-      {/* Desktop search — always visible on sm+ */}
+      {/* Desktop search */}
       <div className="relative hidden sm:flex h-10 w-56 items-center gap-2 rounded-full bg-input px-3 focus-within:ring-2 focus-within:ring-primary/40 transition-all">
         <Search className="size-4 shrink-0 text-muted-foreground" />
+
         <input
           ref={inputRef}
           type="text"
@@ -69,6 +86,7 @@ export function NavSearch({}: NavSearchProps) {
           onKeyDown={handleKeyDown}
           className="h-full w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
+
         {query && (
           <button
             onClick={handleClear}
@@ -80,7 +98,7 @@ export function NavSearch({}: NavSearchProps) {
         )}
       </div>
 
-      {/* Mobile trigger — icon only, visible below sm */}
+      {/* Mobile trigger */}
       <button
         onClick={openMobile}
         className="flex sm:hidden size-10 items-center justify-center rounded-full bg-input text-muted-foreground hover:bg-border transition-colors"
@@ -101,8 +119,10 @@ export function NavSearch({}: NavSearchProps) {
             >
               <ArrowLeft className="size-5 text-foreground" />
             </button>
+
             <div className="flex flex-1 h-10 items-center gap-2 rounded-full bg-input px-3 focus-within:ring-2 focus-within:ring-primary/40 transition-all">
               <Search className="size-4 shrink-0 text-muted-foreground" />
+
               <input
                 ref={mobileInputRef}
                 type="text"
@@ -112,6 +132,7 @@ export function NavSearch({}: NavSearchProps) {
                 onKeyDown={handleMobileKeyDown}
                 className="h-full w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
+
               {query && (
                 <button
                   onClick={() => setQuery("")}
@@ -127,6 +148,7 @@ export function NavSearch({}: NavSearchProps) {
           {/* Hint */}
           <div className="flex flex-col items-center justify-center flex-1 gap-2 text-muted-foreground">
             <Search className="size-10 opacity-20" />
+
             <p className="text-sm">
               {query
                 ? `Press Enter to search "${query}"`

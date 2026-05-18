@@ -88,7 +88,14 @@ export default function SearchResultsClient({
         {/* Users */}
         {(type === "all" || type === "users") &&
           hasUsers &&
-          results.users.map((u) => <UserCard key={u._id} user={u} />)}
+          results.users.map((u) => (
+            <UserCard
+              key={u._id}
+              user={u}
+              accessToken={accessToken}
+              loggedinUserId={user.id}
+            />
+          ))}
 
         {/* Posts */}
         {(type === "all" || type === "posts") &&

@@ -157,7 +157,7 @@ const FeedTrigger = ({
             width={40}
             height={40}
             alt={firstName}
-            className="rounded-full object-cover shrink-0"
+            className="rounded-full object-cover shrink-0 w-10 h-10"
           />
         ) : (
           <div className="w-10 h-10 rounded-full bg-muted shrink-0" />

@@ -1,14 +1,124 @@
+"use client";
+
+import { useGetAllFriends } from "@/hooks/features/friends/use-get-all-friends";
+import { useGetSentRequests } from "@/hooks/features/friends/use-get-sent-requests";
+import { useSendFriendRequest } from "@/hooks/features/friends/use-send-friend-request";
 import { SearchUser } from "@/types/features/search/types";
-import { UserPlus } from "lucide-react";
+import { Check, Loader2, UserCheck, UserPlus } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "nextjs-toploader/app";
+import { useState } from "react";
 
 type Props = {
   user: SearchUser;
+  accessToken: string;
+  loggedinUserId: string;
 };
 
-export default function UserCard({ user }: Props) {
+type FriendshipStatus = "none" | "request_sent" | "friends";
+
+export default function UserCard({ user, accessToken, loggedinUserId }: Props) {
   const fullName = `${user.firstName} ${user.lastName}`;
   const avatarUrl = user.profileImage?.url;
+  const router = useRouter();
+
+  const isOwner = user._id === loggedinUserId;
+
+  // ── Fetch both lists — React Query caches them so no duplicate calls
+  // across multiple UserCard instances on the same page ──────────────────────
+  const { data: allFriendsData, isLoading: loadingFriends } = useGetAllFriends({
+    accessToken,
+    page: 1,
+    limit: 500, // fetch enough to cover all friends in one shot
+  });
+
+  const { data: sentRequestsData, isLoading: loadingSent } = useGetSentRequests(
+    { accessToken },
+  );
+
+  // ── Derive status from fetched data ───────────────────────────────────────
+
+  const isFriend =
+    allFriendsData?.data?.some((f) => f._id === user._id) ?? false;
+
+  const hasPendingRequest =
+    sentRequestsData?.data?.some(
+      (r) => r.recipient._id === user._id && r.status === "pending",
+    ) ?? false;
+
+  const derivedStatus: FriendshipStatus = isFriend
+    ? "friends"
+    : hasPendingRequest
+      ? "request_sent"
+      : "none";
+
+  // Local override only after user takes action in this session
+  const [localOverride, setLocalOverride] = useState<FriendshipStatus | null>(
+    null,
+  );
+
+  const friendshipStatus = localOverride ?? derivedStatus;
+  const isResolving = loadingFriends || loadingSent;
+
+  // ── Mutation ──────────────────────────────────────────────────────────────
+
+  const { mutate: sendRequest, isPending } = useSendFriendRequest({
+    accessToken,
+  });
+
+  const handleAddFriend = () => {
+    if (friendshipStatus !== "none" || isPending || isOwner) return;
+
+    sendRequest(
+      { receiverId: user._id },
+      {
+        onSuccess: (res) => {
+          if (res.success) setLocalOverride("request_sent");
+        },
+      },
+    );
+  };
+
+  const onProfileGo = () => {
+    router.push(`/public/profile/${user.username}`);
+  };
+
+  // ── Button config ─────────────────────────────────────────────────────────
+
+  const getButtonConfig = () => {
+    if (isResolving)
+      return {
+        icon: <Loader2 size={14} className="animate-spin" />,
+        label: "Loading...",
+        className: "bg-gray-100 text-gray-400 cursor-not-allowed",
+      };
+    if (isPending)
+      return {
+        icon: <Loader2 size={14} className="animate-spin" />,
+        label: "Sending...",
+        className: "bg-[#E7F3FF] text-[#1877F2] opacity-70 cursor-not-allowed",
+      };
+    if (friendshipStatus === "friends")
+      return {
+        icon: <UserCheck size={14} />,
+        label: "Friends",
+        className: "bg-[#E7F3FF] text-[#42B72A] cursor-default",
+      };
+    if (friendshipStatus === "request_sent")
+      return {
+        icon: <Check size={14} />,
+        label: "Request Sent",
+        className: "bg-[#E7F3FF] text-[#42B72A] cursor-default",
+      };
+    return {
+      icon: <UserPlus size={14} />,
+      label: "Add Friend",
+      className:
+        "bg-[#E7F3FF] text-[#1877F2] hover:bg-[#1877F2] hover:text-white",
+    };
+  };
+
+  const btn = getButtonConfig();
 
   return (
     <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-[#E4E6EB] hover:shadow-sm transition-shadow">
@@ -18,7 +128,7 @@ export default function UserCard({ user }: Props) {
           <div className="relative h-16 w-16 overflow-hidden rounded-full">
             <Image
               src={user.profileImage.url}
-              alt={`${user.firstName} ${user.lastName}`}
+              alt={fullName}
               fill
               className="object-cover"
             />
@@ -35,11 +145,13 @@ export default function UserCard({ user }: Props) {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-[#1C1E21] text-sm truncate">
+        <p
+          className="font-semibold text-[#1C1E21] text-sm truncate cursor-pointer hover:text-primary"
+          onClick={onProfileGo}
+        >
           {fullName}
         </p>
         <p className="text-xs text-[#65676B] truncate">@{user.username}</p>
-        {/* Mutual friends avatars placeholder row */}
         <div className="flex items-center gap-1.5 mt-1.5">
           <div className="flex -space-x-1.5">
             {[0, 1, 2].map((j) => (
@@ -55,10 +167,20 @@ export default function UserCard({ user }: Props) {
         </div>
       </div>
 
-      {/* Add Friend Button */}
-      <button className="shrink-0 p-2 rounded-full bg-[#E7F3FF] text-[#1877F2] hover:bg-[#1877F2] hover:text-white transition-colors">
-        <UserPlus size={18} />
-      </button>
+      {/* Action button — hidden for own card */}
+      {!isOwner && (
+        <button
+          onClick={handleAddFriend}
+          disabled={isPending || isResolving || friendshipStatus !== "none"}
+          className={[
+            "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:cursor-not-allowed whitespace-nowrap",
+            btn.className,
+          ].join(" ")}
+        >
+          {btn.icon}
+          {btn.label}
+        </button>
+      )}
     </div>
   );
 }

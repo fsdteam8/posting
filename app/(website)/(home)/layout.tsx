@@ -31,7 +31,7 @@ export default async function HomeLayout() {
           className="sticky top-14 h-[calc(100vh-56px)] overflow-y-auto scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          <RightSidebar />
+          <RightSidebar accessToken={cu.user.accessToken} />
         </div>
       </div>
     </div>

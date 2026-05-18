@@ -4,7 +4,6 @@ import {
   SearchUser,
 } from "@/types/features/search/types";
 import Image from "next/image";
-import TrendingHashtags from "./TrendingHashtags";
 
 type Props = {
   activeType: SearchType;
@@ -179,9 +178,6 @@ export default function SearchSidebar({
           )}
         </div>
       )}
-
-      {/* Trending Hashtags always shown */}
-      <TrendingHashtags />
     </div>
   );
 }

@@ -8,7 +8,6 @@ const TABS: { label: string; value: SearchType }[] = [
   { label: "All", value: "all" },
   { label: "Posts", value: "posts" },
   { label: "People", value: "users" },
-  { label: "Hashtags", value: "all" }, // static UI tab, no API filter yet
   { label: "Groups", value: "groups" },
   { label: "Events", value: "events" },
 ];

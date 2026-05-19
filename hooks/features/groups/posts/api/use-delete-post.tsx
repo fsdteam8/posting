@@ -85,6 +85,9 @@ export function useDeletePost({ postId, groupId, accessToken }: Params) {
           };
         },
       );
+
+      // Refresh page-posts feeds so the deletion propagates to page profiles.
+      queryClient.invalidateQueries({ queryKey: ["page-posts"] });
     },
 
     onError: (error) => {

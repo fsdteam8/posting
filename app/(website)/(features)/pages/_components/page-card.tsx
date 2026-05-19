@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 type CardMode = "discover" | "liked" | "invitations";
 
@@ -99,9 +100,12 @@ export function PageCard({
             className="rounded-full border-2 border-white shadow-sm object-cover h-8"
           />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
+            <Link
+              href={`/pages/view/${id}`}
+              className="text-sm font-semibold text-gray-900 truncate leading-tight hover:underline block"
+            >
               {name}
-            </p>
+            </Link>
             <p className="text-xs text-gray-500 truncate">{category}</p>
             <p className="text-xs text-gray-400">
               {formatFollowers(followersCount)} people follow this Page

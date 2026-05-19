@@ -1,5 +1,6 @@
 import { baseURL } from "@/constants";
-import type { PaginatedApiRes, Post } from "@/types/features/pages";
+import type { PaginatedApiRes } from "@/types/features/pages";
+import type { Post } from "@/types/features/posts";
 import { useQuery } from "@tanstack/react-query";
 
 export function useGetPagePosts({

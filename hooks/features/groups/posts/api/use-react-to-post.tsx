@@ -82,6 +82,9 @@ export function useReactToPost({ postId, accessToken, groupId }: Params) {
           };
         },
       );
+
+      // Refresh page-posts feeds so reactions update on page profiles too.
+      queryClient.invalidateQueries({ queryKey: ["page-posts"] });
     },
   });
 }

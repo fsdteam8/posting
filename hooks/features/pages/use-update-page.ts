@@ -37,11 +37,13 @@ export function useUpdatePage({
     mutationFn: async (payload) => {
       const formData = new FormData();
 
-      if (payload.name) formData.append("name", payload.name);
-      if (payload.category) formData.append("category", payload.category);
-      if (payload.description)
+      // Use `!== undefined` so empty strings can clear existing values.
+      if (payload.name !== undefined) formData.append("name", payload.name);
+      if (payload.category !== undefined)
+        formData.append("category", payload.category);
+      if (payload.description !== undefined)
         formData.append("description", payload.description);
-      if (payload.bio) formData.append("bio", payload.bio);
+      if (payload.bio !== undefined) formData.append("bio", payload.bio);
       if (payload.visibility) formData.append("visibility", payload.visibility);
       if (payload.contact)
         formData.append("contact", JSON.stringify(payload.contact));

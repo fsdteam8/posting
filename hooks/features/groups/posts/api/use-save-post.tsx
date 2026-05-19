@@ -75,6 +75,9 @@ export function useSavePost({ postId, accessToken, groupId }: Params) {
           };
         },
       );
+
+      // Refresh page-posts feeds so the saved flag updates on page profiles too.
+      queryClient.invalidateQueries({ queryKey: ["page-posts"] });
     },
   });
 }

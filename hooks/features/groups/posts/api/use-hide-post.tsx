@@ -67,6 +67,9 @@ export function useHidePost({ postId, accessToken, groupId }: Params) {
           };
         },
       );
+
+      // Refresh page-posts feeds so hiding propagates to page profiles too.
+      queryClient.invalidateQueries({ queryKey: ["page-posts"] });
     },
   });
 }

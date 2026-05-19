@@ -97,6 +97,9 @@ export function useEditPost({ postId, groupId, accessToken }: Params) {
           };
         },
       );
+
+      // Refresh page-posts feeds so edits propagate to page profiles too.
+      queryClient.invalidateQueries({ queryKey: ["page-posts"] });
     },
 
     onError: (error) => {

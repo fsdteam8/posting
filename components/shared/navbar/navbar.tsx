@@ -1,13 +1,15 @@
 "use client";
 
+import FeedPostModalContainer from "@/components/shared/features/post-modal/feed-post-modal-container";
 import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conversations";
 import { useMessengerSocket } from "@/hooks/features/messenger/use-messenger-socket";
 import { useGetNotifications } from "@/hooks/features/notifications/api/use-get-notifications";
 import { useNotificationSocket } from "@/hooks/features/notifications/use-notification-socket";
 import { useProfile } from "@/hooks/profile/use-profile";
-import { Bell, MessageCircle, Plus } from "lucide-react";
+import { Bell, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { CreateMenu } from "./create-menu";
 import { IconButton } from "./icon-button";
 import { MessengerPanel } from "./messenger-panel";
 import { MobileMenu } from "./mobile-menu";
@@ -44,6 +46,7 @@ export default function Navbar({ accessToken }: Props) {
   });
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessenger, setShowMessenger] = useState(false);
+  const [postModalOpen, setPostModalOpen] = useState(false);
 
   const { data: notifData } = useGetNotifications({ accessToken, limit: 1 });
   const unreadCount = notifData?.meta?.unreadCount ?? 0;
@@ -95,7 +98,7 @@ export default function Navbar({ accessToken }: Props) {
       {/* Right Section */}
       <div className="flex shrink-0 items-center gap-1 px-2 sm:gap-2 sm:px-4">
         <div className="hidden sm:flex items-center gap-2">
-          <IconButton icon={Plus} label="Create" />
+          <CreateMenu onPostClick={() => setPostModalOpen(true)} />
 
           <div className="relative">
             <IconButton
@@ -131,6 +134,7 @@ export default function Navbar({ accessToken }: Props) {
           <MobileMenu
             messengerUnread={messengerUnread}
             notificationUnread={unreadCount}
+            onPostClick={() => setPostModalOpen(true)}
           />
         </div>
         <ProfileMenu
@@ -140,6 +144,13 @@ export default function Navbar({ accessToken }: Props) {
           onSwitchIdentity={setActiveIdentity}
         />
       </div>
+
+      {/* Headless create-post modal, controlled by the create menus */}
+      <FeedPostModalContainer
+        accessToken={accessToken}
+        externalOpen={postModalOpen}
+        onExternalOpenChange={setPostModalOpen}
+      />
     </header>
   );
 }

@@ -644,11 +644,17 @@ const FeedPostModalContainer = ({
     </Form>
   );
 
+  // When the parent controls open state (passes onExternalOpenChange), the
+  // parent also owns the trigger — render headless so we don't ship a second
+  // "Tell us what's now…" pill into the host UI (e.g. the navbar).
+  const isControlled = onExternalOpenChange !== undefined;
+  const showTrigger = !isEditMode && !isControlled;
+
   return (
     <div>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogTrigger asChild className="w-full flex-1">
-          {isEditMode ? null : (
+        {showTrigger && (
+          <DialogTrigger asChild className="w-full flex-1">
             <FeedTrigger
               accessToken={accessToken}
               onOpen={() => handleOpenChange(true)}
@@ -661,8 +667,8 @@ const FeedPostModalContainer = ({
                 setFeelingOpen(true);
               }}
             />
-          )}
-        </DialogTrigger>
+          </DialogTrigger>
+        )}
         <DialogContent className="sm:max-w-lg">
           <DialogHeader className="border-b border-border pb-3">
             <DialogTitle className="text-center text-[17px] text-foreground">

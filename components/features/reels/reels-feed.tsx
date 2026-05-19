@@ -3,7 +3,14 @@
 import { useGetReels } from "@/hooks/features/reels/use-get-reels";
 import { Reel } from "@/types/features/reels";
 import { ChevronDown, ChevronUp, Loader2, Play } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { ReelItem } from "./reel-item";
 
 interface ReelsFeedProps {
@@ -12,6 +19,43 @@ interface ReelsFeedProps {
 }
 
 const MUTE_STORAGE_KEY = "reels.muted";
+
+// ── Mute preference, hydrated from localStorage via useSyncExternalStore ─────
+const mutedListeners = new Set<() => void>();
+
+function subscribeMuted(callback: () => void) {
+  mutedListeners.add(callback);
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === MUTE_STORAGE_KEY) callback();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    mutedListeners.delete(callback);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function getMutedSnapshot(): boolean {
+  try {
+    const stored = window.localStorage.getItem(MUTE_STORAGE_KEY);
+    return stored === null ? true : stored === "true";
+  } catch {
+    return true;
+  }
+}
+
+function getMutedServerSnapshot(): boolean {
+  return true;
+}
+
+function writeMuted(value: boolean) {
+  try {
+    window.localStorage.setItem(MUTE_STORAGE_KEY, String(value));
+  } catch {
+    /* ignore quota errors */
+  }
+  mutedListeners.forEach((cb) => cb());
+}
 
 export const ReelsFeed = ({
   accessToken,
@@ -34,28 +78,18 @@ export const ReelsFeed = ({
   );
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [muted, setMuted] = useState<boolean>(true);
+  const muted = useSyncExternalStore(
+    subscribeMuted,
+    getMutedSnapshot,
+    getMutedServerSnapshot,
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Restore mute preference once
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(MUTE_STORAGE_KEY);
-      if (stored !== null) setMuted(stored === "true");
-    } catch {}
-  }, []);
-
   const toggleMute = useCallback(() => {
-    setMuted((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem(MUTE_STORAGE_KEY, String(next));
-      } catch {}
-      return next;
-    });
+    writeMuted(!getMutedSnapshot());
   }, []);
 
   // Track which reel is visible

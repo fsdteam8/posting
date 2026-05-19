@@ -56,7 +56,12 @@ interface CallSignalPayload {
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
-    { urls: ["stun:stun.l.google.com:19302", "stun:global.stun.twilio.com:3478"] },
+    {
+      urls: [
+        "stun:stun.l.google.com:19302",
+        "stun:global.stun.twilio.com:3478",
+      ],
+    },
   ],
 };
 
@@ -94,7 +99,7 @@ export function useCall({ me, enabled }: UseCallParams) {
     });
   }
 
-  function closePc() {
+  const closePc = useCallback(() => {
     const pc = pcRef.current;
     if (!pc) return;
     pc.ontrack = null;
@@ -107,7 +112,7 @@ export function useCall({ me, enabled }: UseCallParams) {
       /* noop */
     }
     pcRef.current = null;
-  }
+  }, []);
 
   const teardown = useCallback(() => {
     closePc();
@@ -116,28 +121,26 @@ export function useCall({ me, enabled }: UseCallParams) {
     setRemoteStream(null);
     pendingIceRef.current = [];
     setState(INITIAL_STATE);
-  }, []);
+  }, [closePc]);
 
-  function getOrCreateRemoteStream(): MediaStream {
+  const getOrCreateRemoteStream = useCallback((): MediaStream => {
     if (!remoteStreamRef.current) {
       remoteStreamRef.current = new MediaStream();
       setRemoteStream(remoteStreamRef.current);
     }
     return remoteStreamRef.current;
-  }
+  }, []);
 
-  function createPeerConnection(): RTCPeerConnection {
+  const createPeerConnection = useCallback((): RTCPeerConnection => {
     closePc();
     const pc = new RTCPeerConnection(ICE_SERVERS);
     pc.ontrack = (e) => {
       const stream = getOrCreateRemoteStream();
-      e.streams[0]
-        ?.getTracks()
-        .forEach((t) => {
-          if (!stream.getTracks().some((existing) => existing.id === t.id)) {
-            stream.addTrack(t);
-          }
-        });
+      e.streams[0]?.getTracks().forEach((t) => {
+        if (!stream.getTracks().some((existing) => existing.id === t.id)) {
+          stream.addTrack(t);
+        }
+      });
     };
     pc.onicecandidate = (e) => {
       if (!e.candidate) return;
@@ -164,7 +167,7 @@ export function useCall({ me, enabled }: UseCallParams) {
     };
     pcRef.current = pc;
     return pc;
-  }
+  }, [closePc, getOrCreateRemoteStream]);
 
   async function acquireLocalStream(kind: CallKind): Promise<MediaStream> {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -273,7 +276,7 @@ export function useCall({ me, enabled }: UseCallParams) {
     const pc = createPeerConnection();
     stream.getTracks().forEach((t) => pc.addTrack(t, stream));
     // Wait for the caller's offer (handled in onSignal below).
-  }, [me, teardown]);
+  }, [me, teardown, createPeerConnection]);
 
   const rejectCall = useCallback(() => {
     const s = stateRef.current;
@@ -463,7 +466,7 @@ export function useCall({ me, enabled }: UseCallParams) {
       socket.off("call:signal", onSignal);
       socket.off("call:peer-left", onPeerLeft);
     };
-  }, [enabled, me, localStream, teardown, endCall]);
+  }, [enabled, me, localStream, teardown, endCall, createPeerConnection]);
 
   // Cleanup on unmount
   useEffect(() => {

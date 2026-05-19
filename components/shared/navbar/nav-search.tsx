@@ -3,7 +3,7 @@
 import { ArrowLeft, Clock, Search, TrendingUp, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 
 interface NavSearchProps {
   onSearch?: (query: string) => void;
@@ -21,25 +21,60 @@ const TRENDING = [
   "Sports",
 ];
 
-function loadRecents(): string[] {
-  if (typeof window === "undefined") return [];
+// ── Recents store, hydrated via useSyncExternalStore ─────────────────────────
+const EMPTY_RECENTS: string[] = [];
+let cachedRecents: string[] | null = null;
+const recentsListeners = new Set<() => void>();
+
+function readRecentsRaw(): string[] {
+  if (typeof window === "undefined") return EMPTY_RECENTS;
   try {
     const raw = window.localStorage.getItem(RECENT_KEY);
-    if (!raw) return [];
+    if (!raw) return EMPTY_RECENTS;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((x): x is string => typeof x === "string")
+      : EMPTY_RECENTS;
   } catch {
-    return [];
+    return EMPTY_RECENTS;
   }
 }
 
-function saveRecents(items: string[]) {
+function subscribeRecents(callback: () => void) {
+  recentsListeners.add(callback);
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === RECENT_KEY) {
+      cachedRecents = null;
+      callback();
+    }
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    recentsListeners.delete(callback);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function getRecentsSnapshot(): string[] {
+  // Cache the array reference so useSyncExternalStore doesn't loop.
+  if (cachedRecents !== null) return cachedRecents;
+  cachedRecents = readRecentsRaw();
+  return cachedRecents;
+}
+
+function getRecentsServerSnapshot(): string[] {
+  return EMPTY_RECENTS;
+}
+
+function writeRecents(items: string[]) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(RECENT_KEY, JSON.stringify(items));
   } catch {
     /* ignore quota errors */
   }
+  cachedRecents = items;
+  recentsListeners.forEach((cb) => cb());
 }
 
 export function NavSearch({}: NavSearchProps) {
@@ -48,14 +83,14 @@ export function NavSearch({}: NavSearchProps) {
 
   const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [recents, setRecents] = useState<string[]>([]);
+  const recents = useSyncExternalStore(
+    subscribeRecents,
+    getRecentsSnapshot,
+    getRecentsServerSnapshot,
+  );
 
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setRecents(loadRecents());
-  }, []);
 
   function commitSearch(rawQuery: string) {
     const searchQuery = rawQuery.trim();
@@ -66,14 +101,11 @@ export function NavSearch({}: NavSearchProps) {
     }
 
     // Update recents: move to front, dedupe (case-insensitive), cap length
-    setRecents((prev) => {
-      const next = [
-        searchQuery,
-        ...prev.filter((r) => r.toLowerCase() !== searchQuery.toLowerCase()),
-      ].slice(0, MAX_RECENTS);
-      saveRecents(next);
-      return next;
-    });
+    const next = [
+      searchQuery,
+      ...recents.filter((r) => r.toLowerCase() !== searchQuery.toLowerCase()),
+    ].slice(0, MAX_RECENTS);
+    writeRecents(next);
 
     router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
   }
@@ -119,16 +151,11 @@ export function NavSearch({}: NavSearchProps) {
   }
 
   function removeRecent(value: string) {
-    setRecents((prev) => {
-      const next = prev.filter((r) => r !== value);
-      saveRecents(next);
-      return next;
-    });
+    writeRecents(recents.filter((r) => r !== value));
   }
 
   function clearAllRecents() {
-    setRecents([]);
-    saveRecents([]);
+    writeRecents([]);
   }
 
   const trimmed = query.trim().toLowerCase();

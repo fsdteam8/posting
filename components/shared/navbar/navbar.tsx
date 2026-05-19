@@ -3,12 +3,14 @@
 import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conversations";
 import { useMessengerSocket } from "@/hooks/features/messenger/use-messenger-socket";
 import { useGetNotifications } from "@/hooks/features/notifications/api/use-get-notifications";
+import { useNotificationSocket } from "@/hooks/features/notifications/use-notification-socket";
 import { useProfile } from "@/hooks/profile/use-profile";
-import { Bell, Menu, MessageCircle, Plus } from "lucide-react";
+import { Bell, MessageCircle, Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { IconButton } from "./icon-button";
 import { MessengerPanel } from "./messenger-panel";
+import { MobileMenu } from "./mobile-menu";
 import { NavLinks } from "./nav-links";
 import { NavSearch } from "./nav-search";
 import { NotificationPanel } from "./notification-panel";
@@ -59,6 +61,9 @@ export default function Navbar({ accessToken }: Props) {
   // Keep the cached conversations live so the badge updates on incoming messages
   useMessengerSocket({ userId: profile?._id });
 
+  // Live notifications (also covers friend_request / friend_accept since both go through notification:new)
+  useNotificationSocket({ userId: profile?._id });
+
   const USER = {
     name: profile ? `${profile.firstName} ${profile.lastName}` : "...",
     avatarUrl:
@@ -73,11 +78,11 @@ export default function Navbar({ accessToken }: Props) {
   return (
     <header className="sticky top-0 z-50 flex h-14 w-full items-center border-b bg-card shadow-sm">
       {/* Left Section */}
-      <div className="flex shrink-0 items-center gap-2 px-4">
+      <div className="flex shrink-0 items-center gap-2 px-2 sm:px-4">
         <Link
           href="/"
           aria-label="Postin Home"
-          className="flex items-center gap-1 text-[#1DA1F2] font-semibold text-xl"
+          className="hidden sm:flex items-center gap-1 text-[#1DA1F2] font-semibold text-xl"
         >
           Postin
         </Link>
@@ -88,7 +93,7 @@ export default function Navbar({ accessToken }: Props) {
       <NavLinks />
 
       {/* Right Section */}
-      <div className="flex shrink-0 items-center gap-2 px-4">
+      <div className="flex shrink-0 items-center gap-1 px-2 sm:gap-2 sm:px-4">
         <div className="hidden sm:flex items-center gap-2">
           <IconButton icon={Plus} label="Create" />
 
@@ -123,7 +128,10 @@ export default function Navbar({ accessToken }: Props) {
           </div>
         </div>
         <div className="flex sm:hidden">
-          <IconButton icon={Menu} label="Menu" />
+          <MobileMenu
+            messengerUnread={messengerUnread}
+            notificationUnread={unreadCount}
+          />
         </div>
         <ProfileMenu
           user={USER}

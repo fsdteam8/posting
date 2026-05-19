@@ -2,6 +2,7 @@
 
 import GroupPostCard from "@/components/shared/features/posts/post-card";
 import { useGetGroupPosts } from "@/hooks/features/groups/posts/api/use-get-group-post";
+import { useGroupPostsSocket } from "@/hooks/posts/use-post-socket";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
@@ -23,6 +24,9 @@ const GroupPostContainer = ({ accessToken, groupId, loggedinUser }: Props) => {
     hasNextPage,
     isFetchingNextPage,
   } = useGetGroupPosts({ groupId, accessToken });
+
+  // Live reactions + comments for all posts in this group
+  useGroupPostsSocket({ userId: loggedinUser, groupId });
 
   // ── Infinite scroll via IntersectionObserver ──────────────────────────────
   useEffect(() => {

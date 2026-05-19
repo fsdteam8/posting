@@ -10,7 +10,7 @@ function getSocketBase(): string {
   return apiUrl.replace(/\/api\/v\d+\/?$/, "");
 }
 
-export function getMessengerSocket(userId: string): Socket {
+export function getAppSocket(userId: string): Socket {
   if (SOCKET && SOCKET_USER_ID === userId) return SOCKET;
   if (SOCKET) {
     SOCKET.disconnect();
@@ -25,6 +25,10 @@ export function getMessengerSocket(userId: string): Socket {
   return SOCKET;
 }
 
-export function peekMessengerSocket(): Socket | null {
+export function peekAppSocket(): Socket | null {
   return SOCKET;
 }
+
+// Backwards-compatible aliases (the singleton is now app-wide; renamed for clarity)
+export const getMessengerSocket = getAppSocket;
+export const peekMessengerSocket = peekAppSocket;

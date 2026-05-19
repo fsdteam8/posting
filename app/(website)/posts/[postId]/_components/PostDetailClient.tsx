@@ -2,6 +2,7 @@
 
 import GroupPostCard from "@/components/shared/features/posts/post-card";
 import { useGetPostById } from "@/hooks/posts/use-get-post-by-id";
+import { usePostSocket } from "@/hooks/posts/use-post-socket";
 import { Loader2 } from "lucide-react";
 import { PostAuthorCard } from "./PostAuthorCard";
 import { PostCommentsSection } from "./PostCommentsSection";
@@ -21,6 +22,9 @@ export function PostDetailClient({
     postId,
     accessToken,
   });
+
+  // Live reactions + comments while viewing this post
+  usePostSocket({ userId: loggedInUserId, postId });
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {

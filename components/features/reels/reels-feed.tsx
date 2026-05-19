@@ -57,10 +57,7 @@ function writeMuted(value: boolean) {
   mutedListeners.forEach((cb) => cb());
 }
 
-export const ReelsFeed = ({
-  accessToken,
-  loggedInUserId,
-}: ReelsFeedProps) => {
+export const ReelsFeed = ({ accessToken, loggedInUserId }: ReelsFeedProps) => {
   const {
     data,
     isLoading,
@@ -134,11 +131,7 @@ export const ReelsFeed = ({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (
-          entry.isIntersecting &&
-          hasNextPage &&
-          !isFetchingNextPage
-        ) {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
@@ -149,14 +142,11 @@ export const ReelsFeed = ({
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Keyboard navigation
-  const scrollToIndex = useCallback(
-    (idx: number) => {
-      const target = itemRefs.current[idx];
-      if (!target) return;
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    [],
-  );
+  const scrollToIndex = useCallback((idx: number) => {
+    const target = itemRefs.current[idx];
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -193,9 +183,7 @@ export const ReelsFeed = ({
       <div className="min-h-[calc(100vh-56px)] bg-black flex items-center justify-center p-6">
         <div className="flex flex-col items-center gap-3 text-center">
           <p className="text-white text-base">
-            {error instanceof Error
-              ? error.message
-              : "Could not load reels"}
+            {error instanceof Error ? error.message : "Could not load reels"}
           </p>
           <button
             onClick={() => refetch()}
@@ -212,7 +200,7 @@ export const ReelsFeed = ({
     return (
       <div className="min-h-[calc(100vh-56px)] bg-black flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative h-[480px] w-[270px] rounded-2xl bg-zinc-900 shadow-2xl flex items-center justify-center border border-zinc-800">
+          <div className="relative h-120 w-67.5 rounded-2xl bg-zinc-900 shadow-2xl flex items-center justify-center border border-zinc-800">
             <Play className="size-16 text-white opacity-80" />
             <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-black/70 via-transparent to-black/30" />
           </div>
@@ -241,7 +229,7 @@ export const ReelsFeed = ({
             }}
             className="h-[calc(100vh-56px)] w-full snap-start flex items-center justify-center"
           >
-            <div className="relative h-full w-full max-w-[460px] mx-auto">
+            <div className="relative h-full w-full max-w-115 mx-auto">
               <ReelItem
                 reel={reel}
                 isActive={idx === activeIndex}

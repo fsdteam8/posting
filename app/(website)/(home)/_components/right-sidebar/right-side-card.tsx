@@ -1,6 +1,6 @@
 import { Separator } from "@/components/ui/separator";
 
-import { contacts, sponsoredAds } from "../mock-data";
+import { sponsoredAds } from "../mock-data";
 import { BirthdaysCard } from "./birthday-card";
 import { ContactsCard } from "./contacts-card";
 import { FriendRequestCard } from "./friend-request-card";
@@ -20,7 +20,7 @@ export function RightSidebar({ accessToken }: Props) {
       <FriendRequestCard accessToken={accessToken} />
       <Separator />
 
-      <ContactsCard contacts={contacts} />
+      <ContactsCard accessToken={accessToken} />
     </aside>
   );
 }

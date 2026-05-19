@@ -23,7 +23,7 @@ export function NavIcon({ icon: Icon, label, active, onClick }: NavIconProps) {
           onClick={onClick}
           aria-label={label}
           className={cn(
-            "relative flex h-12 items-center justify-center rounded-lg px-6 transition-colors lg:px-8",
+            "relative flex h-12 items-center justify-center rounded-lg px-3 transition-colors sm:px-6 lg:px-8",
             "hover:bg-secondary",
             active &&
               "text-primary after:absolute after:bottom-0 after:left-2 after:right-2 after:h-0.75 after:rounded-t-full after:bg-primary",

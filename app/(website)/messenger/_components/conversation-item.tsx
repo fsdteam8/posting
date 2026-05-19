@@ -11,6 +11,7 @@ import {
   getConversationAvatar,
   getConversationTitle,
 } from "./helpers";
+import { useMessenger } from "./messenger-context";
 
 interface Props {
   conversation: Conversation;
@@ -31,6 +32,7 @@ function formatTime(at?: string | null) {
 }
 
 export function ConversationItem({ conversation, meId, active }: Props) {
+  const { presence } = useMessenger();
   // Use nickname for direct chats when present
   const other = conversation.participants.find((p) => p._id !== meId);
   const baseTitle = getConversationTitle(conversation, meId);
@@ -49,7 +51,11 @@ export function ConversationItem({ conversation, meId, active }: Props) {
   const isMuted = !!(conversation.mutedBy || []).find((id) => id === meId);
   const isMissed = last?.type === "missed-call";
   const unread = conversation.unreadCount || 0;
-  const isOnline = !conversation.isGroup && other?.isOnline;
+  // Live presence wins over the stored value when available
+  const livePresence = other ? presence[other._id] : undefined;
+  const isOnline =
+    !conversation.isGroup &&
+    (livePresence ? livePresence.isOnline : !!other?.isOnline);
 
   let preview = last?.text || "";
   if (!preview && last?.type) {

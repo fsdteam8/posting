@@ -82,7 +82,7 @@ export function DetailsPanel({
   }, [messages]);
 
   return (
-    <aside className="flex h-full w-85 shrink-0 flex-col overflow-y-auto border-l bg-card">
+    <aside className="hidden h-full w-85 shrink-0 flex-col overflow-y-auto border-l bg-card lg:flex">
       <div className="flex flex-col items-center px-6 pt-8 pb-4">
         <div className="relative size-24 overflow-hidden rounded-full bg-muted">
           <Avatar src={avatar} alt={title} sizes="96px" isGroup={isGroup} />

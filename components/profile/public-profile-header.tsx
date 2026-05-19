@@ -9,6 +9,7 @@ import {
 import { useCancelFriendRequest } from "@/hooks/features/friends/use-cancel-friend-request";
 import { useSendFriendRequest } from "@/hooks/features/friends/use-send-friend-request";
 import { useUnfriend } from "@/hooks/features/friends/use-unfriend";
+import { useStartDirectChat } from "@/hooks/features/messenger/use-start-direct-chat";
 import { Profile } from "@/hooks/profile/use-profile";
 import {
   ArrowLeft,
@@ -89,6 +90,10 @@ export default function PublicProfileHeader({
     useCancelFriendRequest({ accessToken });
 
   const { mutate: unfriend, isPending: isUnfriending } = useUnfriend({
+    accessToken,
+  });
+
+  const { startChat, isStarting: isOpeningChat } = useStartDirectChat({
     accessToken,
   });
 
@@ -279,9 +284,17 @@ export default function PublicProfileHeader({
               </DropdownMenu>
             )}
 
-            {/* Message */}
-            <button className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap">
-              <MessageCircle size={14} />
+            {/* Message — opens (or creates) a direct conversation with this user */}
+            <button
+              onClick={() => startChat(profile._id)}
+              disabled={isOpeningChat}
+              className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-60 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap"
+            >
+              {isOpeningChat ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <MessageCircle size={14} />
+              )}
               Message
             </button>
 

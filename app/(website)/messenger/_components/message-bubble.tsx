@@ -14,6 +14,7 @@ import {
   userFullName,
 } from "./helpers";
 import { ImageViewer } from "./image-viewer";
+import { useMessageGestures } from "./use-message-gestures";
 
 interface Props {
   message: Message;
@@ -74,9 +75,41 @@ interface ActionWrapProps {
 }
 
 function ActionWrap({ children, isMine, onReact, onReply }: ActionWrapProps) {
+  const { handlers, translateX } = useMessageGestures({
+    onLongPress: onReact,
+    onSwipeReply: onReply,
+  });
+
+  const isSwiping = translateX !== 0;
+  // Show a reply hint on the opposite side as the user drags
+  const showHint = Math.abs(translateX) > 12;
+
   return (
     <div className="group/msg relative w-fit max-w-full">
-      {children}
+      {showHint && (
+        <span
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-opacity",
+            translateX > 0 ? "-left-7" : "-right-7",
+          )}
+          style={{ opacity: Math.min(1, Math.abs(translateX) / 60) }}
+        >
+          <Reply className="size-4" />
+        </span>
+      )}
+      <div
+        {...handlers}
+        style={{
+          transform: `translateX(${translateX}px)`,
+          touchAction: "pan-y",
+        }}
+        className={cn(
+          "w-fit max-w-full",
+          isSwiping ? "" : "transition-transform duration-150",
+        )}
+      >
+        {children}
+      </div>
       <HoverActions isMine={isMine} onReact={onReact} onReply={onReply} />
     </div>
   );

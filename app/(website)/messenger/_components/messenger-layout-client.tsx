@@ -5,6 +5,7 @@ import { useCreateGroupConversation } from "@/hooks/features/messenger/api/use-c
 import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conversations";
 import { useLeaveConversation } from "@/hooks/features/messenger/api/use-leave-conversation";
 import { useMessengerSocket } from "@/hooks/features/messenger/use-messenger-socket";
+import { usePresenceSocket } from "@/hooks/features/presence/use-presence-socket";
 import { useGlobalCall } from "@/providers/call-provider";
 import type { MessengerUser } from "@/types/messenger";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ import {
 } from "./helpers";
 import { MessengerProvider } from "./messenger-context";
 import { MiniSidebar } from "./mini-sidebar";
+import { MobileTabBar } from "./mobile-tab-bar";
 import { NewGroupDialog } from "./new-group-dialog";
 import { NicknamesDialog } from "./nicknames-dialog";
 import { ReportDialog } from "./report-dialog";
@@ -118,6 +120,23 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
     activeConversationId: selectedId,
   });
 
+  // Watch presence for the other participant in every 1-to-1 conversation
+  const partnerIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of conversations) {
+      if (c.isGroup) continue;
+      for (const p of c.participants) {
+        if (p._id !== me._id) set.add(p._id);
+      }
+    }
+    return Array.from(set);
+  }, [conversations, me._id]);
+
+  const presence = usePresenceSocket({
+    viewerId: me._id,
+    watchUserIds: partnerIds,
+  });
+
   // ── Call manager (from global provider) ─────────────────────────────
   const globalCall = useGlobalCall();
 
@@ -167,6 +186,7 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
         setBlockTarget({ user, conversationId }),
       requestDeleteChat: (conversationId: string) =>
         setDeleteTarget(conversationId),
+      presence,
     }),
     [
       accessToken,
@@ -181,6 +201,7 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
       setNicknamesFor,
       openNewGroup,
       globalCall,
+      presence,
     ],
   );
 
@@ -189,13 +210,10 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
 
   return (
     <MessengerProvider value={ctxValue}>
-      <div className="relative flex h-[calc(100vh-56px)] w-full overflow-hidden bg-background">
-        {/* Mini sidebar: hidden on mobile when in chat to give chat full width */}
-        <div
-          className={
-            onConversationRoute ? "hidden sm:flex" : "flex"
-          }
-        >
+      <div className="relative flex h-[calc(100vh-56px)] w-full max-w-full overflow-hidden bg-background">
+        {/* Mini sidebar: hidden on mobile (the bottom tab bar on the conv list
+            handles primary nav there) */}
+        <div className="hidden md:flex">
           <MiniSidebar
             avatarUrl={me.profileImage?.url || ""}
             hasMissedCall={hasMissedCall}
@@ -203,22 +221,26 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
           />
         </div>
 
-        {/* Conv list: full width on mobile when no conversation open; hidden when conversation open */}
+        {/* Conv list column: full width on mobile when no conversation open
+            (with bottom tab bar); hidden when conversation open on mobile. */}
         {showConvList && (
           <div
             className={
               onConversationRoute
-                ? "hidden md:flex md:w-80"
-                : "flex w-full md:w-80"
+                ? "hidden min-h-0 flex-col md:flex md:w-80"
+                : "flex w-full min-h-0 flex-col md:w-80"
             }
           >
-            <ConversationList
-              conversations={conversations}
-              meId={me._id}
-              selectedId={selectedId}
-              pinnedIds={pinnedIds}
-              loading={convLoading}
-            />
+            <div className="flex min-h-0 flex-1">
+              <ConversationList
+                conversations={conversations}
+                meId={me._id}
+                selectedId={selectedId}
+                pinnedIds={pinnedIds}
+                loading={convLoading}
+              />
+            </div>
+            <MobileTabBar hasMissedCall={hasMissedCall} />
           </div>
         )}
 

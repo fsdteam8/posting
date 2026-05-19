@@ -8,7 +8,7 @@ import type {
 } from "@/types/messenger";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { io, type Socket } from "socket.io-client";
+import { getMessengerSocket } from "./socket-singleton";
 
 interface MessageNewPayload {
   conversationId: string;
@@ -39,29 +39,6 @@ interface UseMessengerSocketParams {
   activeConversationId?: string | null;
 }
 
-function getSocketBase(): string {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-  return apiUrl.replace(/\/api\/v\d+\/?$/, "");
-}
-
-let SOCKET_SINGLETON: Socket | null = null;
-let SOCKET_USER_ID: string | null = null;
-
-function getOrCreateSocket(userId: string): Socket {
-  if (SOCKET_SINGLETON && SOCKET_USER_ID === userId) return SOCKET_SINGLETON;
-  if (SOCKET_SINGLETON) {
-    SOCKET_SINGLETON.disconnect();
-    SOCKET_SINGLETON = null;
-  }
-  SOCKET_SINGLETON = io(getSocketBase(), {
-    auth: { userId },
-    transports: ["websocket", "polling"],
-    reconnection: true,
-  });
-  SOCKET_USER_ID = userId;
-  return SOCKET_SINGLETON;
-}
-
 export function useMessengerSocket({
   userId,
   activeConversationId,
@@ -72,7 +49,7 @@ export function useMessengerSocket({
   // Connect / disconnect
   useEffect(() => {
     if (!userId) return;
-    const socket = getOrCreateSocket(userId);
+    const socket = getMessengerSocket(userId);
 
     function onConvUpdated({ conversationId, message }: MessageNewPayload) {
       // Patch the conversations list cache
@@ -187,7 +164,7 @@ export function useMessengerSocket({
   // Join active conversation
   useEffect(() => {
     if (!userId || !activeConversationId) return;
-    const socket = getOrCreateSocket(userId);
+    const socket = getMessengerSocket(userId);
     if (!joinedRef.current.has(activeConversationId)) {
       socket.emit("joinConversation", activeConversationId);
       joinedRef.current.add(activeConversationId);

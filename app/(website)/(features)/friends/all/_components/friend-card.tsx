@@ -9,7 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MessageCircle, MoreHorizontal, UserMinus, Users } from "lucide-react";
+import { useStartDirectChat } from "@/hooks/features/messenger/use-start-direct-chat";
+import { Loader2, MessageCircle, MoreHorizontal, UserMinus, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Friend } from "@/types/features/friends";
@@ -17,15 +18,18 @@ import { formatDistanceToNow } from "date-fns";
 
 type FriendCardProps = {
   friend: Friend;
+  accessToken: string;
   onUnfriend: (friendId: string) => void;
   isUnfriending: boolean;
 };
 
 export function FriendCard({
   friend,
+  accessToken,
   onUnfriend,
   isUnfriending,
 }: FriendCardProps) {
+  const { startChat, isStarting } = useStartDirectChat({ accessToken });
   const fullName = `${friend.firstName} ${friend.lastName}`;
   const initials =
     `${friend.firstName[0] ?? ""}${friend.lastName[0] ?? ""}`.toUpperCase();
@@ -119,9 +123,15 @@ export function FriendCard({
           <Button
             size="sm"
             variant="outline"
-            className="flex-1 text-xs h-8 gap-1"
+            className="flex-1 text-xs h-8 gap-1 cursor-pointer"
+            onClick={() => startChat(friend._id)}
+            disabled={isStarting}
           >
-            <MessageCircle className="size-3" />
+            {isStarting ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <MessageCircle className="size-3" />
+            )}
             Message
           </Button>
 

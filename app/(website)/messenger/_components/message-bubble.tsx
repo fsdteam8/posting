@@ -36,8 +36,14 @@ function HoverActions({ isMine, onReact, onReply }: HoverActionsProps) {
   return (
     <div
       className={cn(
-        "absolute top-1/2 z-10 hidden -translate-y-1/2 items-center gap-0.5 rounded-full border bg-card px-1 py-0.5 shadow-sm group-hover/msg:flex",
-        isMine ? "right-full mr-1.5" : "left-full ml-1.5",
+        // Use opacity (transitionable) + a delay-out so the bar lingers when
+        // the cursor briefly leaves the bubble on its way to the buttons.
+        "pointer-events-none absolute top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5 rounded-full border bg-card px-1 py-0.5 opacity-0 shadow-sm transition-opacity delay-150 duration-150",
+        "group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 group-hover/msg:delay-0",
+        "hover:pointer-events-auto hover:opacity-100 hover:delay-0",
+        // Sit flush against the bubble — no margin gap so the cursor never
+        // crosses empty space between bubble and buttons.
+        isMine ? "right-full" : "left-full",
       )}
     >
       <button

@@ -5,10 +5,10 @@ import { useCreateGroupConversation } from "@/hooks/features/messenger/api/use-c
 import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conversations";
 import { useLeaveConversation } from "@/hooks/features/messenger/api/use-leave-conversation";
 import { useMessengerSocket } from "@/hooks/features/messenger/use-messenger-socket";
+import { useGlobalCall } from "@/providers/call-provider";
 import type { MessengerUser } from "@/types/messenger";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
-import { CallScreen } from "./call-screen";
 import { ConfirmDialog } from "./confirm-dialog";
 import { ConversationList } from "./conversation-list";
 import {
@@ -52,10 +52,6 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [nicknamesOpen, setNicknamesOpen] = useState(false);
   const [reportSubject, setReportSubject] = useState<string | null>(null);
-  const [call, setCall] = useState<{
-    kind: "audio" | "video";
-    user: MessengerUser;
-  } | null>(null);
 
   const [blockTarget, setBlockTarget] = useState<{
     user: MessengerUser;
@@ -122,6 +118,9 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
     activeConversationId: selectedId,
   });
 
+  // ── Call manager (from global provider) ─────────────────────────────
+  const globalCall = useGlobalCall();
+
   const hasMissedCall = useMemo(
     () => conversations.some((c) => c.lastMessage?.type === "missed-call"),
     [conversations],
@@ -161,8 +160,9 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
       openTheme: () => setThemeOpen(true),
       openNicknames: () => setNicknamesOpen(true),
       openReport: (subject: string) => setReportSubject(subject),
-      openCall: (kind: "audio" | "video", user: MessengerUser) =>
-        setCall({ kind, user }),
+      openCall: (kind: "audio" | "video", user: MessengerUser) => {
+        if (globalCall) globalCall.initiateCall(kind, user);
+      },
       requestBlock: (user: MessengerUser, conversationId: string) =>
         setBlockTarget({ user, conversationId }),
       requestDeleteChat: (conversationId: string) =>
@@ -180,29 +180,60 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
       nicknames,
       setNicknamesFor,
       openNewGroup,
+      globalCall,
     ],
   );
+
+  // On mobile: hide the conv list when a conversation is open
+  const onConversationRoute = !!selectedId;
 
   return (
     <MessengerProvider value={ctxValue}>
       <div className="relative flex h-[calc(100vh-56px)] w-full overflow-hidden bg-background">
-        <MiniSidebar
-          avatarUrl={me.profileImage?.url || ""}
-          hasMissedCall={hasMissedCall}
-          onCreateClick={() => openNewGroup()}
-        />
-
-        {showConvList && (
-          <ConversationList
-            conversations={conversations}
-            meId={me._id}
-            selectedId={selectedId}
-            pinnedIds={pinnedIds}
-            loading={convLoading}
+        {/* Mini sidebar: hidden on mobile when in chat to give chat full width */}
+        <div
+          className={
+            onConversationRoute ? "hidden sm:flex" : "flex"
+          }
+        >
+          <MiniSidebar
+            avatarUrl={me.profileImage?.url || ""}
+            hasMissedCall={hasMissedCall}
+            onCreateClick={() => openNewGroup()}
           />
+        </div>
+
+        {/* Conv list: full width on mobile when no conversation open; hidden when conversation open */}
+        {showConvList && (
+          <div
+            className={
+              onConversationRoute
+                ? "hidden md:flex md:w-80"
+                : "flex w-full md:w-80"
+            }
+          >
+            <ConversationList
+              conversations={conversations}
+              meId={me._id}
+              selectedId={selectedId}
+              pinnedIds={pinnedIds}
+              loading={convLoading}
+            />
+          </div>
         )}
 
-        {children}
+        {/* Center content — ChatArea + DetailsPanel sit side by side (row).
+            Hidden on mobile when on the index route so the conv list takes
+            the whole screen. */}
+        <div
+          className={
+            onConversationRoute || !showConvList
+              ? "flex min-w-0 flex-1"
+              : "hidden min-w-0 flex-1 md:flex"
+          }
+        >
+          {children}
+        </div>
 
         <ThemeDialog
           open={themeOpen}
@@ -288,14 +319,6 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
           }}
         />
 
-        <CallScreen
-          key={call ? `call-${call.user._id}-${call.kind}` : "no-call"}
-          open={!!call}
-          user={call?.user || null}
-          selfUser={me}
-          kind={call?.kind || "audio"}
-          onClose={() => setCall(null)}
-        />
       </div>
     </MessengerProvider>
   );

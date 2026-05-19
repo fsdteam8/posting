@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { MessengerUser } from "@/types/messenger";
+import type { PresenceState } from "@/hooks/features/presence/use-presence-socket";
 
 interface MessengerContextValue {
   accessToken: string;
@@ -24,6 +25,8 @@ interface MessengerContextValue {
   openCall: (kind: "audio" | "video", user: MessengerUser) => void;
   requestBlock: (user: MessengerUser, conversationId: string) => void;
   requestDeleteChat: (conversationId: string) => void;
+  /** Live presence map keyed by userId. May be empty until users come online. */
+  presence: Record<string, PresenceState>;
 }
 
 const Ctx = createContext<MessengerContextValue | null>(null);

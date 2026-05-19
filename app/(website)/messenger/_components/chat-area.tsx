@@ -169,7 +169,7 @@ export function ChatArea({
       <div
         ref={scrollRef}
         className={cn(
-          "flex-1 overflow-y-auto px-6 py-4",
+          "flex-1 overflow-y-auto px-3 py-4 sm:px-6",
           theme && "bg-linear-to-br",
           theme?.color,
         )}

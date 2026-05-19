@@ -40,7 +40,7 @@ export function ConversationList({
   const total = conversations.length;
 
   return (
-    <div className="flex h-full w-80 shrink-0 flex-col border-r bg-card">
+    <div className="flex h-full w-full min-w-0 flex-col border-r bg-card md:w-80 md:shrink-0">
       <div className="px-5 pt-5 pb-3">
         <h2 className="text-[20px] font-bold tracking-tight">
           Message <span className="text-primary">({total})</span>

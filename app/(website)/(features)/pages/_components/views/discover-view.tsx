@@ -1,7 +1,11 @@
 "use client";
 
 import { useDiscoverPages } from "@/hooks/features/pages/use-discover-pages";
+import { useFollowPage } from "@/hooks/features/pages/use-follow-page";
+import { useUnfollowPage } from "@/hooks/features/pages/use-unfollow-page";
 import { Page } from "@/types/features/pages";
+import { useQueryClient } from "@tanstack/react-query";
+import { CompassIcon, RefreshCw, X } from "lucide-react";
 import { useState } from "react";
 import { PageCard } from "../page-card";
 
@@ -9,69 +13,71 @@ interface DiscoverViewProps {
   accessToken: string;
 }
 
-function SkeletonCard() {
+// Per-card wrapper so each card owns its own follow/unfollow mutation instance
+function DiscoverPageCard({
+  page,
+  accessToken,
+  onRemove,
+}: {
+  page: Page;
+  accessToken: string;
+  onRemove: (id: string) => void;
+}) {
+  const [isLiked, setIsLiked] = useState(
+    page.currentUserMeta?.isLiked ?? false,
+  );
+
+  const { mutate: follow, isPending: isFollowing } = useFollowPage({
+    accessToken,
+    pageId: page._id,
+  });
+
+  const { mutate: unfollow, isPending: isUnfollowing } = useUnfollowPage({
+    accessToken,
+    pageId: page._id,
+  });
+
+  function handleLike() {
+    if (isLiked) {
+      setIsLiked(false); // optimistic
+      unfollow(undefined, {
+        onError: () => setIsLiked(true), // rollback on failure
+      });
+    } else {
+      setIsLiked(true); // optimistic
+      follow(undefined, {
+        onError: () => setIsLiked(false), // rollback on failure
+      });
+    }
+  }
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
-      <div className="h-35 bg-gray-200" />
-      <div className="p-3 space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0" />
-          <div className="flex-1 space-y-1.5">
-            <div className="h-3 bg-gray-200 rounded w-3/4" />
-            <div className="h-2.5 bg-gray-200 rounded w-1/2" />
-            <div className="h-2.5 bg-gray-200 rounded w-2/3" />
-          </div>
-        </div>
-        <div className="flex gap-2 pt-1">
-          <div className="flex-1 h-7 bg-gray-200 rounded-lg" />
-          <div className="flex-1 h-7 bg-gray-200 rounded-lg" />
-        </div>
-      </div>
-    </div>
+    <PageCard
+      id={page._id}
+      name={page.name}
+      category={page.category}
+      followersCount={page.followersCount}
+      coverImage={page.coverImage?.url || undefined}
+      profileImage={page.profileImage?.url || undefined}
+      mode="discover"
+      isLiked={isLiked}
+      isPending={isFollowing || isUnfollowing}
+      onLike={handleLike}
+      onRemove={onRemove}
+    />
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-        <svg
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#9ca3af"
-          strokeWidth="1.5"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-      </div>
-      <p className="text-base font-semibold text-gray-700">
-        No pages to discover
-      </p>
-      <p className="text-sm text-gray-400 mt-1">
-        Check back later for new suggestions
-      </p>
-    </div>
-  );
-}
-
-export function DiscoverView({ accessToken }: DiscoverViewProps) {
+export default function DiscoverView({ accessToken }: DiscoverViewProps) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [liked, setLiked] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = useDiscoverPages({ accessToken });
 
   const pages: Page[] = (data?.data ?? []).filter((p) => !dismissed.has(p._id));
 
-  function handleLike(id: string) {
-    setLiked((prev) => new Set([...prev, id]));
-    // Wire to useFollowPage({ accessToken, pageId: id }).mutate() per card
-  }
-
-  function handleRemove(id: string) {
-    setDismissed((prev) => new Set([...prev, id]));
+  function handleRefresh() {
+    queryClient.invalidateQueries({ queryKey: ["discover-pages"] });
   }
 
   return (
@@ -81,6 +87,7 @@ export function DiscoverView({ accessToken }: DiscoverViewProps) {
         Suggested for you
       </h3>
 
+      {/* Error */}
       {isError && (
         <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-4">
           <svg
@@ -99,6 +106,7 @@ export function DiscoverView({ accessToken }: DiscoverViewProps) {
         </div>
       )}
 
+      {/* Loading skeleton */}
       {isLoading && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -107,27 +115,85 @@ export function DiscoverView({ accessToken }: DiscoverViewProps) {
         </div>
       )}
 
-      {!isLoading && !isError && pages.length === 0 && <EmptyState />}
+      {/* Empty state */}
+      {!isLoading && !isError && pages.length === 0 && (
+        <EmptyState onRefresh={handleRefresh} />
+      )}
 
-      {!isLoading && pages.length > 0 && (
+      {/* Grid */}
+      {!isLoading && !isError && pages.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {pages.map((page) => (
-            <PageCard
+            <DiscoverPageCard
               key={page._id}
-              id={page._id}
-              name={page.name}
-              category={page.category}
-              followersCount={page.followersCount}
-              coverImage={page.coverImage?.url || undefined}
-              profileImage={page.profileImage?.url || undefined}
-              mode="discover"
-              isLiked={liked.has(page._id) || page.currentUserMeta?.isLiked}
-              onLike={handleLike}
-              onRemove={handleRemove}
+              page={page}
+              accessToken={accessToken}
+              onRemove={(id) => setDismissed((prev) => new Set([...prev, id]))}
             />
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+interface EmptyStateProps {
+  onRefresh: () => void;
+}
+
+function EmptyState({ onRefresh }: EmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="relative w-22 h-22 mb-6">
+        <div className="w-22 h-22 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+          <CompassIcon size={36} className="text-gray-400" />
+        </div>
+        <div className="absolute bottom-0.5 right-0.5 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+          <X size={13} className="text-gray-400" />
+        </div>
+      </div>
+
+      <p className="text-base font-medium text-gray-900 mb-2">
+        No pages to discover
+      </p>
+      <p className="text-sm text-gray-500 max-w-65 leading-relaxed mb-7">
+        You have seen all available suggestions. Check back later for new pages.
+      </p>
+
+      <button
+        onClick={() => onRefresh()}
+        className="inline-flex items-center gap-2 px-5 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        <RefreshCw size={15} />
+        Refresh suggestions
+      </button>
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Cover image */}
+      <div className="h-35 bg-gray-200 animate-pulse" />
+
+      <div className="p-3">
+        {/* Avatar + text lines */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse shrink-0" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-3 bg-gray-200 animate-pulse rounded w-3/4" />
+            <div className="h-2.5 bg-gray-200 animate-pulse rounded w-1/2" />
+            <div className="h-2.5 bg-gray-200 animate-pulse rounded w-2/3" />
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-2">
+          <div className="flex-1 h-7 bg-gray-200 animate-pulse rounded-lg" />
+          <div className="flex-1 h-7 bg-gray-200 animate-pulse rounded-lg" />
+        </div>
+      </div>
     </div>
   );
 }

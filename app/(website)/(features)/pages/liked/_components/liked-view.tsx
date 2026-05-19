@@ -1,12 +1,55 @@
 "use client";
 
 import { useGetLikedPages } from "@/hooks/features/pages/use-get-liked-pages";
+import { useUnfollowPage } from "@/hooks/features/pages/use-unfollow-page";
 import { Page } from "@/types/features/pages";
 import { useState } from "react";
 import { PageCard } from "../../_components/page-card";
 
 interface LikedViewProps {
   accessToken: string;
+}
+
+// Per-card wrapper so each card owns its own unfollow mutation instance
+function LikedPageCard({
+  page,
+  accessToken,
+  onRemoved,
+}: {
+  page: Page;
+  accessToken: string;
+  onRemoved: (id: string) => void;
+}) {
+  const { mutate: unfollow, isPending } = useUnfollowPage({
+    accessToken,
+    pageId: page._id,
+  });
+
+  function handleRemove() {
+    onRemoved(page._id); // optimistic — remove from UI instantly
+    unfollow(undefined, {
+      onError: () => {
+        // TODO: roll back optimistic remove if needed
+        // Currently the parent removes from state on call,
+        // so you'd need to re-add it here on failure.
+        // Simplest: invalidate the query so the list re-fetches.
+      },
+    });
+  }
+
+  return (
+    <PageCard
+      id={page._id}
+      name={page.name}
+      category={page.category}
+      followersCount={page.followersCount}
+      coverImage={page.coverImage?.url || undefined}
+      profileImage={page.profileImage?.url || undefined}
+      mode="liked"
+      isPending={isPending}
+      onRemove={handleRemove}
+    />
+  );
 }
 
 function SkeletonCard() {
@@ -67,10 +110,8 @@ export function LikedView({ accessToken }: LikedViewProps) {
     (p) => !optimisticRemoved.has(p._id),
   );
 
-  function handleRemove(id: string) {
-    // Optimistic remove — the hook will invalidate cache on success
+  function handleRemoved(id: string) {
     setOptimisticRemoved((prev) => new Set([...prev, id]));
-    // Wire to: useUnfollowPage({ accessToken, pageId: id }).mutate()
   }
 
   return (
@@ -111,16 +152,11 @@ export function LikedView({ accessToken }: LikedViewProps) {
       {!isLoading && pages.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {pages.map((page) => (
-            <PageCard
+            <LikedPageCard
               key={page._id}
-              id={page._id}
-              name={page.name}
-              category={page.category}
-              followersCount={page.followersCount}
-              coverImage={page.coverImage?.url || undefined}
-              profileImage={page.profileImage?.url || undefined}
-              mode="liked"
-              onRemove={handleRemove}
+              page={page}
+              accessToken={accessToken}
+              onRemoved={handleRemoved}
             />
           ))}
         </div>

@@ -18,6 +18,7 @@ interface PageCardProps {
   onAccept?: (id: string) => void;
   onDecline?: (id: string) => void;
   isLiked?: boolean;
+  isPending?: boolean;
 }
 
 const PLACEHOLDER_COVERS = [
@@ -53,6 +54,8 @@ export function PageCard({
   onRemove,
   onAccept,
   onDecline,
+  isPending,
+  isLiked,
 }: PageCardProps) {
   const cover =
     coverImage || PLACEHOLDER_COVERS[hashIndex(id, PLACEHOLDER_COVERS.length)];
@@ -93,7 +96,7 @@ export function PageCard({
             alt={name}
             width={32}
             height={32}
-            className="rounded-full border-2 border-white shadow-sm object-cover"
+            className="rounded-full border-2 border-white shadow-sm object-cover h-8"
           />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
@@ -112,9 +115,14 @@ export function PageCard({
             <>
               <button
                 onClick={() => onLike?.(id)}
-                className="flex-1 py-1.5 text-sm font-semibold rounded-lg bg-primary text-white hover:bg-blue-700 transition-colors"
+                disabled={isPending}
+                className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-colors cursor-pointer ${
+                  isLiked
+                    ? "bg-blue-100 text-primary"
+                    : "bg-primary text-white hover:bg-primary/90"
+                } disabled:opacity-60 disabled:cursor-not-allowed`}
               >
-                Like
+                {isPending ? "..." : isLiked ? "Liked" : "Like"}
               </button>
               <button
                 onClick={() => onRemove?.(id)}

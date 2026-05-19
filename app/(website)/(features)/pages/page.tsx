@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { DiscoverView } from "./_components/views/discover-view";
+import DiscoverView from "./_components/views/discover-view";
 
 const Page = async () => {
   const cu = await auth();

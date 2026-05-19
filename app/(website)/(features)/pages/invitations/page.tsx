@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { InvitationsView } from "../_components/views/invitations-view";
+import { InvitationsView } from "./_components/invitation-view";
 
 const InvitationsPage = async () => {
   const cu = await auth();

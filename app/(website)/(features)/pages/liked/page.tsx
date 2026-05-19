@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { LikedView } from "../_components/views/liked-view";
+import { LikedView } from "./_components/liked-view";
 
 const LikedPage = async () => {
   const cu = await auth();

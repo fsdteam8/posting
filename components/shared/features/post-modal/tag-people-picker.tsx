@@ -7,17 +7,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useGetAllFriends } from "@/hooks/features/friends/use-get-all-friends";
 import { useGetSingleGroup } from "@/hooks/features/groups/api/use-get-single-group-info";
 import { cn } from "@/lib/utils";
 import { GroupUser } from "@/types/features/groups";
 import { Check, Loader2, Search, X } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface TagPeoplePickerProps {
   accessToken: string;
+  /**
+   * When provided, the picker shows that group's members.
+   * When empty, it falls back to the current user's friends so the picker
+   * still works in non-group contexts (feed, page, profile).
+   */
   groupUsername: string;
   value: GroupUser[];
   onChange: (val: GroupUser[]) => void;
@@ -37,25 +43,46 @@ const TagPeoplePicker = ({
 }: TagPeoplePickerProps) => {
   const [search, setSearch] = useState("");
 
-  const { data, isLoading, isError } = useGetSingleGroup({
+  const useGroupSource = Boolean(groupUsername);
+
+  // Group members — only fetched when a group username is provided
+  const groupQuery = useGetSingleGroup({
     username: groupUsername,
     accessToken,
   });
 
-  const members = useMemo(() => {
-    return data?.data.members ?? [];
-  }, [data?.data.members]);
+  // Friends — used when no group context is present (feed/page/profile posts)
+  const friendsQuery = useGetAllFriends({
+    accessToken,
+    page: 1,
+    limit: 50,
+  });
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return members;
-    const q = search.toLowerCase();
-    return members.filter(
-      (m) =>
-        m.firstName.toLowerCase().includes(q) ||
-        m.lastName.toLowerCase().includes(q) ||
-        m.username.toLowerCase().includes(q),
-    );
-  }, [members, search]);
+  const isLoading = useGroupSource
+    ? groupQuery.isLoading
+    : friendsQuery.isLoading;
+  const isError = useGroupSource ? groupQuery.isError : friendsQuery.isError;
+
+  // Normalize both sources to GroupUser shape (structurally compatible).
+  const candidates: GroupUser[] = useGroupSource
+    ? (groupQuery.data?.data.members ?? [])
+    : (friendsQuery.data?.data ?? []).map((f) => ({
+        _id: f._id,
+        firstName: f.firstName,
+        lastName: f.lastName,
+        username: f.username,
+        profileImage: f.profileImage,
+      }));
+
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? candidates.filter(
+        (m) =>
+          m.firstName.toLowerCase().includes(q) ||
+          m.lastName.toLowerCase().includes(q) ||
+          m.username.toLowerCase().includes(q),
+      )
+    : candidates;
 
   const isSelected = (id: string) => value.some((u) => u._id === id);
 
@@ -83,7 +110,9 @@ const TagPeoplePicker = ({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search members..."
+              placeholder={
+                useGroupSource ? "Search members…" : "Search friends…"
+              }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2 bg-muted rounded-full text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -125,13 +154,17 @@ const TagPeoplePicker = ({
 
             {isError && (
               <p className="text-center text-[13px] text-red-500 dark:text-red-400 py-6">
-                Failed to load members.
+                Failed to load {useGroupSource ? "members" : "friends"}.
               </p>
             )}
 
             {!isLoading && !isError && filtered.length === 0 && (
               <p className="text-center text-[13px] text-muted-foreground py-6">
-                No members found.
+                {useGroupSource
+                  ? "No members found."
+                  : candidates.length === 0
+                    ? "You don't have any friends to tag yet."
+                    : "No friends match your search."}
               </p>
             )}
 

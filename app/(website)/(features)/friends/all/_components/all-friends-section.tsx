@@ -108,6 +108,7 @@ export function AllFriendsSection({ accessToken }: AllFriendsSectionProps) {
               <FriendCard
                 key={friend._id}
                 friend={friend}
+                accessToken={accessToken}
                 onUnfriend={handleUnfriend}
                 isUnfriending={pendingId === friend._id}
               />

@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import Navbar from "@/components/shared/navbar/navbar";
 import { baseURL } from "@/constants";
 import { getQueryClient } from "@/lib/tanstack-query/query-client";
+import { CallProvider } from "@/providers/call-provider";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
 import React from "react";
@@ -31,8 +32,10 @@ const WebsiteLayout = async ({ children }: Props) => {
   return (
     <div>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <Navbar accessToken={cu.user.accessToken} />
-        {children}
+        <CallProvider accessToken={cu.user.accessToken}>
+          <Navbar accessToken={cu.user.accessToken} />
+          {children}
+        </CallProvider>
       </HydrationBoundary>
     </div>
   );

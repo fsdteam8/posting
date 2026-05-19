@@ -54,7 +54,7 @@ export function SellerInfoCard({
       {
         onSuccess: (res) => {
           if (res.success) {
-            router.push(`/messages/${res.data.conversationId}`);
+            router.push(`/messenger/${res.data.conversationId}`);
           }
         },
       },

@@ -148,7 +148,7 @@ const FeedTrigger = ({
   const avatarUrl = profile?.profileImage?.url;
 
   return (
-    <Card className="px-4 py-3 shadow-sm rounded-full hover:bg-muted transition-colors duration-200">
+    <Card className="px-4 py-3 shadow-sm rounded-full transition-shadow duration-200 hover:shadow-md">
       <div className="flex items-center gap-x-3">
         {/* Avatar */}
         {avatarUrl ? (
@@ -167,7 +167,7 @@ const FeedTrigger = ({
         <button
           type="button"
           onClick={onOpen}
-          className="flex-1 text-left bg-muted/60  transition-colors duration-200 rounded-full px-4 py-2 text-sm text-muted-foreground"
+          className="group/pill flex-1 text-left bg-muted/60 hover:bg-muted active:bg-muted/80 transition-colors duration-200 rounded-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground/80 cursor-pointer"
         >
           Tell us what&apos;s now with you?
         </button>
@@ -178,7 +178,7 @@ const FeedTrigger = ({
             type="button"
             title="Feeling/activity"
             onClick={onFeelingTrigger}
-            className="p-2 rounded-full hover:bg-muted transition-colors duration-200"
+            className="p-2 rounded-full transition-colors duration-200 hover:bg-yellow-100 active:bg-yellow-200 dark:hover:bg-yellow-950/40 dark:active:bg-yellow-950/60 cursor-pointer"
           >
             <Smile className="w-5 h-5 text-yellow-400" />
           </button>
@@ -186,7 +186,7 @@ const FeedTrigger = ({
             type="button"
             title="Add photo/video"
             onClick={onPhotoTrigger}
-            className="p-2 rounded-full hover:bg-muted transition-colors duration-200"
+            className="p-2 rounded-full transition-colors duration-200 hover:bg-green-100 active:bg-green-200 dark:hover:bg-green-950/40 dark:active:bg-green-950/60 cursor-pointer"
           >
             <ImageIcon className="w-5 h-5 text-[#45bd62]" />
           </button>

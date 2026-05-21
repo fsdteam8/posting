@@ -72,7 +72,11 @@ export function SellerInfoCard({
       {/* ── Seller profile row ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         {/* Avatar */}
-        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-neutral-100 shrink-0">
+        <button
+          onClick={() => router.push(`/marketplace/seller/${seller._id}`)}
+          className="relative w-10 h-10 rounded-full overflow-hidden bg-neutral-100 shrink-0 cursor-pointer hover:ring-2 hover:ring-neutral-200 transition"
+          aria-label={`View ${fullName}'s profile`}
+        >
           {seller.profileImage?.url ? (
             <Image
               src={seller.profileImage.url}
@@ -85,20 +89,26 @@ export function SellerInfoCard({
               <User className="w-5 h-5 text-neutral-400" />
             </div>
           )}
-        </div>
+        </button>
 
         {/* Name + username */}
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-neutral-800 truncate">
+        <button
+          onClick={() => router.push(`/marketplace/seller/${seller._id}`)}
+          className="flex-1 min-w-0 text-left cursor-pointer"
+        >
+          <p className="text-[13px] font-semibold text-neutral-800 truncate hover:underline">
             {fullName}
           </p>
           <p className="text-[12px] text-neutral-400 truncate">
             @{seller.username}
           </p>
-        </div>
+        </button>
 
         {/* View profile link */}
-        <button className="text-[12px] text-blue-600 hover:text-blue-700 font-medium shrink-0">
+        <button
+          onClick={() => router.push(`/marketplace/seller/${seller._id}`)}
+          className="text-[12px] text-blue-600 hover:text-blue-700 font-medium shrink-0"
+        >
           View profile
         </button>
       </div>

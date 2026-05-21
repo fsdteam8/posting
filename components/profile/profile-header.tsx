@@ -2,13 +2,11 @@
 
 import { Profile } from "@/hooks/profile/use-profile";
 import {
-  BadgeCheck,
   BookmarkPlus,
   ChevronDown,
   Eye,
   MoreHorizontal,
   PenLine,
-  Search,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -99,10 +97,10 @@ export function ProfileHeader({
             <h1 className="text-lg font-bold text-gray-900 whitespace-nowrap">
               {fullName}
             </h1>
-            <button className="inline-flex items-center gap-1 border border-gray-300 rounded-full px-2.5 py-0.5 text-[11px] font-medium text-gray-500 hover:border-gray-400 transition-colors bg-transparent cursor-pointer">
+            {/* <button className="inline-flex items-center gap-1 border border-gray-300 rounded-full px-2.5 py-0.5 text-[11px] font-medium text-gray-500 hover:border-gray-400 transition-colors bg-transparent cursor-pointer">
               <BadgeCheck size={12} className="text-gray-400" />
               Get Verified
-            </button>
+            </button> */}
           </div>
           <p className="text-[12.5px] text-gray-500 mt-0.5">
             {formatCount(followersCount)} Followers &bull;{" "}
@@ -132,9 +130,6 @@ export function ProfileHeader({
               onClick={TogglePublicProfile}
             >
               <Eye size={15} />
-            </button>
-            <button className="inline-flex items-center justify-center size-8.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-500 rounded-lg transition-colors cursor-pointer bg-transparent">
-              <Search size={15} />
             </button>
             <button className="inline-flex items-center justify-center size-8.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-500 rounded-lg transition-colors cursor-pointer bg-transparent">
               <MoreHorizontal size={15} />

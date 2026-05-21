@@ -23,10 +23,14 @@ import { useInfiniteQuery } from "@tanstack/react-query";
  * automatically resets to page 1 and refetches from scratch.
  */
 export function useBrowseListings(params: BrowseListingsParams = {}) {
-  const { limit = 10, q, category, sortBy = "recent" } = params;
+  const { limit = 10, q, category, sortBy = "recent", sellerId } = params;
 
   return useInfiniteQuery<BrowseListingsPage, Error>({
-    queryKey: ["marketplace", "listings", { q, category, sortBy, limit }],
+    queryKey: [
+      "marketplace",
+      "listings",
+      { q, category, sortBy, limit, sellerId },
+    ],
 
     queryFn: async ({ pageParam = 1 }) => {
       // Build query string — omit empty/undefined values so the URL stays clean
@@ -36,6 +40,7 @@ export function useBrowseListings(params: BrowseListingsParams = {}) {
         sortBy,
         ...(q ? { q } : {}),
         ...(category ? { category } : {}),
+        ...(sellerId ? { sellerId } : {}),
       });
 
       const res = await fetch(

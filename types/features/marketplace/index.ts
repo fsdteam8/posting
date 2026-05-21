@@ -184,6 +184,7 @@ export type BrowseListingsParams = {
   q?: string; // full-text search query
   category?: string; // filter by category string
   sortBy?: SortBy;
+  sellerId?: string; // restrict results to a specific seller
 };
 
 export type BrowseListingsPagination = {

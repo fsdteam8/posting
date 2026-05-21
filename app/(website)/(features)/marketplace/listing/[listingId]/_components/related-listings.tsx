@@ -48,10 +48,10 @@ export function RelatedListings({ listings }: Props) {
             <button
               key={listing._id}
               onClick={() => router.push(`/marketplace/listing/${listing._id}`)}
-              className="shrink-0 w-36 text-left group"
+              className="shrink-0 w-36 h-64 flex flex-col text-left group"
             >
               {/* Thumbnail */}
-              <div className="w-full relative aspect-square rounded-xl overflow-hidden bg-neutral-100 mb-2">
+              <div className="w-full relative aspect-square rounded-xl overflow-hidden bg-neutral-100 mb-2 shrink-0">
                 {photo ? (
                   <Image
                     src={photo}
@@ -67,21 +67,23 @@ export function RelatedListings({ listings }: Props) {
               </div>
 
               {/* Info */}
-              <p className="text-[13px] font-semibold text-neutral-800">
+              <p className="text-[13px] font-semibold text-neutral-800 truncate">
                 {listing.currency} {listing.price.toLocaleString()}
               </p>
               <p className="text-[12px] text-neutral-500 truncate mt-0.5">
                 {listing.title}
               </p>
 
-              {listing.location?.city && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-2.5 h-2.5 text-neutral-400" />
-                  <span className="text-[11px] text-neutral-400 truncate">
-                    {listing.location.city}
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-1 mt-0.5 h-4">
+                {listing.location?.city && (
+                  <>
+                    <MapPin className="w-2.5 h-2.5 text-neutral-400 shrink-0" />
+                    <span className="text-[11px] text-neutral-400 truncate">
+                      {listing.location.city}
+                    </span>
+                  </>
+                )}
+              </div>
             </button>
           );
         })}

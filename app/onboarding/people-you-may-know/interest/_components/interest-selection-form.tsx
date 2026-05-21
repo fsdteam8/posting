@@ -114,7 +114,7 @@ export default function InterestSelectionForm({ accessToken }: Props) {
       }
 
       // handle success
-      router.push("/");
+      isOnboardedMutate();
     },
     onError: (err) => {
       toast.error(err.message ?? "Something went wrong");

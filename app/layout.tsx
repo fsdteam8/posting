@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     "A Facebook-style social media navigation interface built with Next.js and shadcn/ui",
 };
 
+// nothing
+
 export default function RootLayout({
   children,
 }: Readonly<{

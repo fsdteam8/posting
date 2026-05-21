@@ -29,7 +29,6 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
-  BarChart3,
   Globe,
   ImageIcon,
   Loader2,
@@ -188,15 +187,6 @@ const GroupTrigger = ({
             <Smile className="w-5 h-5 text-[#f7b928]" />
             <span className="text-[13px] sm:text-[15px] font-semibold text-muted-foreground">
               Feeling/activity
-            </span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex-1 transition-colors duration-300"
-          >
-            <BarChart3 className="w-5 h-5 text-[#f5533d]" />
-            <span className="text-[13px] sm:text-[15px] font-semibold text-muted-foreground">
-              Poll
             </span>
           </Button>
         </div>

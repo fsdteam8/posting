@@ -5,8 +5,11 @@ import { useGetSingleGroup } from "@/hooks/features/groups/api/use-get-single-gr
 import { formatCount } from "@/lib/utils";
 import { Globe, Plus, Share2 } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import ErrorScreen from "../../screens/error-screen";
 import GroupJoinedAction from "./group-joined-action/group-joined-action";
+import GroupInviteModal from "./group-invite-modal";
+import GroupShareModal from "./group-share-modal";
 
 interface Props {
   username: string;
@@ -19,12 +22,15 @@ export default function GroupInfoHeader({
   accessToken,
   loggedinUserId,
 }: Props) {
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const { data, refetch, isRefetching } = useGetSingleGroup({
     username,
     accessToken,
   });
 
   let content;
+  let modal: React.ReactNode = null;
   if (!data?.success) {
     content = (
       <ErrorScreen
@@ -109,6 +115,7 @@ export default function GroupInfoHeader({
                 className="gap-1.5 px-4 py-1.5 text-[15px] font-semibold"
                 variant="default"
                 size="sm"
+                onClick={() => setInviteOpen(true)}
               >
                 <Plus className="w-4 h-4" />
                 Invite
@@ -119,6 +126,7 @@ export default function GroupInfoHeader({
               variant="secondary"
               className="gap-1.5 px-4 py-1.5 text-[15px] font-semibold"
               size="sm"
+              onClick={() => setShareOpen(true)}
             >
               <Share2 className="w-4 h-4" />
               Share
@@ -135,7 +143,31 @@ export default function GroupInfoHeader({
         </div>
       </div>
     );
+
+    modal = (
+      <>
+        <GroupInviteModal
+          groupId={group._id}
+          groupName={group.name}
+          accessToken={accessToken}
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+        />
+        <GroupShareModal
+          groupUserName={group.groupUserName}
+          groupName={group.name}
+          groupPrivacy={group.privacy}
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+        />
+      </>
+    );
   }
 
-  return content;
+  return (
+    <>
+      {content}
+      {modal}
+    </>
+  );
 }

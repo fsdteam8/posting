@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { BookOpen, Compass, Plus, Users } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
@@ -21,7 +20,7 @@ export default function GroupsSidebar({ accessToken }: Props) {
   return (
     <aside className="w-80 flex flex-col h-[92vh]  bg-card border-r border-border sticky top-0">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      {/* <div className="p-4 border-b border-border">
         <h2 className="text-xl font-bold text-foreground mb-4">Groups</h2>
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -31,11 +30,8 @@ export default function GroupsSidebar({ accessToken }: Props) {
               className="w-full h-10 pr-10"
             />
           </div>
-          <Button size="icon" variant="outline" className="h-10 w-10">
-            <div className="w-4 h-4 flex items-center justify-center">⚙️</div>
-          </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Navigation Items */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-3">

@@ -36,7 +36,11 @@ import { MarketplaceSidebar } from "./marketplace-sidebar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type MarketplaceNavItem = "browse" | "my-listings" | "create";
+export type MarketplaceNavItem =
+  | "browse"
+  | "my-listings"
+  | "create"
+  | "messages";
 
 interface MarketplaceShellProps {
   children: ReactNode;
@@ -59,6 +63,7 @@ interface MarketplaceShellProps {
 function getActiveNavItem(pathname: string): MarketplaceNavItem {
   if (pathname === "/marketplace/my-listing") return "my-listings";
   if (pathname === "/marketplace/create") return "create";
+  if (pathname.startsWith("/marketplace/messages")) return "messages";
   return "browse";
 }
 
@@ -105,6 +110,11 @@ export function MarketplaceShell({
   function handleCreateClick() {
     closeMobileSidebar();
     router.push("/marketplace/create");
+  }
+
+  function handleMessagesClick() {
+    closeMobileSidebar();
+    router.push("/marketplace/messages");
   }
 
   function handleCategoryChange(cat: string | null) {
@@ -158,6 +168,7 @@ export function MarketplaceShell({
             onBrowseClick={handleBrowseClick}
             onCreateClick={handleCreateClick}
             onMyListingsClick={handleMyListingsClick}
+            onMessagesClick={handleMessagesClick}
           />
         </div>
       </div>

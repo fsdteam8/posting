@@ -47,6 +47,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { EditListingDialog } from "./edit-listing-dialog";
 import { MarketplaceGrid } from "./marketplace-grid";
@@ -65,6 +66,7 @@ type Props = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function MarketplaceClient({ accessToken, initialCategory }: Props) {
+  const router = useRouter();
   // ── Meta ─────────────────────────────────────────────────────────────────────
   // Cached for 10 minutes — used to populate Select dropdowns in dialogs
   // and to render the category strip.
@@ -149,6 +151,11 @@ export function MarketplaceClient({ accessToken, initialCategory }: Props) {
     setMobileSidebarOpen(false);
   }
 
+  function handleMessagesClick() {
+    setMobileSidebarOpen(false);
+    router.push("/marketplace/messages");
+  }
+
   function handleBrowseClick() {
     setView("browse");
     setMobileSidebarOpen(false);
@@ -193,6 +200,7 @@ export function MarketplaceClient({ accessToken, initialCategory }: Props) {
             onBrowseClick={handleBrowseClick}
             onCreateClick={handleCreateClick}
             onMyListingsClick={handleMyListingsClick}
+            onMessagesClick={handleMessagesClick}
           />
         </div>
       </div>

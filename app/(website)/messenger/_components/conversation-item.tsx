@@ -17,6 +17,12 @@ interface Props {
   conversation: Conversation;
   meId: string;
   active: boolean;
+  /**
+   * Route prefix for the link. Defaults to "/messenger" for the social inbox;
+   * the marketplace inbox passes "/marketplace/messages" so item taps stay
+   * inside the marketplace section.
+   */
+  basePath?: string;
 }
 
 function formatTime(at?: string | null) {
@@ -31,7 +37,12 @@ function formatTime(at?: string | null) {
   return format(d, "MMM yyyy");
 }
 
-export function ConversationItem({ conversation, meId, active }: Props) {
+export function ConversationItem({
+  conversation,
+  meId,
+  active,
+  basePath = "/messenger",
+}: Props) {
   const { presence } = useMessenger();
   // Use nickname for direct chats when present
   const other = conversation.participants.find((p) => p._id !== meId);
@@ -70,7 +81,7 @@ export function ConversationItem({ conversation, meId, active }: Props) {
 
   return (
     <Link
-      href={`/messenger/${conversation._id}`}
+      href={`${basePath}/${conversation._id}`}
       className={cn(
         "group relative flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
         active ? "bg-primary/8" : "hover:bg-muted/60",

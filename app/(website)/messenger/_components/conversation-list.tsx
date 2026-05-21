@@ -13,6 +13,10 @@ interface Props {
   selectedId: string | null;
   pinnedIds: Set<string>;
   loading?: boolean;
+  /** Heading shown at the top of the list. Defaults to "Message". */
+  title?: string;
+  /** Route prefix passed down to ConversationItem links. */
+  basePath?: string;
 }
 
 export function ConversationList({
@@ -21,6 +25,8 @@ export function ConversationList({
   selectedId,
   pinnedIds,
   loading,
+  title = "Message",
+  basePath,
 }: Props) {
   const [q, setQ] = useState("");
 
@@ -43,7 +49,7 @@ export function ConversationList({
     <div className="flex h-full w-full min-w-0 flex-col border-r bg-card md:w-80 md:shrink-0">
       <div className="px-5 pt-5 pb-3">
         <h2 className="text-[20px] font-bold tracking-tight">
-          Message <span className="text-primary">({total})</span>
+          {title} <span className="text-primary">({total})</span>
         </h2>
       </div>
 
@@ -85,6 +91,7 @@ export function ConversationList({
                       conversation={c}
                       meId={meId}
                       active={selectedId === c._id}
+                      basePath={basePath}
                     />
                   ))}
                 </div>
@@ -103,6 +110,7 @@ export function ConversationList({
                       conversation={c}
                       meId={meId}
                       active={selectedId === c._id}
+                      basePath={basePath}
                     />
                   ))}
                 </div>

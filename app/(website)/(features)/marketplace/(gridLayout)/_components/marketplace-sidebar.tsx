@@ -20,7 +20,14 @@
 import { useGetMarketplaceMeta } from "@/hooks/features/marketplace/api/use-get-marketplace-meta";
 import { cn } from "@/lib/utils";
 import type { ListingStatus } from "@/types/features/marketplace";
-import { Grid2X2, List, PlusCircle, Store, Tag } from "lucide-react";
+import {
+  Grid2X2,
+  List,
+  MessageCircle,
+  PlusCircle,
+  Store,
+  Tag,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { MarketplaceNavItem } from "./marketplace-shell";
 
@@ -39,6 +46,7 @@ interface MarketplaceSidebarProps {
   onBrowseClick: () => void;
   onCreateClick: () => void;
   onMyListingsClick: () => void;
+  onMessagesClick: () => void;
 
   // ── Status filter (kept for API compatibility, used on my-listings page) ───
   activeStatus?: ListingStatus | null;
@@ -87,6 +95,7 @@ export function MarketplaceSidebar({
   onBrowseClick,
   onCreateClick,
   onMyListingsClick,
+  onMessagesClick,
 }: MarketplaceSidebarProps) {
   const { data } = useGetMarketplaceMeta();
   const categories: string[] = data?.data?.categories ?? [];
@@ -122,6 +131,14 @@ export function MarketplaceSidebar({
           // Active only on /marketplace/create
           active={activeNavItem === "create"}
           onClick={onCreateClick}
+        />
+
+        <NavButton
+          icon={<MessageCircle className="w-4 h-4" />}
+          label="Messages"
+          // Active on any /marketplace/messages route
+          active={activeNavItem === "messages"}
+          onClick={onMessagesClick}
         />
       </div>
 

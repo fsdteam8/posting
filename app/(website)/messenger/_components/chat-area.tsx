@@ -30,6 +30,14 @@ interface Props {
   onDelete: (messageId: string) => void;
   searchOpen: boolean;
   setSearchOpen: (v: boolean) => void;
+  /** Forwarded to ChatHeader so the mobile back link can point to the right inbox. */
+  backHref?: string;
+  /** Hide call buttons (e.g. marketplace chats don't need voice/video). */
+  showCallButtons?: boolean;
+  /** Hide details toggle when the host page doesn't render a details panel. */
+  showDetailsToggle?: boolean;
+  /** Optional banner rendered above the chat stream (e.g. listing summary). */
+  banner?: React.ReactNode;
 }
 
 export function ChatArea({
@@ -47,6 +55,10 @@ export function ChatArea({
   onDelete,
   searchOpen,
   setSearchOpen,
+  backHref,
+  showCallButtons,
+  showDetailsToggle,
+  banner,
 }: Props) {
   const theme = getThemeById(themeId);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -135,7 +147,12 @@ export function ChatArea({
         onAudioCall={onAudioCall}
         onVideoCall={onVideoCall}
         onOpenSearch={() => setSearchOpen(!searchOpen)}
+        backHref={backHref}
+        showCallButtons={showCallButtons}
+        showDetailsToggle={showDetailsToggle}
       />
+
+      {banner}
 
       {searchOpen && (
         <div className="flex items-center gap-2 border-b bg-muted/30 px-5 py-2">
@@ -174,7 +191,7 @@ export function ChatArea({
           theme?.color,
         )}
       >
-        <div className="mx-auto flex max-w-3xl flex-col gap-1">
+        <div className="flex w-full flex-col gap-1">
           {loading && messages.length === 0 ? (
             <div className="flex h-64 items-center justify-center">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />

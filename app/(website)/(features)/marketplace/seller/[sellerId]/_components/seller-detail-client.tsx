@@ -135,7 +135,7 @@ export function SellerDetailClient({
               priority
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-neutral-100 via-neutral-50 to-neutral-100" />
+            <div className="w-full h-full bg-linear-to-r from-neutral-100 via-neutral-50 to-neutral-100" />
           )}
         </div>
 
@@ -248,7 +248,7 @@ export function SellerDetailClient({
                   size="sm"
                   variant="outline"
                   className="h-9 gap-1.5 text-[12.5px] rounded-full px-4"
-                  onClick={() => router.push("/messenger")}
+                  onClick={() => router.push("/marketplace/messages")}
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   Message

@@ -18,6 +18,12 @@ interface Props {
   onAudioCall: () => void;
   onVideoCall: () => void;
   onOpenSearch: () => void;
+  /** Where the mobile back arrow points. Defaults to the social inbox. */
+  backHref?: string;
+  /** Hide the call buttons when the chat type doesn't support them. */
+  showCallButtons?: boolean;
+  /** Hide the details toggle when the surface doesn't render a details panel. */
+  showDetailsToggle?: boolean;
 }
 
 export function ChatHeader({
@@ -27,6 +33,9 @@ export function ChatHeader({
   onAudioCall,
   onVideoCall,
   onOpenSearch,
+  backHref = "/messenger",
+  showCallButtons = true,
+  showDetailsToggle = true,
 }: Props) {
   const { presence } = useMessenger();
   const isGroup = conversation.isGroup;
@@ -52,7 +61,7 @@ export function ChatHeader({
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         {/* Back to conversation list (mobile only) */}
         <Link
-          href="/messenger"
+          href={backHref}
           aria-label="Back to messages"
           className="-ml-1 flex size-9 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground md:hidden"
         >
@@ -89,30 +98,36 @@ export function ChatHeader({
         >
           <Search className="size-5" />
         </button>
-        <button
-          type="button"
-          onClick={onAudioCall}
-          className="flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label="Audio call"
-        >
-          <Phone className="size-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onVideoCall}
-          className="flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label="Video call"
-        >
-          <Video className="size-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onToggleDetails}
-          className="flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label="Toggle details"
-        >
-          <User className="size-5" />
-        </button>
+        {showCallButtons && (
+          <>
+            <button
+              type="button"
+              onClick={onAudioCall}
+              className="flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              aria-label="Audio call"
+            >
+              <Phone className="size-5" />
+            </button>
+            <button
+              type="button"
+              onClick={onVideoCall}
+              className="flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              aria-label="Video call"
+            >
+              <Video className="size-5" />
+            </button>
+          </>
+        )}
+        {showDetailsToggle && (
+          <button
+            type="button"
+            onClick={onToggleDetails}
+            className="flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            aria-label="Toggle details"
+          >
+            <User className="size-5" />
+          </button>
+        )}
       </div>
     </div>
   );

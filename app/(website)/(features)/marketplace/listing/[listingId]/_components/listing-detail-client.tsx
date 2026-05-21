@@ -40,6 +40,7 @@ import { ListingDetailSkeleton } from "./listing-detail-skeleton";
 import { ListingImageGallery } from "./listing-image-gallery";
 import { MakeOfferCard } from "./make-offer-card";
 import { RelatedListings } from "./related-listings";
+import { SellerActionsCard } from "./seller-actions-card";
 import { SellerInfoCard } from "./seller-info-card";
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
@@ -370,6 +371,16 @@ export function ListingDetailClient({
                 accessToken={accessToken}
               />
             )}
+
+          {/* Seller-only tools — pick a buyer and finalize the sale */}
+          {isSeller && (
+            <SellerActionsCard
+              listingId={listingId}
+              accessToken={accessToken}
+              listingStatus={listing.listingStatus}
+              currency={listing.currency}
+            />
+          )}
 
           {/* Availability notice for non-available listings */}
           {listing.listingStatus !== "available" && (

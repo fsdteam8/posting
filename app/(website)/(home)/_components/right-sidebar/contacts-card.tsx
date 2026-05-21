@@ -159,8 +159,7 @@ export function ContactsCard({ accessToken }: Props) {
         <ul className="flex flex-col">
           {filtered.map((friend) => {
             const fullName = `${friend.firstName} ${friend.lastName}`.trim();
-            const isPending =
-              isStarting && pendingId === friend._id;
+            const isPending = isStarting && pendingId === friend._id;
             return (
               <li key={friend._id}>
                 <button

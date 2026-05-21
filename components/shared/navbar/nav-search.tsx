@@ -12,14 +12,7 @@ interface NavSearchProps {
 const RECENT_KEY = "postin:recent-searches";
 const MAX_RECENTS = 8;
 
-const TRENDING = [
-  "Photography",
-  "Travel",
-  "Food",
-  "Music",
-  "Tech",
-  "Sports",
-];
+const TRENDING = ["Photography", "Travel", "Food", "Music", "Tech", "Sports"];
 
 // ── Recents store, hydrated via useSyncExternalStore ─────────────────────────
 const EMPTY_RECENTS: string[] = [];
@@ -249,7 +242,8 @@ export function NavSearch({}: NavSearchProps) {
                   <Search className="size-4 text-primary" />
                 </span>
                 <span className="text-sm text-foreground truncate">
-                  Search for &ldquo;<span className="font-medium">{query}</span>&rdquo;
+                  Search for &ldquo;<span className="font-medium">{query}</span>
+                  &rdquo;
                 </span>
               </button>
             )}

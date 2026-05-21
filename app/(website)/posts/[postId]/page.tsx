@@ -38,7 +38,10 @@ export async function generateMetadata({ params }: PostDetailPageProps) {
       author && `${author.firstName ?? ""} ${author.lastName ?? ""}`.trim();
     const plain =
       typeof post.content === "string"
-        ? post.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+        ? post.content
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
         : "";
     const description =
       plain.slice(0, 160) || `View ${authorName ?? "this"} post on Postin`;

@@ -1,22 +1,17 @@
-import { Bookmark } from "lucide-react";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { SavedPageShell } from "./_components/saved-page-shell";
 
-const Page = () => {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="flex flex-col items-center text-center gap-3">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10">
-          <Bookmark className="size-8 text-primary" />
-        </div>
+export const metadata = {
+  title: "Saved",
+  description: "Posts and items you have saved",
+};
 
-        <h1 className="text-3xl font-bold tracking-tight">Saved</h1>
+const Page = async () => {
+  const cu = await auth();
+  if (!cu || !cu.user || !cu.user.accessToken) redirect("/login");
 
-        <p className="max-w-md text-sm text-muted-foreground">
-          This is the Saved page. Posts, links, and items you’ve saved will
-          appear here.
-        </p>
-      </div>
-    </div>
-  );
+  return <SavedPageShell accessToken={cu.user.accessToken} />;
 };
 
 export default Page;

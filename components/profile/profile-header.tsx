@@ -120,7 +120,10 @@ export function ProfileHeader({
               <BookmarkPlus size={14} />
               Add Story
             </button>
-            <button className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap">
+            <button
+              onClick={() => router.push("/profile/edit")}
+              className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-[13px] font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer bg-transparent whitespace-nowrap"
+            >
               <PenLine size={14} />
               Edit Profile
             </button>

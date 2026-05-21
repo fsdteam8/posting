@@ -9,8 +9,13 @@
  * their own listing).
  */
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,33 +23,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Bookmark,
-  BookmarkCheck,
-  EyeOff,
-  MoreHorizontal,
-  Flag,
-  Share2,
-} from "lucide-react";
-import { useSaveListing } from "@/hooks/features/notifications/api/useSaveListing";
+import { Textarea } from "@/components/ui/textarea";
 import { useHideListing } from "@/hooks/features/notifications/api/useHideListing";
 import {
   useReportListing,
   type ReportReason,
 } from "@/hooks/features/notifications/api/useReportListing";
+import { useSaveListing } from "@/hooks/features/notifications/api/useSaveListing";
+import {
+  Bookmark,
+  BookmarkCheck,
+  EyeOff,
+  Flag,
+  MoreHorizontal,
+  Share2,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // ─── Report reasons ───────────────────────────────────────────────────────────
@@ -63,8 +63,8 @@ const REPORT_REASONS: { value: ReportReason; label: string }[] = [
 type Props = {
   listingId: string;
   accessToken: string;
-  isSaved: boolean;      // whether the current user has saved this listing
-  isHidden: boolean;     // whether the current user has hidden this listing
+  isSaved: boolean; // whether the current user has saved this listing
+  isHidden: boolean; // whether the current user has hidden this listing
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -82,9 +82,25 @@ export function ListingActionsBar({
   const [reportReason, setReportReason] = useState<ReportReason | "">("");
   const [reportDetails, setReportDetails] = useState("");
 
-  const { mutate: saveListing, isPending: isSaving } = useSaveListing({ accessToken });
-  const { mutate: hideListing, isPending: isHiding } = useHideListing({ accessToken });
-  const { mutate: reportListing, isPending: isReporting } = useReportListing({ accessToken });
+  // Re-sync with server truth when the listing refetches after a mutation.
+  // useState(initial) only reads the prop once on mount, so without this the
+  // local state can drift if the optimistic toggle disagrees with the server.
+  useEffect(() => {
+    setSaved(initialSaved);
+  }, [initialSaved]);
+  useEffect(() => {
+    setHidden(initialHidden);
+  }, [initialHidden]);
+
+  const { mutate: saveListing, isPending: isSaving } = useSaveListing({
+    accessToken,
+  });
+  const { mutate: hideListing, isPending: isHiding } = useHideListing({
+    accessToken,
+  });
+  const { mutate: reportListing, isPending: isReporting } = useReportListing({
+    accessToken,
+  });
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
@@ -212,7 +228,11 @@ export function ListingActionsBar({
               </SelectTrigger>
               <SelectContent>
                 {REPORT_REASONS.map((r) => (
-                  <SelectItem key={r.value} value={r.value} className="text-[12.5px]">
+                  <SelectItem
+                    key={r.value}
+                    value={r.value}
+                    className="text-[12.5px]"
+                  >
                     {r.label}
                   </SelectItem>
                 ))}
@@ -223,7 +243,7 @@ export function ListingActionsBar({
               value={reportDetails}
               onChange={(e) => setReportDetails(e.target.value)}
               placeholder="Additional details (optional)"
-              className="resize-none text-[12.5px] min-h-[72px]"
+              className="resize-none text-[12.5px] min-h-18"
               rows={3}
             />
 

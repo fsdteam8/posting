@@ -4,6 +4,7 @@ import { useDeleteNotification } from "@/hooks/features/notifications/api/use-de
 import { useGetNotifications } from "@/hooks/features/notifications/api/use-get-notifications";
 import { useMarkAllRead } from "@/hooks/features/notifications/api/use-mark-all-read";
 import { useMarkNotificationRead } from "@/hooks/features/notifications/api/use-mark-notification-read";
+import { normalizeDeepLink } from "@/lib/notification-deeplink";
 import { Notification } from "@/types/notification/notification";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -67,7 +68,7 @@ export function NotificationsPageClient({ accessToken }: Props) {
 
   function handleNotifClick(notif: Notification) {
     if (!notif.read) markRead({ notificationId: notif._id });
-    router.push(notif.deepLink);
+    router.push(normalizeDeepLink(notif.deepLink));
   }
 
   return (

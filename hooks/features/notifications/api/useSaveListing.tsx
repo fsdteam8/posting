@@ -6,8 +6,15 @@ type SaveToggleResponse = {
   success: boolean;
   message: string;
   data: {
+    /** Whether the toggle action itself was a save (true) or unsave (false). */
     saved: boolean;
+    /**
+     * Whether the listing is saved by the current user in ANY collection
+     * after the action. The UI should drive its bookmark state from this.
+     */
+    isSaved?: boolean;
     listingId: string;
+    collectionId?: string | null;
   };
 };
 
@@ -52,10 +59,12 @@ export function useSaveListing({ accessToken }: { accessToken: string }) {
         return;
       }
 
-      // Refresh the individual listing (saves count changes)
+      // Refresh the individual listing (saves count + listing.saves array)
       queryClient.invalidateQueries({
         queryKey: ["marketplace", "listing", listingId],
       });
+      // Refresh the browse/grid feed so any card showing the saved badge updates
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "listings"] });
       // Refresh saved listings page
       queryClient.invalidateQueries({
         queryKey: ["marketplace", "saved-listings"],

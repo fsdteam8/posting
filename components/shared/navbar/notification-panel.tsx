@@ -4,6 +4,7 @@ import { useDeleteNotification } from "@/hooks/features/notifications/api/use-de
 import { useGetNotifications } from "@/hooks/features/notifications/api/use-get-notifications";
 import { useMarkAllRead } from "@/hooks/features/notifications/api/use-mark-all-read";
 import { useMarkNotificationRead } from "@/hooks/features/notifications/api/use-mark-notification-read";
+import { normalizeDeepLink } from "@/lib/notification-deeplink";
 import { Notification } from "@/types/notification/notification";
 import { formatDistanceToNow } from "date-fns";
 import { Check, CheckCheck, Loader2, Trash2, X } from "lucide-react";
@@ -41,7 +42,7 @@ export function NotificationPanel({ accessToken, onClose }: Props) {
     if (!notif.read) {
       markRead({ notificationId: notif._id });
     }
-    router.push(notif.deepLink);
+    router.push(normalizeDeepLink(notif.deepLink));
     onClose();
   }
 

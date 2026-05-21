@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import FeedPostModalContainer from "../post-modal/feed-post-modal-container";
 import PostModalContainer from "../post-modal/post-modal-container";
 
 const AlertModal = dynamic(() => import("@/components/ui/custom/alert-modal"), {
@@ -288,16 +289,24 @@ const PostHeaderAction = ({
         />
       )}
 
-      {editOpen && (
-        <PostModalContainer
-          accessToken={accessToken}
-          username={groupId || data.author.username}
-          app={groupId ? "group" : "profile"}
-          initialData={data}
-          externalOpen={editOpen}
-          onExternalOpenChange={setEditOpen}
-        />
-      )}
+      {editOpen &&
+        (isGroupContext ? (
+          <PostModalContainer
+            accessToken={accessToken}
+            username={groupId}
+            app="group"
+            initialData={data}
+            externalOpen={editOpen}
+            onExternalOpenChange={setEditOpen}
+          />
+        ) : (
+          <FeedPostModalContainer
+            accessToken={accessToken}
+            initialData={data}
+            externalOpen={editOpen}
+            onExternalOpenChange={setEditOpen}
+          />
+        ))}
     </>
   );
 };

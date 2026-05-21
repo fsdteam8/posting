@@ -67,12 +67,14 @@ export default function GroupInviteModal({
   }, [friends, search]);
 
   // Reset local invited state when modal closes
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setSearch("");
       setInvitedIds(new Set());
     }
-  }, [open]);
+  }
 
   // Infinite scroll
   useEffect(() => {

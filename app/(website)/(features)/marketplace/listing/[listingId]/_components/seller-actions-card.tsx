@@ -134,8 +134,8 @@ export function SellerActionsCard({
           </Button>
           <p className="text-[11.5px] text-neutral-500 leading-relaxed">
             Already agreed on a sale in chat? You can also mark this sold
-            directly from the conversation — the buyer is detected
-            automatically there.
+            directly from the conversation — the buyer is detected automatically
+            there.
           </p>
         </>
       ) : (
@@ -178,7 +178,7 @@ export function SellerActionsCard({
                   </p>
                   <p className="text-[11.5px] text-neutral-400 mt-1">
                     If you agreed on a sale in chat, open the conversation and
-                    use the "Mark as sold" button there.
+                    use the &quot;Mark as sold&quot; button there.
                   </p>
                   <Link
                     href="/marketplace/messages"

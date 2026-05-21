@@ -209,7 +209,7 @@ export function CreatePageClient({ accessToken }: CreatePageClientProps) {
     // Step 6: done — navigate to the new page
     if (step === 6) {
       if (createdPageId) {
-        router.push(`/pages/${createdPageId}`);
+        router.push(`/pages/view/${createdPageId}`);
       } else {
         router.push("/pages");
       }

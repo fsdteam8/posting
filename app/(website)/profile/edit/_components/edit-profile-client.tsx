@@ -551,12 +551,10 @@ export function EditProfileClient({ accessToken }: EditProfileClientProps) {
   const [form, setForm] = useState<FormState>(buildInitialForm);
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    if (profile && !hydrated) {
-      setForm(buildInitialForm());
-      setHydrated(true);
-    }
-  }, [profile, hydrated, buildInitialForm]);
+  if (profile && !hydrated) {
+    setHydrated(true);
+    setForm(buildInitialForm());
+  }
 
   // Revoke object URLs on unmount/change
   useEffect(() => {

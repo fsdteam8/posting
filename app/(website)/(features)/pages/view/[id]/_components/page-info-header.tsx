@@ -97,7 +97,7 @@ export function PageInfoHeader({ pageId, accessToken }: Props) {
 
   return (
     <div className="relative px-6 pb-4">
-      <div className="flex items-end gap-4 -mt-16">
+      <div className="flex items-end gap-4 -mt-12">
         {/* Profile image */}
         <div className="relative shrink-0">
           <div className="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-linear-to-br from-purple-500 to-blue-500">

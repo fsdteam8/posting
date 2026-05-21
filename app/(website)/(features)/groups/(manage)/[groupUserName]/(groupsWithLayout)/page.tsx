@@ -21,7 +21,10 @@ const Page = async ({ params }: { params: { groupUserName: string } }) => {
           app="group"
         />
 
-        <GroupFeaturedSection />
+        <GroupFeaturedSection
+          groupId={groupUserName}
+          accessToken={cu.user.accessToken}
+        />
 
         <div className="px-4 py-2">
           <button className="flex items-center gap-1 text-[15px] font-semibold text-fb-blue hover:underline">

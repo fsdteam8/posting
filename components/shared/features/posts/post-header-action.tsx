@@ -12,17 +12,22 @@ import { useDeletePost } from "@/hooks/features/groups/posts/api/use-delete-post
 import { useEditPost } from "@/hooks/features/groups/posts/api/use-edit-post";
 import { useHidePost } from "@/hooks/features/groups/posts/api/use-hide-post";
 import { useSavePost } from "@/hooks/features/groups/posts/api/use-save-post";
+import { useToggleFeatureGroupPost } from "@/hooks/features/groups/posts/api/use-toggle-feature-group-post";
+import { useTogglePinGroupPost } from "@/hooks/features/groups/posts/api/use-toggle-pin-group-post";
+import { useGetSingleGroup } from "@/hooks/features/groups/api/use-get-single-group-info";
 import { Post } from "@/types/features/posts";
 import {
   Bookmark,
   BookmarkX,
   EyeOff,
-  Megaphone,
   MessageCircle,
   MessageCircleOff,
   MoreHorizontal,
   PencilLine,
   Pin,
+  PinOff,
+  Sparkles,
+  Star,
   Trash2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -48,6 +53,8 @@ const PostHeaderAction = ({
 }: Props) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const isGroupContext = Boolean(groupId);
+
   const { mutate, isPending: isSaving } = useSavePost({
     postId: data._id,
     accessToken,
@@ -72,6 +79,24 @@ const PostHeaderAction = ({
     accessToken,
   });
 
+  const { mutate: togglePin, isPending: isPinning } = useTogglePinGroupPost({
+    postId: data._id,
+    accessToken,
+    groupId,
+  });
+
+  const { mutate: toggleFeature, isPending: isFeaturing } =
+    useToggleFeatureGroupPost({
+      postId: data._id,
+      accessToken,
+      groupId,
+    });
+
+  const { data: groupInfo } = useGetSingleGroup({
+    username: isGroupContext ? groupId : "",
+    accessToken,
+  });
+
   const handleDelete = async () => {
     const res = await deletePost();
 
@@ -81,6 +106,11 @@ const PostHeaderAction = ({
   };
 
   const isCreator = data.author._id === loggedinUserId;
+  const isGroupAdmin = Boolean(
+    isGroupContext &&
+      groupInfo?.data?.admins?.some((admin) => admin._id === loggedinUserId),
+  );
+  const canManageGroupPost = isGroupContext && (isGroupAdmin || isCreator);
 
   const onToggleCommenting = (data: "allowed" | "notAllowed") => {
     const formdata = new FormData();
@@ -94,7 +124,7 @@ const PostHeaderAction = ({
     editPost(formdata);
   };
 
-  const onTogglePin = (value: "true" | "false") => {
+  const onTogglePinProfile = (value: "true" | "false") => {
     const formdata = new FormData();
 
     formdata.append("isPinned", value);
@@ -132,18 +162,54 @@ const PostHeaderAction = ({
             </span>
           </DropdownMenuItem>
 
-          {isCreator && (
+          {!isGroupContext && isCreator && (
             <DropdownMenuItem
               className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"
-              onClick={() => onTogglePin(data.isPinned ? "false" : "true")}
+              onClick={() =>
+                onTogglePinProfile(data.isPinned ? "false" : "true")
+              }
             >
               {data.isPinned ? (
-                <Megaphone className="w-4 h-4 text-fb-text shrink-0" />
+                <PinOff className="w-4 h-4 text-fb-text shrink-0" />
               ) : (
                 <Pin className="w-4 h-4 text-fb-text shrink-0" />
               )}
               <span className="text-[13px] font-medium text-fb-text">
-                {data.isPinned ? "Unpin from Featured" : "Pin to featured"}
+                {data.isPinned ? "Unpin post" : "Pin post"}
+              </span>
+            </DropdownMenuItem>
+          )}
+
+          {canManageGroupPost && (
+            <DropdownMenuItem
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"
+              onClick={() => togglePin()}
+              disabled={isPinning}
+            >
+              {data.isPinned ? (
+                <PinOff className="w-4 h-4 text-fb-text shrink-0" />
+              ) : (
+                <Pin className="w-4 h-4 text-fb-text shrink-0" />
+              )}
+              <span className="text-[13px] font-medium text-fb-text">
+                {data.isPinned ? "Unpin post" : "Pin post"}
+              </span>
+            </DropdownMenuItem>
+          )}
+
+          {canManageGroupPost && (
+            <DropdownMenuItem
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer"
+              onClick={() => toggleFeature()}
+              disabled={isFeaturing}
+            >
+              {data.isFeatured ? (
+                <Sparkles className="w-4 h-4 text-fb-text shrink-0" />
+              ) : (
+                <Star className="w-4 h-4 text-fb-text shrink-0" />
+              )}
+              <span className="text-[13px] font-medium text-fb-text">
+                {data.isFeatured ? "Unfeature post" : "Feature post"}
               </span>
             </DropdownMenuItem>
           )}

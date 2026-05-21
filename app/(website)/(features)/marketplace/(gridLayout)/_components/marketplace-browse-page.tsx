@@ -108,12 +108,6 @@ export function MarketplaceBrowsePage({}: Props) {
           <h2 className="text-[12px] font-semibold text-neutral-700 uppercase tracking-wide">
             Trending categories
           </h2>
-          <button
-            onClick={() => setActiveCategory(null)}
-            className="text-[11.5px] text-blue-600 hover:text-blue-700 font-medium"
-          >
-            See all
-          </button>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">

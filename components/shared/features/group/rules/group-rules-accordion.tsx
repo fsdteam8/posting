@@ -2,7 +2,7 @@
 import { useGetSingleGroup } from "@/hooks/features/groups/api/use-get-single-group-info";
 import { GroupRule } from "@/types/features/groups";
 
-import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
 interface GroupRulesAccordionProps {
@@ -82,9 +82,6 @@ const RulesAccordion = ({ rules }: { rules: GroupRule[] }) => {
                     <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                       {rule.description}
                     </p>
-                    <button className="shrink-0 text-muted-foreground hover:text-foreground transition-colors cursor-pointer mt-0.5">
-                      <MoreHorizontal className="w-5 h-5" />
-                    </button>
                   </div>
                 </div>
               )}

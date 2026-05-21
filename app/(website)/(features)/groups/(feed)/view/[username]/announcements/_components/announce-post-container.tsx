@@ -1,7 +1,7 @@
 "use client";
 
 import GroupPostCard from "@/components/shared/features/posts/post-card";
-import { useGetPinnedPostOfGroup } from "@/hooks/features/groups/api/featured/use-get-pineed-post";
+import { useGetFeaturedPostOfGroup } from "@/hooks/features/groups/api/featured/use-get-featured-post";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
@@ -26,7 +26,7 @@ const AnnouncePostContainer = ({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useGetPinnedPostOfGroup({ groupId, accessToken });
+  } = useGetFeaturedPostOfGroup({ groupId, accessToken });
 
   // ── Infinite scroll via IntersectionObserver ──────────────────────────────
   useEffect(() => {
@@ -80,7 +80,10 @@ const AnnouncePostContainer = ({
     return (
       <div className="flex flex-col items-center py-16 gap-1 text-center">
         <p className="text-[15px] font-semibold text-fb-text-primary">
-          No posts yet
+          No featured posts yet
+        </p>
+        <p className="text-[13px] text-fb-text-secondary">
+          Group admins can feature important posts so members can find them here.
         </p>
       </div>
     );

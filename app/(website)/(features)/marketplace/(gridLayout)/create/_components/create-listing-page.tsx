@@ -9,14 +9,11 @@ import { Form } from "@/components/ui/form";
 import { useCreateListing } from "@/hooks/features/marketplace/api/use-create-listing";
 import { useGetMarketplaceMeta } from "@/hooks/features/marketplace/api/use-get-marketplace-meta";
 
-import { ListingType } from "@/types/features/marketplace";
-
 import { useRouter } from "nextjs-toploader/app";
 
 import ListingDetailsStep from "./listing-details-step";
 import ListingLocationStep from "./listing-location-step";
 import { type PhotoFile } from "./listing-media-uploader";
-import ListingTypeStep from "./listing-type-step";
 import {
   CreateListingFormValues,
   createListingSchema,
@@ -35,7 +32,7 @@ export default function CreateListingPage({ accessToken }: Props) {
   const router = useRouter();
 
   // ── Step navigation ────────────────────────────────────────────────────────
-  const [step, setStep] = useState<"type" | "details" | "location">("type");
+  const [step, setStep] = useState<"details" | "location">("details");
 
   // ── Media state ────────────────────────────────────────────────────────────
   // Lifted here (not inside ListingDetailsStep) so files survive when the user
@@ -70,11 +67,6 @@ export default function CreateListingPage({ accessToken }: Props) {
   });
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-
-  function handleTypeSelect(type: ListingType) {
-    form.setValue("listingType", type);
-    setStep("details");
-  }
 
   async function onSubmit(values: ParsedCreateListingFormValues) {
     const res = await mutateAsync({
@@ -121,13 +113,13 @@ export default function CreateListingPage({ accessToken }: Props) {
 
       {/* Step indicator */}
       <div className="mb-8 flex items-center gap-2">
-        {["type", "details", "location"].map((s, i) => (
+        {(["details", "location"] as const).map((s, i) => (
           <div
             key={s}
             className={`h-2 rounded-full transition-all ${
               step === s
                 ? "w-10 bg-primary"
-                : ["type", "details", "location"].indexOf(step) > i
+                : (["details", "location"] as const).indexOf(step) > i
                   ? "w-8 bg-primary/40"
                   : "w-8 bg-muted"
             }`}
@@ -136,8 +128,6 @@ export default function CreateListingPage({ accessToken }: Props) {
       </div>
 
       <div className="rounded-3xl border bg-background p-6 shadow-sm">
-        {step === "type" && <ListingTypeStep onSelect={handleTypeSelect} />}
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             {step === "details" && (

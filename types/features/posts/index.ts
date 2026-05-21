@@ -45,6 +45,7 @@ export interface Post {
   commentCount: number;
   allowComments: boolean;
   isPinned: boolean;
+  isFeatured: boolean;
   reportedBy: string[];
   reportCount: number;
   hiddenFor: string[];

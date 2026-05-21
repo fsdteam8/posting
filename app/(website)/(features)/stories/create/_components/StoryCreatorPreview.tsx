@@ -50,15 +50,31 @@ export function StoryCreatorPreview({ form, userName, userAvatar }: Props) {
         className="relative w-75 h-133.25 rounded-2xl overflow-hidden shadow-2xl shrink-0"
         style={{ background: bgStyle }}
       >
-        {/* Photo mode */}
-        {form.mode === "photo" && form.mediaPreview && (
-          <Image
-            src={form.mediaPreview}
-            alt="Story preview"
-            fill
-            className="object-cover"
-          />
-        )}
+        {/* Photo mode — image */}
+        {form.mode === "photo" &&
+          form.mediaPreview &&
+          form.mediaType !== "video" && (
+            <Image
+              src={form.mediaPreview}
+              alt="Story preview"
+              fill
+              className="object-cover"
+            />
+          )}
+
+        {/* Photo mode — video */}
+        {form.mode === "photo" &&
+          form.mediaPreview &&
+          form.mediaType === "video" && (
+            <video
+              src={form.mediaPreview}
+              className="absolute inset-0 w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          )}
 
         {/* Overlay gradient for photo mode */}
         {form.mode === "photo" && form.mediaPreview && (

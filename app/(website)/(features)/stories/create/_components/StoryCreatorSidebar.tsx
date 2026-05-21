@@ -7,12 +7,15 @@ import {
   Type,
   UserCheck,
   Users,
+  Video as VideoIcon,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import { useRef } from "react";
 
 export type PrivacyType = "public" | "friends" | "onlyMe" | "custom";
+
+export type MediaType = "image" | "video";
 
 export interface StoryFormState {
   text: string;
@@ -21,6 +24,7 @@ export interface StoryFormState {
   customAudience: string[];
   mediaFile: File | null;
   mediaPreview: string | null;
+  mediaType: MediaType | null;
   mode: "text" | "photo";
 }
 
@@ -81,7 +85,15 @@ export function StoryCreatorSidebar({
     const file = e.target.files?.[0];
     if (!file) return;
     const preview = URL.createObjectURL(file);
-    onFormChange({ mediaFile: file, mediaPreview: preview, mode: "photo" });
+    const mediaType: MediaType = file.type.startsWith("video/")
+      ? "video"
+      : "image";
+    onFormChange({
+      mediaFile: file,
+      mediaPreview: preview,
+      mediaType,
+      mode: "photo",
+    });
   };
 
   const canShare =
@@ -201,13 +213,21 @@ export function StoryCreatorSidebar({
           </button>
           {form.mediaFile && (
             <div className="flex items-center gap-2 mt-2 bg-[#f0f2f5] dark:bg-[#3a3b3c] rounded-lg px-3 py-2">
-              <ImageIcon size={13} className="text-[#65676b] shrink-0" />
+              {form.mediaType === "video" ? (
+                <VideoIcon size={13} className="text-[#65676b] shrink-0" />
+              ) : (
+                <ImageIcon size={13} className="text-[#65676b] shrink-0" />
+              )}
               <p className="text-[12px] text-[#050505] dark:text-white truncate flex-1">
                 {form.mediaFile.name}
               </p>
               <button
                 onClick={() =>
-                  onFormChange({ mediaFile: null, mediaPreview: null })
+                  onFormChange({
+                    mediaFile: null,
+                    mediaPreview: null,
+                    mediaType: null,
+                  })
                 }
                 className="text-[#65676b] hover:text-red-500 transition-colors shrink-0"
               >

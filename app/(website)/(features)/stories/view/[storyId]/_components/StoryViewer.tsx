@@ -2,12 +2,16 @@
 
 import { Story, StoryUser } from "@/types/features/feed/story";
 import {
+  BellOff,
   ChevronLeft,
   ChevronRight,
+  EyeOff,
+  Flag,
   MoreHorizontal,
   Pause,
   Play,
   Send,
+  Trash2,
   Volume2,
   VolumeX,
   X,
@@ -90,9 +94,12 @@ export function StoryViewer({
   const [isMuted, setIsMuted] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [showReactions, setShowReactions] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [sentReaction, setSentReaction] = useState<string | null>(() =>
     getMyReaction(stories[initialIndex], currentUserId),
   );
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // progressRef stores the real progress value.
   // The interval reads/writes this ref directly so we never need to
@@ -115,6 +122,45 @@ export function StoryViewer({
   // touches the interval logic, so the interval itself never needs to restart.
   useEffect(() => {
     isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMenu]);
+
+  // Pause the timer while the menu is open so the story doesn't advance
+  // while the user is interacting with menu actions.
+  useEffect(() => {
+    if (showMenu) setIsPaused(true);
+  }, [showMenu]);
+
+  // Sync mute state with the underlying <video> element
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  // Sync pause state with the underlying <video> element so the video
+  // actually stops playing — not just the progress bar timer.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPaused) {
+      video.pause();
+    } else {
+      void video.play().catch(() => {
+        /* play() can reject if interrupted by a fast pause toggle — safe to ignore */
+      });
+    }
   }, [isPaused]);
 
   // Track view once per story
@@ -213,6 +259,9 @@ export function StoryViewer({
 
   const displayName = getStoryUserDisplayName(user);
 
+  const hasVideo = currentStory?.media?.[0]?.type === "video";
+  const isOwnStory = user._id === currentUserId;
+
   return (
     <div className="flex items-center justify-center w-full h-full relative select-none">
       {/* Prev group arrow */}
@@ -230,17 +279,35 @@ export function StoryViewer({
         className="relative w-85 h-151 rounded-2xl overflow-hidden shadow-2xl"
         style={bgStyle}
       >
-        {/* Media */}
-        {currentStory?.media && currentStory.media.length > 0 && (
-          <Image
-            src={currentStory.media[0].url}
-            alt="story"
-            fill
-            className="object-cover"
-            draggable={false}
-            priority
-          />
-        )}
+        {/* Media — image */}
+        {currentStory?.media &&
+          currentStory.media.length > 0 &&
+          currentStory.media[0].type !== "video" && (
+            <Image
+              src={currentStory.media[0].url}
+              alt="story"
+              fill
+              className="object-cover"
+              draggable={false}
+              priority
+            />
+          )}
+
+        {/* Media — video */}
+        {currentStory?.media &&
+          currentStory.media.length > 0 &&
+          currentStory.media[0].type === "video" && (
+            <video
+              ref={videoRef}
+              key={currentStory._id}
+              src={currentStory.media[0].url}
+              poster={currentStory.media[0].thumbnail}
+              className="absolute inset-0 w-full h-full object-cover"
+              autoPlay
+              playsInline
+              muted={isMuted}
+            />
+          )}
 
         {/* Overlay */}
         <div className="absolute inset-0 bg-linear-to-b from-black/50 via-transparent to-black/60 pointer-events-none" />
@@ -286,19 +353,21 @@ export function StoryViewer({
 
           {/* Controls */}
           <div className="flex items-center gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMuted((m) => !m);
-              }}
-              className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              {isMuted ? (
-                <VolumeX size={16} className="text-white" />
-              ) : (
-                <Volume2 size={16} className="text-white" />
-              )}
-            </button>
+            {hasVideo && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMuted((m) => !m);
+                }}
+                className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                {isMuted ? (
+                  <VolumeX size={16} className="text-white" />
+                ) : (
+                  <Volume2 size={16} className="text-white" />
+                )}
+              </button>
+            )}
 
             <button
               onClick={(e) => {
@@ -314,12 +383,75 @@ export function StoryViewer({
               )}
             </button>
 
-            <button
-              onClick={(e) => e.stopPropagation()}
-              className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              <MoreHorizontal size={16} className="text-white" />
-            </button>
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu((s) => !s);
+                }}
+                className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <MoreHorizontal size={16} className="text-white" />
+              </button>
+
+              {showMenu && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 mt-2 w-48 rounded-xl bg-[#242526] shadow-2xl ring-1 ring-white/10 overflow-hidden z-30"
+                >
+                  {isOwnStory ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        // TODO: wire up delete-story mutation when available
+                        console.log("Delete story", currentStory?._id);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[13px] text-red-400 hover:bg-white/5 transition-colors"
+                    >
+                      <Trash2 size={15} />
+                      Delete story
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          console.log("Hide story", currentStory?._id);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                      >
+                        <EyeOff size={15} />
+                        Hide story
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          console.log("Mute story author", user._id);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                      >
+                        <BellOff size={15} />
+                        Mute story author
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          console.log("Report story", currentStory?._id);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                      >
+                        <Flag size={15} />
+                        Report story
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
 
             <button
               onClick={(e) => {

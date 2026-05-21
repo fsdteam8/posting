@@ -25,6 +25,7 @@ const DEFAULT_FORM: StoryFormState = {
   customAudience: [],
   mediaFile: null,
   mediaPreview: null,
+  mediaType: null,
   mode: "text",
 };
 

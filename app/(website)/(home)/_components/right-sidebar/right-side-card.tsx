@@ -13,7 +13,7 @@ interface Props {
 export function RightSidebar({ accessToken }: Props) {
   return (
     <aside className="flex flex-col gap-4 py-4 pl-2">
-      <BirthdaysCard />
+      <BirthdaysCard accessToken={accessToken} />
       <Separator />
       <SponsoredCard ads={sponsoredAds} />
       <Separator />

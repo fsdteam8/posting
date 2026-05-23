@@ -21,7 +21,7 @@ import { useCreatePagePostForm } from "@/hooks/features/pages/use-create-page-po
 import { useGetPageById } from "@/hooks/features/pages/use-get-page-by-id";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BarChart3, Globe, ImageIcon, Loader2, Smile, X } from "lucide-react";
+import { Globe, ImageIcon, Loader2, Smile, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useCallback, useState } from "react";
@@ -100,7 +100,7 @@ const PageTrigger = ({
             className="rounded-full object-cover shrink-0 w-10 h-10"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 shrink-0 flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 shrink-0 flex items-center justify-center text-white font-bold">
             {pageName.charAt(0).toUpperCase()}
           </div>
         )}
@@ -229,7 +229,7 @@ const PagePostModalContainer = ({ accessToken, pageId }: Props) => {
               className="rounded-full object-cover shrink-0 w-11 h-11"
             />
           ) : (
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 shrink-0 flex items-center justify-center text-white font-bold">
+            <div className="w-11 h-11 rounded-full bg-linear-to-br from-purple-500 to-blue-500 shrink-0 flex items-center justify-center text-white font-bold">
               {pageName.charAt(0).toUpperCase()}
             </div>
           )}
@@ -361,13 +361,6 @@ const PagePostModalContainer = ({ accessToken, pageId }: Props) => {
                   feelingActivity ? "text-yellow-500" : "text-yellow-400",
                 )}
               />
-            </button>
-            <button
-              type="button"
-              title="Poll"
-              className="p-1.5 rounded-full hover:bg-muted transition-colors"
-            >
-              <BarChart3 className="w-5 h-5 text-[#f5533d]" />
             </button>
           </div>
         </div>

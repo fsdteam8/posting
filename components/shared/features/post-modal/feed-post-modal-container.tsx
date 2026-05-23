@@ -32,7 +32,6 @@ import { GroupUser } from "@/types/features/groups";
 import { Post } from "@/types/features/posts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  BarChart3,
   Globe,
   ImageIcon,
   Loader2,
@@ -612,13 +611,6 @@ const FeedPostModalContainer = ({
                   feelingActivity ? "text-yellow-500" : "text-yellow-400",
                 )}
               />
-            </button>
-            <button
-              type="button"
-              title="Poll"
-              className="p-1.5 rounded-full hover:bg-muted transition-colors"
-            >
-              <BarChart3 className="w-5 h-5 text-[#f5533d]" />
             </button>
           </div>
         </div>

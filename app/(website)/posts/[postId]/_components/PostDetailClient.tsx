@@ -81,7 +81,11 @@ export function PostDetailClient({
 
         {/* Right sidebar */}
         <div className="lg:col-span-1 lg:sticky lg:top-16 self-start">
-          <PostDetailSidebar post={post} loggedInUserId={loggedInUserId} />
+          <PostDetailSidebar
+            post={post}
+            loggedInUserId={loggedInUserId}
+            accessToken={accessToken}
+          />
         </div>
       </div>
     </div>

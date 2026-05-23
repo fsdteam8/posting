@@ -1,12 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useToggleFollowUser } from "@/hooks/features/users/use-toggle-follow-user";
+import { useProfile } from "@/hooks/profile/use-profile";
 import { Post } from "@/types/features/posts";
 import { format } from "date-fns";
 import {
+  Check,
   Eye,
   Globe,
   Heart,
+  Loader2,
   Lock,
   MessageCircle,
   Share2,
@@ -19,6 +23,7 @@ import Link from "next/link";
 interface Props {
   post: Post;
   loggedInUserId: string;
+  accessToken: string;
 }
 
 const visibilityMap = {
@@ -34,11 +39,27 @@ function formatCount(n: number) {
   return n.toLocaleString();
 }
 
-export function PostDetailSidebar({ post, loggedInUserId }: Props) {
+export function PostDetailSidebar({
+  post,
+  loggedInUserId,
+  accessToken,
+}: Props) {
   const author = post.author;
   const fullName = `${author.firstName} ${author.lastName}`.trim();
   const avatarUrl = author.profileImage?.url;
   const isSelf = author._id === loggedInUserId;
+
+  const { data: profile } = useProfile(accessToken);
+  const isFollowing = Boolean(profile?.following?.includes(author._id));
+
+  const { mutate: toggleFollow, isPending: isToggling } = useToggleFollowUser({
+    accessToken,
+  });
+
+  const handleToggleFollow = () => {
+    if (isToggling) return;
+    toggleFollow({ userId: author._id, isFollowing });
+  };
 
   const visibility =
     visibilityMap[post.visibility as keyof typeof visibilityMap] ??
@@ -87,9 +108,23 @@ export function PostDetailSidebar({ post, loggedInUserId }: Props) {
 
           {!isSelf && (
             <div className="flex gap-2 mt-3">
-              <Button size="sm" className="flex-1 gap-1.5">
-                <UserPlus className="w-4 h-4" />
-                Follow
+              <Button
+                size="sm"
+                variant={isFollowing ? "secondary" : "default"}
+                className="flex-1 gap-1.5"
+                onClick={handleToggleFollow}
+                disabled={isToggling}
+                aria-pressed={isFollowing}
+                aria-label={isFollowing ? "Unfollow" : "Follow"}
+              >
+                {isToggling ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isFollowing ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <UserPlus className="w-4 h-4" />
+                )}
+                {isFollowing ? "Following" : "Follow"}
               </Button>
               <Button
                 size="sm"

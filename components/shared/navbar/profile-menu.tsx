@@ -13,11 +13,8 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
-  HelpCircle,
   LogOut,
-  MessageSquareWarning,
   Moon,
-  Settings,
   Users,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -45,6 +42,8 @@ interface ProfileMenuProps {
 
 type Panel = "main" | "display";
 
+const VISIBLE_PAGES_LIMIT = 2;
+
 export function ProfileMenu({
   user,
   pages,
@@ -53,23 +52,20 @@ export function ProfileMenu({
 }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>("main");
+  const [showAllPages, setShowAllPages] = useState(false);
 
-  const currentName =
-    activeIdentity.type === "user"
-      ? user.name
-      : (pages.find((p) => p.id === activeIdentity.id)?.name ?? user.name);
-
-  const currentAvatar =
-    activeIdentity.type === "user"
-      ? user.avatarUrl
-      : (pages.find((p) => p.id === activeIdentity.id)?.avatarUrl ??
-        user.avatarUrl);
-
-  // Reset panel when popover closes
+  // Reset panel + collapse expanded pages list when popover closes
   const handleOpenChange = (val: boolean) => {
     setOpen(val);
-    if (!val) setPanel("main");
+    if (!val) {
+      setPanel("main");
+      setShowAllPages(false);
+    }
   };
+
+  const hasOverflow = pages.length > VISIBLE_PAGES_LIMIT;
+  const visiblePages =
+    hasOverflow && !showAllPages ? pages.slice(0, VISIBLE_PAGES_LIMIT) : pages;
 
   const router = useRouter();
 
@@ -81,13 +77,13 @@ export function ProfileMenu({
           aria-label="Open profile menu"
         >
           <Avatar className="size-9 ring-2 ring-border">
-            <AvatarImage src={currentAvatar} alt={currentName} />
+            <AvatarImage src={user.avatarUrl} alt={user.name} />
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-              {currentName.charAt(0)}
+              {user.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <span className="hidden max-w-25 truncate text-sm font-semibold text-foreground md:inline-block">
-            {currentName}
+            {user.name}
           </span>
           <ChevronDown className="hidden size-4 text-muted-foreground md:block" />
         </button>
@@ -103,7 +99,7 @@ export function ProfileMenu({
           ) : (
             <div className="p-4">
               {/* Profile Card */}
-              <div className="rounded-lg border bg-card shadow-sm">
+              <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
                 <button
                   onClick={() => {
                     onSwitchIdentity({ type: "user" });
@@ -111,7 +107,7 @@ export function ProfileMenu({
                     router.push("/profile");
                   }}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-t-lg p-3 text-left transition-colors hover:bg-secondary",
+                    "flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-secondary",
                     activeIdentity.type === "user" && "bg-secondary",
                   )}
                 >
@@ -127,12 +123,13 @@ export function ProfileMenu({
                 </button>
 
                 {/* Pages */}
-                {pages.map((page) => (
+                {visiblePages.map((page) => (
                   <button
                     key={page.id}
                     onClick={() => {
                       onSwitchIdentity({ type: "page", id: page.id });
                       setOpen(false);
+                      router.push(`/pages/view/${page.id}`);
                     }}
                     className={cn(
                       "flex w-full items-center gap-3 border-t px-3 py-2.5 text-left transition-colors hover:bg-secondary",
@@ -153,11 +150,16 @@ export function ProfileMenu({
                   </button>
                 ))}
 
-                {/* See all profiles */}
-                <button className="flex w-full items-center justify-center gap-2 rounded-b-lg border-t px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-                  <Users className="size-4" />
-                  See all profiles
-                </button>
+                {/* See all profiles — only when there are more pages than the visible limit */}
+                {hasOverflow && !showAllPages && (
+                  <button
+                    onClick={() => setShowAllPages(true)}
+                    className="flex w-full items-center justify-center gap-2 border-t px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    <Users className="size-4" />
+                    See all profiles
+                  </button>
+                )}
               </div>
 
               <Separator className="my-3" />
@@ -169,7 +171,7 @@ export function ProfileMenu({
                   label="Meta Business Suite"
                   trailing="external"
                 />
-                <MenuItem
+                {/* <MenuItem
                   icon={Settings}
                   label="Settings & privacy"
                   trailing="chevron"
@@ -178,18 +180,18 @@ export function ProfileMenu({
                   icon={HelpCircle}
                   label="Help & support"
                   trailing="chevron"
-                />
+                /> */}
                 <MenuItem
                   icon={Moon}
                   label="Display & accessibility"
                   trailing="chevron"
                   onSelect={() => setPanel("display")}
                 />
-                <MenuItem
+                {/* <MenuItem
                   icon={MessageSquareWarning}
                   label="Give feedback"
                   shortcut="Ctrl B"
-                />
+                /> */}
                 <MenuItem
                   icon={LogOut}
                   label="Log out"

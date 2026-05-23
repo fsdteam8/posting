@@ -5,6 +5,7 @@ import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conv
 import { useMessengerSocket } from "@/hooks/features/messenger/use-messenger-socket";
 import { useGetNotifications } from "@/hooks/features/notifications/api/use-get-notifications";
 import { useNotificationSocket } from "@/hooks/features/notifications/use-notification-socket";
+import { useGetMyPages } from "@/hooks/features/pages/use-get-my-pages";
 import { useProfile } from "@/hooks/profile/use-profile";
 import { Bell, MessageCircle } from "lucide-react";
 import Link from "next/link";
@@ -17,21 +18,6 @@ import { NavLinks } from "./nav-links";
 import { NavSearch } from "./nav-search";
 import { NotificationPanel } from "./notification-panel";
 import { ProfileMenu } from "./profile-menu";
-
-const PAGES = [
-  {
-    id: "tourhub",
-    name: "TourHub",
-    avatarUrl:
-      "https://api.dicebear.com/9.x/icons/svg?seed=TourHub&backgroundColor=c0aede",
-  },
-  {
-    id: "breakup-support",
-    name: "Breakup Support",
-    avatarUrl:
-      "https://api.dicebear.com/9.x/icons/svg?seed=Breakup&backgroundColor=ffdfbf",
-  },
-];
 
 interface Props {
   accessToken: string;
@@ -52,6 +38,19 @@ export default function Navbar({ accessToken }: Props) {
   const unreadCount = notifData?.meta?.unreadCount ?? 0;
 
   const { data: profile } = useProfile(accessToken);
+
+  const { data: myPagesData } = useGetMyPages({ accessToken });
+  const pages = useMemo(
+    () =>
+      (myPagesData?.data ?? []).map((p) => ({
+        id: p._id,
+        name: p.name,
+        avatarUrl:
+          p.profileImage?.url ||
+          `https://api.dicebear.com/9.x/icons/svg?seed=${encodeURIComponent(p.name)}&backgroundColor=c0aede`,
+      })),
+    [myPagesData],
+  );
 
   // Live conversations list — feeds the unread badge AND drives the panel preview
   const { data: convData } = useGetConversations({ accessToken, limit: 50 });
@@ -139,7 +138,7 @@ export default function Navbar({ accessToken }: Props) {
         </div>
         <ProfileMenu
           user={USER}
-          pages={PAGES}
+          pages={pages}
           activeIdentity={activeIdentity}
           onSwitchIdentity={setActiveIdentity}
         />

@@ -23,15 +23,15 @@ const mainItems: SidebarItem[] = [
   { icon: "/home/icons/play.png", label: "Reels", href: "/reels" },
   { icon: "/home/icons/bookmark.png", label: "Save", href: "/saved" },
   { icon: "/home/icons/pages.png", label: "Pages", href: "/pages" },
-  { icon: "/home/icons/events.png", label: "Event", href: "/events" },
+  // { icon: "/home/icons/events.png", label: "Event", href: "/events" },
   { icon: "/home/icons/birthday.png", label: "Birthday", href: "/birthday" },
-  { icon: "/home/icons/clock.png", label: "Memories", href: "/memories" },
-  { icon: "/home/icons/spaces.png", label: "Spaces", href: "/spaces" },
+  // { icon: "/home/icons/clock.png", label: "Memories", href: "/memories" },
+  // { icon: "/home/icons/spaces.png", label: "Spaces", href: "/spaces" },
 ];
 
 const expandedItems: SidebarItem[] = [
-  { icon: "/home/icons/offers.png", label: "Offers", href: "/offers" },
-  { icon: "/home/icons/poke.png", label: "Poke's", href: "/pokes" },
+  // { icon: "/home/icons/offers.png", label: "Offers", href: "/offers" },
+  // { icon: "/home/icons/poke.png", label: "Poke's", href: "/pokes" },
 ];
 
 interface Props {

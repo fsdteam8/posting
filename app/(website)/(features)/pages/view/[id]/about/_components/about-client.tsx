@@ -7,15 +7,12 @@ import {
   Calendar,
   Clock,
   Globe,
-  Heart,
   Info,
   Link2,
   Mail,
   MapPin,
   Phone,
   ShieldCheck,
-  ThumbsUp,
-  Users,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,27 +21,13 @@ interface Props {
   accessToken: string;
 }
 
-type SectionKey =
-  | "category"
-  | "contact"
-  | "basic"
-  | "transparency"
-  | "groups"
-  | "events"
-  | "likes"
-  | "following"
-  | "followers";
+type SectionKey = "category" | "contact" | "basic" | "transparency";
 
 const SECTIONS: { key: SectionKey; label: string }[] = [
   { key: "category", label: "Category" },
   { key: "contact", label: "Contact info" },
   { key: "basic", label: "Basic info" },
   { key: "transparency", label: "Page transparency" },
-  { key: "groups", label: "Groups" },
-  { key: "events", label: "Events" },
-  { key: "likes", label: "Likes" },
-  { key: "following", label: "Following" },
-  { key: "followers", label: "Followers" },
 ];
 
 export function AboutClient({ pageId, accessToken }: Props) {
@@ -127,7 +110,7 @@ export function AboutClient({ pageId, accessToken }: Props) {
         </nav>
 
         {/* Content */}
-        <div className="px-6 py-6 min-h-[260px]">
+        <div className="px-6 py-6 min-h-65">
           <SectionContent section={active} page={page} />
         </div>
       </div>
@@ -153,44 +136,6 @@ function SectionContent({
       return <BasicInfoSection page={page} />;
     case "transparency":
       return <TransparencySection page={page} />;
-    case "groups":
-      return (
-        <EmptySection
-          icon={Users}
-          title="No groups yet"
-          description="This page hasn't linked any groups."
-        />
-      );
-    case "events":
-      return (
-        <EmptySection
-          icon={Calendar}
-          title="No events yet"
-          description="This page hasn't created any events."
-        />
-      );
-    case "likes":
-      return (
-        <Row
-          icon={ThumbsUp}
-          label={`${formatCount(page.likesCount ?? 0)} likes`}
-        />
-      );
-    case "following":
-      return (
-        <EmptySection
-          icon={Heart}
-          title="Not following anyone yet"
-          description="Pages this page follows will appear here."
-        />
-      );
-    case "followers":
-      return (
-        <Row
-          icon={Users}
-          label={`${formatCount(page.followersCount ?? 0)} followers`}
-        />
-      );
   }
 }
 
@@ -369,8 +314,3 @@ function EmptySection({
   );
 }
 
-function formatCount(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
-}

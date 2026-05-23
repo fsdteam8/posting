@@ -17,8 +17,7 @@ export function PageTabNavigation({ pageId }: Props) {
     { label: "About", href: `${base}/about` },
     { label: "Videos", href: `${base}/videos` },
     { label: "Photos", href: `${base}/photos` },
-    { label: "Events", href: `${base}/events` },
-    { label: "Channels", href: `${base}/channels` },
+    // { label: "Channels", href: `${base}/channels` },
   ];
 
   return (

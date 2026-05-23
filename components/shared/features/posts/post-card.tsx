@@ -7,6 +7,7 @@ import { PostCommentDialog } from "./comment-dialog/post-comment-dialog";
 import { PostActions } from "./group-post-action";
 import { PostHeader } from "./post-header";
 import { PostMedia } from "./post-media";
+import { SharedPostEmbed } from "./shared-post-embed";
 
 interface PostCardProps {
   post: Post;
@@ -76,6 +77,8 @@ const GroupPostCard = ({
             )}
           </div>
         )}
+
+        {post.sharedPost && <SharedPostEmbed shared={post.sharedPost} />}
 
         <PostMedia post={post} />
         <PostActions

@@ -77,7 +77,7 @@ export function PostDetailSidebar({
     <aside className="space-y-3">
       {/* Author card */}
       <div className="bg-card rounded-lg shadow-sm overflow-hidden">
-        <div className="h-16 bg-gradient-to-br from-primary/30 via-primary/15 to-transparent" />
+        <div className="h-16 bg-linear-to-br from-primary/30 via-primary/15 to-transparent" />
         <div className="px-4 pb-4 -mt-8">
           <Link href={`/public/profile/${author.username}`} className="block">
             <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-card bg-gray-200">
@@ -104,7 +104,9 @@ export function PostDetailSidebar({
           >
             {fullName}
           </Link>
-          <p className="text-[12px] text-fb-text-secondary">@{author.username}</p>
+          <p className="text-[12px] text-fb-text-secondary">
+            @{author.username}
+          </p>
 
           {!isSelf && (
             <div className="flex gap-2 mt-3">
@@ -126,19 +128,19 @@ export function PostDetailSidebar({
                 )}
                 {isFollowing ? "Following" : "Follow"}
               </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="flex-1"
-                asChild
-              >
+              <Button size="sm" variant="secondary" className="flex-1" asChild>
                 <Link href={`/public/profile/${author.username}`}>View</Link>
               </Button>
             </div>
           )}
 
           {isSelf && (
-            <Button size="sm" variant="secondary" className="w-full mt-3" asChild>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="w-full mt-3"
+              asChild
+            >
               <Link href={`/public/profile/${author.username}`}>
                 View profile
               </Link>
@@ -186,10 +188,7 @@ export function PostDetailSidebar({
         {/* Stat grid */}
         <div className="grid grid-cols-2 gap-2 mt-4">
           {stats.map(({ icon: Icon, label, value }) => (
-            <div
-              key={label}
-              className="rounded-lg bg-fb-hover/50 px-3 py-2.5"
-            >
+            <div key={label} className="rounded-lg bg-fb-hover/50 px-3 py-2.5">
               <div className="flex items-center gap-1.5 text-fb-text-secondary mb-0.5">
                 <Icon className="w-3.5 h-3.5" />
                 <span className="text-[11px] uppercase tracking-wide">

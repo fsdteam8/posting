@@ -17,7 +17,7 @@ export interface Post {
   title: string;
   content: string;
   postType: "text" | "image" | "video" | "reel" | "shared";
-  sharedPost: string | null;
+  sharedPost: Post | string | null;
   sharedMessage: string;
   mentions: string[];
   feeling: string;

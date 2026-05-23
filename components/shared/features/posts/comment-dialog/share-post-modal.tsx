@@ -62,6 +62,20 @@ const VISIBILITY_OPTIONS: {
   },
 ];
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const stripHtml = (html: string) =>
+  html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+
 // ─── External platform config ─────────────────────────────────────────────────
 
 const getExternalPlatforms = (postUrl: string, shareText: string) => [
@@ -132,7 +146,10 @@ export default function SharePostModal({
       ? `${window.location.origin}/posts/${post._id}`
       : `/posts/${post._id}`;
 
-  const shareText = post.content?.slice(0, 100) ?? "Check out this post!";
+  const originalText = post.content ? stripHtml(post.content) : "";
+  const shareText = originalText
+    ? originalText.slice(0, 100)
+    : "Check out this post!";
 
   const platforms = getExternalPlatforms(postUrl, shareText);
 
@@ -292,7 +309,7 @@ export default function SharePostModal({
                           Original post
                         </p>
                         <p className="text-[13px] text-gray-600 dark:text-zinc-300 line-clamp-2">
-                          {post.content ?? "No content"}
+                          {originalText || "No content"}
                         </p>
                       </div>
                     </div>

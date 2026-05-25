@@ -1,5 +1,5 @@
 import { baseURL } from "@/constants";
-import type { MessagesResponse } from "@/types/messenger";
+import type { Message, MessagesResponse } from "@/types/messenger";
 import { useQuery } from "@tanstack/react-query";
 
 interface Params {
@@ -8,6 +8,15 @@ interface Params {
   page?: number;
   limit?: number;
 }
+
+type RawMessagesResponse = Omit<MessagesResponse, "data"> & {
+  data:
+    | Message[]
+    | {
+        messages?: Message[];
+        listing?: unknown;
+      };
+};
 
 export function useGetMessages({
   accessToken,
@@ -31,7 +40,15 @@ export function useGetMessages({
         } catch {}
         throw new Error(msg);
       }
-      return res.json();
+      const body = (await res.json()) as RawMessagesResponse;
+      const data = Array.isArray(body.data)
+        ? body.data
+        : (body.data?.messages ?? []);
+
+      return {
+        ...body,
+        data,
+      };
     },
     staleTime: 1000 * 10,
     refetchOnWindowFocus: false,

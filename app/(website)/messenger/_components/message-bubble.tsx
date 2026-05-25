@@ -1,7 +1,11 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { Message, MessengerUser } from "@/types/messenger";
+import type {
+  Message,
+  MessageSendStatus,
+  MessengerUser,
+} from "@/types/messenger";
 import { format } from "date-fns";
 import { FileText, Reply, Smile } from "lucide-react";
 import Image from "next/image";
@@ -31,6 +35,43 @@ interface HoverActionsProps {
   isMine: boolean;
   onReact: () => void;
   onReply: () => void;
+}
+
+export const MESSAGE_STATUS_ICONS: Record<
+  MessageSendStatus,
+  { src: string; label: string }
+> = {
+  waiting: {
+    src: "/features/message/waiting%20to%20sent.png",
+    label: "Waiting to send",
+  },
+  sent: {
+    src: "/features/message/sent.png",
+    label: "Sent",
+  },
+  delivered: {
+    src: "/features/message/delivered.png",
+    label: "Delivered",
+  },
+  failed: {
+    src: "/features/message/failed%20to%20sent.png",
+    label: "Failed to send",
+  },
+};
+
+export function MessageStatusIcon({ status }: { status: MessageSendStatus }) {
+  const icon = MESSAGE_STATUS_ICONS[status];
+
+  return (
+    <Image
+      src={icon.src}
+      alt={icon.label}
+      width={14}
+      height={14}
+      className="size-3.5"
+      title={icon.label}
+    />
+  );
 }
 
 function HoverActions({ isMine, onReact, onReply }: HoverActionsProps) {
@@ -127,6 +168,10 @@ export function MessageBubble({
 }: Props) {
   const [viewerSrc, setViewerSrc] = useState<string | null>(null);
   const isMine = message.sender?._id === meId;
+  const sendStatus: MessageSendStatus | null = isMine
+    ? (message.sendStatus ??
+      (seenByUsers && seenByUsers.length > 0 ? "delivered" : "sent"))
+    : null;
   const time = message.createdAt
     ? format(new Date(message.createdAt), "h:mm a")
     : "";
@@ -320,30 +365,38 @@ export function MessageBubble({
           </div>
         )}
 
-        {/* Seen-by indicator (only mine, only when others have seen this msg last) */}
-        {isMine && seenByUsers && seenByUsers.length > 0 && (
+        {isMine && sendStatus && (
           <div
             className="mt-0.5 flex items-center gap-1 self-end"
-            title={`Seen by ${seenByUsers.map((u) => userFullName(u)).join(", ")}`}
+            title={
+              seenByUsers && seenByUsers.length > 0
+                ? `Seen by ${seenByUsers.map((u) => userFullName(u)).join(", ")}`
+                : MESSAGE_STATUS_ICONS[sendStatus].label
+            }
           >
-            <span className="flex -space-x-1">
-              {seenByUsers.slice(0, 3).map((u) => (
-                <span
-                  key={u._id}
-                  className="relative size-3.5 overflow-hidden rounded-full ring-1 ring-card"
-                >
-                  <Avatar
-                    src={getUserAvatar(u)}
-                    alt={userFullName(u)}
-                    sizes="14px"
-                  />
+            <MessageStatusIcon status={sendStatus} />
+            {seenByUsers && seenByUsers.length > 0 && (
+              <>
+                <span className="flex -space-x-1">
+                  {seenByUsers.slice(0, 3).map((u) => (
+                    <span
+                      key={u._id}
+                      className="relative size-3.5 overflow-hidden rounded-full ring-1 ring-card"
+                    >
+                      <Avatar
+                        src={getUserAvatar(u)}
+                        alt={userFullName(u)}
+                        sizes="14px"
+                      />
+                    </span>
+                  ))}
                 </span>
-              ))}
-            </span>
-            {seenByUsers.length > 3 && (
-              <span className="text-[9px] text-muted-foreground">
-                +{seenByUsers.length - 3}
-              </span>
+                {seenByUsers.length > 3 && (
+                  <span className="text-[9px] text-muted-foreground">
+                    +{seenByUsers.length - 3}
+                  </span>
+                )}
+              </>
             )}
           </div>
         )}

@@ -50,6 +50,14 @@ export function ConversationPageClient({ conversationId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, conversation?.unreadCount]);
 
+  useEffect(() => {
+    const latest = messages[messages.length - 1];
+    if (!conversationId || !latest || latest.sender?._id === me._id) return;
+    if ((latest.seenBy || []).includes(me._id)) return;
+    markSeen.mutate({ conversationId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, messages[messages.length - 1]?._id, me._id]);
+
   if (!conversation) {
     return <EmptyChat />;
   }
@@ -84,6 +92,7 @@ export function ConversationPageClient({ conversationId }: Props) {
                 file: files[i],
                 text: i === 0 ? text : undefined,
                 replyTo: i === 0 ? replyTo ?? null : null,
+                optimisticSender: me,
               });
             }
             return;
@@ -93,6 +102,7 @@ export function ConversationPageClient({ conversationId }: Props) {
               conversationId: convId,
               text,
               replyTo: replyTo ?? null,
+              optimisticSender: me,
             });
           }
         }}

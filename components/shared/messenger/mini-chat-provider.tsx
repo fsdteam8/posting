@@ -4,24 +4,34 @@ import { Avatar } from "@/app/(website)/messenger/_components/avatar";
 import {
   getConversationAvatar,
   getConversationTitle,
+  getOtherParticipant,
 } from "@/app/(website)/messenger/_components/helpers";
+import { MessageBubble } from "@/app/(website)/messenger/_components/message-bubble";
+import { MessageContextMenu } from "@/app/(website)/messenger/_components/message-context-menu";
+import { MessageInput } from "@/app/(website)/messenger/_components/message-input";
+import { ReactionsBar } from "@/app/(website)/messenger/_components/reactions-bar";
 import { useCreateDirectConversation } from "@/hooks/features/messenger/api/use-create-direct-conversation";
+import { useDeleteMessage } from "@/hooks/features/messenger/api/use-delete-message";
 import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conversations";
 import { useGetMessages } from "@/hooks/features/messenger/api/use-get-messages";
 import { useMarkConversationSeen } from "@/hooks/features/messenger/api/use-mark-seen";
+import { useReactToMessage } from "@/hooks/features/messenger/api/use-react-to-message";
 import { useSendMessage } from "@/hooks/features/messenger/api/use-send-message";
 import { useMessengerSocket } from "@/hooks/features/messenger/use-messenger-socket";
 import { useProfile } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
-import type { Conversation, Message } from "@/types/messenger";
-import { format } from "date-fns";
+import type {
+  Conversation,
+  Message,
+  MessengerUser,
+} from "@/types/messenger";
 import {
-  ImageIcon,
+  ExternalLink,
   Loader2,
   Maximize2,
   MessageCircle,
   Minus,
-  Send,
+  User,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -116,10 +126,21 @@ export function MiniChatProvider({ accessToken, children }: Props) {
     [createDirect.isPending, openConversation, openDirectChat],
   );
 
+  const optimisticSender: MessengerUser | undefined = profile
+    ? {
+        _id: profile._id,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        username: profile.username,
+        profileImage: profile.profileImage,
+        isOnline: profile.isOnline,
+      }
+    : undefined;
+
   return (
     <MiniChatContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-0 right-2 z-[60] flex max-w-[calc(100vw-1rem)] flex-row-reverse items-end gap-3 sm:right-5">
+      <div className="pointer-events-none fixed bottom-0 right-2 z-60 flex max-w-[calc(100vw-1rem)] flex-row-reverse items-end gap-3 sm:right-5">
         {windows.map((window) => {
           const conversation =
             conversations.find((c) => c._id === window.conversationId) ?? null;
@@ -130,6 +151,7 @@ export function MiniChatProvider({ accessToken, children }: Props) {
               conversationId={window.conversationId}
               conversation={conversation}
               meId={profile?._id}
+              optimisticSender={optimisticSender}
               minimized={window.minimized}
               onClose={() => closeConversation(window.conversationId)}
               onToggleMinimized={() => toggleMinimized(window.conversationId)}
@@ -150,6 +172,7 @@ function MiniChatBox({
   conversationId,
   conversation,
   meId,
+  optimisticSender,
   minimized,
   onClose,
   onToggleMinimized,
@@ -158,14 +181,28 @@ function MiniChatBox({
   conversationId: string;
   conversation: Conversation | null;
   meId?: string;
+  optimisticSender?: MessengerUser;
   minimized: boolean;
   onClose: () => void;
   onToggleMinimized: () => void;
 }) {
-  const [text, setText] = useState("");
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    msg: Message;
+  } | null>(null);
+  const [reactionsFor, setReactionsFor] = useState<{
+    x: number;
+    y: number;
+    msg: Message;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messages = useGetMessages({ accessToken, conversationId });
   const sendMessage = useSendMessage({ accessToken });
+  const reactMessage = useReactToMessage({ accessToken });
+  const deleteMessage = useDeleteMessage({ accessToken });
   const markSeen = useMarkConversationSeen({ accessToken });
 
   useMessengerSocket({ userId: meId, activeConversationId: conversationId });
@@ -177,11 +214,56 @@ function MiniChatBox({
   const avatar =
     conversation && meId ? getConversationAvatar(conversation, meId) : "";
   const unread = conversation?.unreadCount || 0;
+  const otherParticipant =
+    conversation && meId ? getOtherParticipant(conversation, meId) : null;
+  const profileHref = otherParticipant?.username
+    ? `/public/profile/${otherParticipant.username}`
+    : null;
+
+  const seenByForMessage = useMemo(() => {
+    if (!conversation || !meId) return {};
+
+    const others = conversation.participants.filter((p) => p._id !== meId);
+    const lastSeenByUser: Record<string, string> = {};
+
+    for (const other of others) {
+      for (let i = (messages.data?.data.length ?? 0) - 1; i >= 0; i--) {
+        const message = messages.data?.data[i];
+        if (
+          message?.sender?._id === meId &&
+          (message.seenBy || []).some((id) =>
+            typeof id === "string" ? id === other._id : false,
+          )
+        ) {
+          lastSeenByUser[other._id] = message._id;
+          break;
+        }
+      }
+    }
+
+    const map: Record<string, MessengerUser[]> = {};
+    for (const [userId, messageId] of Object.entries(lastSeenByUser)) {
+      const user = others.find((other) => other._id === userId);
+      if (!user) continue;
+      if (!map[messageId]) map[messageId] = [];
+      map[messageId].push(user);
+    }
+    return map;
+  }, [conversation, meId, messages.data?.data]);
 
   useEffect(() => {
     if (unread > 0) markSeen.mutate({ conversationId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, unread]);
+
+  useEffect(() => {
+    const data = messages.data?.data ?? [];
+    const latest = data[data.length - 1];
+    if (!meId || !latest || latest.sender?._id === meId) return;
+    if ((latest.seenBy || []).includes(meId)) return;
+    markSeen.mutate({ conversationId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, messages.data?.data.at(-1)?._id, meId]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -190,29 +272,54 @@ function MiniChatBox({
     });
   }, [messages.data?.data.length, minimized]);
 
-  function handleSend() {
-    const trimmed = text.trim();
-    if (!trimmed || sendMessage.isPending) return;
-    sendMessage.mutate({ conversationId, text: trimmed });
-    setText("");
+  async function handleSend({
+    text,
+    files,
+  }: {
+    text?: string;
+    files?: File[];
+  }) {
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        await sendMessage.mutateAsync({
+          conversationId,
+          file: files[i],
+          text: i === 0 ? text : undefined,
+          replyTo: i === 0 ? replyTo?._id ?? null : null,
+          optimisticSender,
+        });
+      }
+      setReplyTo(null);
+      return;
+    }
+    if (text) {
+      sendMessage.mutate({
+        conversationId,
+        text,
+        replyTo: replyTo?._id ?? null,
+        optimisticSender,
+      });
+      setReplyTo(null);
+    }
   }
 
   return (
     <section
       className={cn(
-        "pointer-events-auto w-[calc(100vw-1rem)] overflow-hidden rounded-t-lg border bg-card shadow-2xl ring-1 ring-black/5 sm:w-82",
-        minimized ? "h-12" : "h-[455px]",
+        "pointer-events-auto w-[calc(100vw-1rem)] overflow-visible rounded-t-lg border bg-card shadow-2xl ring-1 ring-black/5 sm:w-82",
+        minimized ? "h-12" : "h-113.75",
       )}
       aria-label={`${title} chat window`}
     >
       <div className="flex h-12 items-center gap-2 border-b px-3">
-        <button
-          type="button"
-          onClick={onToggleMinimized}
-          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
-          aria-label={minimized ? "Open chat" : "Minimize chat"}
-        >
-          <div className="relative size-8 shrink-0 overflow-hidden rounded-full bg-muted">
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setProfileMenuOpen((open) => !open)}
+            className="relative size-8 cursor-pointer overflow-hidden rounded-full bg-muted"
+            aria-label="Open chat menu"
+            aria-expanded={profileMenuOpen}
+          >
             {avatar ? (
               <Avatar
                 src={avatar}
@@ -223,7 +330,38 @@ function MiniChatBox({
             ) : (
               <MessageCircle className="m-2 size-4 text-muted-foreground" />
             )}
-          </div>
+          </button>
+
+          {profileMenuOpen && (
+            <div className="absolute left-0 top-10 z-50 w-48 overflow-hidden rounded-lg border bg-card py-1 shadow-xl ring-1 ring-black/5">
+              {profileHref && (
+                <Link
+                  href={profileHref}
+                  onClick={() => setProfileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-[13px] text-foreground hover:bg-muted"
+                >
+                  <User className="size-4 text-muted-foreground" />
+                  <span>See profile</span>
+                </Link>
+              )}
+              <Link
+                href={`/messenger/${conversationId}`}
+                onClick={() => setProfileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-[13px] text-foreground hover:bg-muted"
+              >
+                <ExternalLink className="size-4 text-muted-foreground" />
+                <span>Open in Messenger</span>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onToggleMinimized}
+          className="flex min-w-0 flex-1 cursor-pointer items-center text-left"
+          aria-label={minimized ? "Open chat" : "Minimize chat"}
+        >
           <span className="min-w-0 truncate text-[13px] font-semibold">
             {title}
           </span>
@@ -258,7 +396,7 @@ function MiniChatBox({
       </div>
 
       {!minimized && (
-        <div className="flex h-[407px] min-h-0 flex-col">
+        <div className="flex h-101.75 min-h-0 flex-col">
           <div
             ref={scrollRef}
             className="min-h-0 flex-1 overflow-y-auto px-3 py-3"
@@ -273,147 +411,102 @@ function MiniChatBox({
                 <span>Start a conversation</span>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                {messages.data.data.map((message) => (
-                  <MiniMessageBubble
-                    key={message._id}
-                    message={message}
-                    isMine={message.sender?._id === meId}
-                  />
-                ))}
+              <div className="flex flex-col gap-1">
+                {messages.data.data.map((message, index) => {
+                  const previous = messages.data.data[index - 1];
+                  const showAvatar =
+                    !previous || previous.sender?._id !== message.sender?._id;
+
+                  return (
+                    <MessageBubble
+                      key={message._id}
+                      message={message}
+                      meId={meId ?? ""}
+                      conversationId={conversationId}
+                      showAvatar={showAvatar}
+                      seenByUsers={seenByForMessage[message._id]}
+                      onContextMenu={(msg, event) => {
+                        event.preventDefault();
+                        setContextMenu({
+                          x: event.clientX,
+                          y: event.clientY,
+                          msg,
+                        });
+                        setReactionsFor({
+                          x: event.clientX,
+                          y: event.clientY - 60,
+                          msg,
+                        });
+                      }}
+                      onReact={(msg) =>
+                        setReactionsFor({
+                          x: window.innerWidth / 2 - 120,
+                          y: window.innerHeight / 2,
+                          msg,
+                        })
+                      }
+                      onReply={(msg) => setReplyTo(msg)}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
 
-          <div className="border-t p-2">
-            <div className="flex items-center gap-2 rounded-full bg-muted/60 pl-3 pr-1.5">
-              <input
-                value={text}
-                onChange={(event) => setText(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    handleSend();
-                  }
+          <MessageInput
+            replyTo={replyTo}
+            disabled={sendMessage.isPending}
+            placeholder="Your message"
+            onClearReply={() => setReplyTo(null)}
+            onSend={handleSend}
+          />
+
+          {contextMenu && (
+            <MessageContextMenu
+              x={contextMenu.x}
+              y={contextMenu.y}
+              isMine={contextMenu.msg.sender?._id === meId}
+              onClose={() => {
+                setContextMenu(null);
+                setReactionsFor(null);
+              }}
+              onReply={() => setReplyTo(contextMenu.msg)}
+              onCopy={() => {
+                if (contextMenu.msg.text) {
+                  navigator.clipboard.writeText(contextMenu.msg.text);
+                }
+              }}
+              onForward={() => {}}
+              onDelete={() =>
+                deleteMessage.mutate({
+                  messageId: contextMenu.msg._id,
+                  conversationId,
+                })
+              }
+            />
+          )}
+
+          {reactionsFor && (
+            <div
+              style={{ top: reactionsFor.y, left: reactionsFor.x }}
+              className={cn("fixed z-50")}
+            >
+              <ReactionsBar
+                onPick={(emoji) => {
+                  reactMessage.mutate({
+                    conversationId,
+                    messageId: reactionsFor.msg._id,
+                    emoji,
+                  });
+                  setReactionsFor(null);
                 }}
-                placeholder="Aa"
-                className="min-w-0 flex-1 bg-transparent py-2 text-[13px] outline-none placeholder:text-muted-foreground"
+                onMore={() => setReactionsFor(null)}
+                onClose={() => setReactionsFor(null)}
               />
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={!text.trim() || sendMessage.isPending}
-                className={cn(
-                  "flex size-8 shrink-0 items-center justify-center rounded-full transition",
-                  text.trim() && !sendMessage.isPending
-                    ? "cursor-pointer text-primary hover:bg-primary/10"
-                    : "cursor-not-allowed text-muted-foreground",
-                )}
-                aria-label="Send"
-              >
-                {sendMessage.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
-              </button>
             </div>
-          </div>
+          )}
         </div>
       )}
     </section>
-  );
-}
-
-function MiniMessageBubble({
-  message,
-  isMine,
-}: {
-  message: Message;
-  isMine: boolean;
-}) {
-  const time = format(new Date(message.createdAt), "h:mm a");
-  const hasMedia = message.media?.url;
-
-  return (
-    <div className={cn("flex", isMine ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[78%] overflow-hidden rounded-2xl px-3 py-2 text-[13px] leading-snug",
-          isMine
-            ? "rounded-br-md bg-primary text-primary-foreground"
-            : "rounded-bl-md bg-muted text-foreground",
-        )}
-      >
-        {message.isDeleted ? (
-          <p className="italic opacity-75">Message deleted</p>
-        ) : (
-          <>
-            {message.text && <p className="whitespace-pre-wrap">{message.text}</p>}
-            {hasMedia && <MiniMessageMedia message={message} isMine={isMine} />}
-          </>
-        )}
-        <p
-          className={cn(
-            "mt-1 text-[10px]",
-            isMine ? "text-primary-foreground/70" : "text-muted-foreground",
-          )}
-        >
-          {time}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function MiniMessageMedia({
-  message,
-  isMine,
-}: {
-  message: Message;
-  isMine: boolean;
-}) {
-  if (!message.media?.url) return null;
-
-  if (message.type === "image") {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={message.media.url}
-        alt={message.media.fileName || "Image message"}
-        className="mt-1 max-h-40 rounded-lg object-cover"
-      />
-    );
-  }
-
-  if (message.type === "audio") {
-    return (
-      <audio controls className="mt-1 w-48 max-w-full">
-        <source src={message.media.url} type={message.media.mimeType} />
-      </audio>
-    );
-  }
-
-  if (message.type === "video") {
-    return (
-      <video controls className="mt-1 max-h-40 rounded-lg">
-        <source src={message.media.url} type={message.media.mimeType} />
-      </video>
-    );
-  }
-
-  return (
-    <a
-      href={message.media.url}
-      target="_blank"
-      rel="noreferrer"
-      className={cn(
-        "mt-1 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs underline-offset-2 hover:underline",
-        isMine ? "bg-primary-foreground/15" : "bg-background",
-      )}
-    >
-      <ImageIcon className="size-4 shrink-0" />
-      <span className="truncate">{message.media.fileName || "Attachment"}</span>
-    </a>
   );
 }

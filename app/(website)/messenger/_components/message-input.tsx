@@ -19,6 +19,7 @@ import { userFullName } from "./helpers";
 interface Props {
   replyTo: Message | null;
   disabled?: boolean;
+  placeholder?: string;
   onClearReply: () => void;
   /**
    * Send one logical message. If `files` is provided each entry becomes its own
@@ -45,6 +46,7 @@ function classifyFile(file: File): StagedAttachment["kind"] {
 export function MessageInput({
   replyTo,
   disabled,
+  placeholder = "Your messages...",
   onClearReply,
   onSend,
 }: Props) {
@@ -331,7 +333,7 @@ export function MessageInput({
               }
             }}
             placeholder={
-              staged.length > 0 ? "Add a caption..." : "Your messages..."
+              staged.length > 0 ? "Add a caption..." : placeholder
             }
             className={cn(
               "flex-1 bg-transparent py-2.5 text-[13.5px] outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed",

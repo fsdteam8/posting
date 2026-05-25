@@ -53,6 +53,8 @@ export type MessageMedia = {
 
 export type MessageType = "text" | "image" | "video" | "audio" | "file";
 
+export type MessageSendStatus = "waiting" | "sent" | "delivered" | "failed";
+
 export type Message = {
   _id: string;
   conversation: string;
@@ -67,6 +69,7 @@ export type Message = {
   isDeleted?: boolean;
   isEdited?: boolean;
   isPinned?: boolean;
+  sendStatus?: MessageSendStatus;
   createdAt: string;
   updatedAt?: string;
 };

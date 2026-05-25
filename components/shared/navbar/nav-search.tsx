@@ -118,6 +118,190 @@ function SuggestionIcon({ type }: { type: Suggestion["type"] }) {
   );
 }
 
+interface SearchPanelBodyProps {
+  compact?: boolean;
+  trimmed: string;
+  query: string;
+  suggestions: Suggestion[];
+  suggestLoading: boolean;
+  filteredRecents: string[];
+  onPickSuggestion: (value: string) => void;
+  onPickSuggestionItem: (suggestion: Suggestion) => void;
+  onRemoveRecent: (value: string) => void;
+  onClearAllRecents: () => void;
+}
+
+function SearchPanelBody({
+  compact,
+  trimmed,
+  query,
+  suggestions,
+  suggestLoading,
+  filteredRecents,
+  onPickSuggestion,
+  onPickSuggestionItem,
+  onRemoveRecent,
+  onClearAllRecents,
+}: SearchPanelBodyProps) {
+  const showSuggestions = !!trimmed && suggestions.length > 0;
+  const showNoResults =
+    !!trimmed && !suggestLoading && suggestions.length === 0;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col",
+        compact ? "max-h-[60vh]" : "max-h-[70vh]",
+      )}
+    >
+      {trimmed && (
+        <button
+          onClick={() => onPickSuggestion(query)}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-input transition-colors border-b"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <Search className="size-4 text-primary" />
+          </span>
+          <span className="text-sm text-foreground truncate">
+            Search for <span className="font-medium">&ldquo;{query}&rdquo;</span>
+          </span>
+          {suggestLoading && (
+            <Loader2 className="ml-auto size-4 animate-spin text-muted-foreground" />
+          )}
+        </button>
+      )}
+
+      <div className="overflow-y-auto">
+        {showSuggestions && (
+          <div className="px-2 py-2">
+            <h3 className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Suggestions
+            </h3>
+            <ul>
+              {suggestions.map((s) => (
+                <li key={`${s.type}-${s._id}`}>
+                  <button
+                    onClick={() => onPickSuggestionItem(s)}
+                    className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-input transition-colors"
+                  >
+                    {s.image ? (
+                      <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                        <Image
+                          src={s.image}
+                          alt={s.label}
+                          fill
+                          sizes="36px"
+                          className="object-cover"
+                        />
+                      </span>
+                    ) : (
+                      <SuggestionIcon type={s.type} />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {s.label}
+                      </p>
+                      {s.sublabel && (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {s.sublabel}
+                        </p>
+                      )}
+                    </div>
+                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {s.type}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {showNoResults && (
+          <p className="px-4 py-3 text-xs text-muted-foreground">
+            No matches found. Press Enter to search anyway.
+          </p>
+        )}
+
+        {filteredRecents.length > 0 && (
+          <div className="px-2 py-2">
+            <div className="flex items-center justify-between px-2 pb-1">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Recent
+              </h3>
+              {!trimmed && (
+                <button
+                  onClick={onClearAllRecents}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+
+            <ul>
+              {filteredRecents.map((item) => (
+                <li
+                  key={item}
+                  className="flex items-center rounded-lg hover:bg-input transition-colors"
+                >
+                  <button
+                    onClick={() => onPickSuggestion(item)}
+                    className="flex flex-1 items-center gap-3 px-2 py-2 text-left min-w-0"
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                      <Clock className="size-4 text-muted-foreground" />
+                    </span>
+                    <span className="text-sm text-foreground truncate">
+                      {item}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => onRemoveRecent(item)}
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted-foreground/15 mr-1"
+                    aria-label={`Remove ${item} from recent searches`}
+                  >
+                    <X className="size-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {!trimmed && (
+          <div className="px-4 py-3">
+            <h3 className="flex items-center gap-1.5 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <TrendingUp className="size-3.5" />
+              Trending
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {TRENDING.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => onPickSuggestion(tag)}
+                  className="rounded-full bg-input px-3 py-1.5 text-sm text-foreground hover:bg-border transition-colors"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!trimmed && filteredRecents.length === 0 && (
+          <div className="flex flex-col items-center justify-center gap-2 px-6 py-8 text-muted-foreground">
+            <Search className="size-10 opacity-20" />
+            <p className="text-sm text-center">
+              Search posts, people, pages and more
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function NavSearch({ accessToken }: NavSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -251,174 +435,6 @@ export function NavSearch({ accessToken }: NavSearchProps) {
     writeRecents([]);
   }
 
-  // Shared suggestion-panel body. Used in both desktop popover and mobile modal.
-  function PanelBody({ compact }: { compact?: boolean }) {
-    const showSuggestions = !!trimmed && suggestions.length > 0;
-    const showNoResults =
-      !!trimmed && !suggestLoading && suggestions.length === 0;
-
-    return (
-      <div
-        className={cn(
-          "flex flex-col",
-          compact ? "max-h-[60vh]" : "max-h-[70vh]",
-        )}
-      >
-        {/* "Search for X" header row */}
-        {trimmed && (
-          <button
-            onClick={() => pickSuggestion(query)}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-input transition-colors border-b"
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <Search className="size-4 text-primary" />
-            </span>
-            <span className="text-sm text-foreground truncate">
-              Search for{" "}
-              <span className="font-medium">&ldquo;{query}&rdquo;</span>
-            </span>
-            {suggestLoading && (
-              <Loader2 className="ml-auto size-4 animate-spin text-muted-foreground" />
-            )}
-          </button>
-        )}
-
-        <div className="overflow-y-auto">
-          {/* Live suggestions */}
-          {showSuggestions && (
-            <div className="px-2 py-2">
-              <h3 className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Suggestions
-              </h3>
-              <ul>
-                {suggestions.map((s) => (
-                  <li key={`${s.type}-${s._id}`}>
-                    <button
-                      onClick={() => pickSuggestionItem(s)}
-                      className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-input transition-colors"
-                    >
-                      {s.image ? (
-                        <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-                          <Image
-                            src={s.image}
-                            alt={s.label}
-                            fill
-                            sizes="36px"
-                            className="object-cover"
-                          />
-                        </span>
-                      ) : (
-                        <SuggestionIcon type={s.type} />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {s.label}
-                        </p>
-                        {s.sublabel && (
-                          <p className="truncate text-xs text-muted-foreground">
-                            {s.sublabel}
-                          </p>
-                        )}
-                      </div>
-                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                        {s.type}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* No-result message (only after debounce settles) */}
-          {showNoResults && (
-            <p className="px-4 py-3 text-xs text-muted-foreground">
-              No matches found. Press Enter to search anyway.
-            </p>
-          )}
-
-          {/* Recent searches */}
-          {filteredRecents.length > 0 && (
-            <div className="px-2 py-2">
-              <div className="flex items-center justify-between px-2 pb-1">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Recent
-                </h3>
-                {!trimmed && (
-                  <button
-                    onClick={clearAllRecents}
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-
-              <ul>
-                {filteredRecents.map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-center rounded-lg hover:bg-input transition-colors"
-                  >
-                    <button
-                      onClick={() => pickSuggestion(item)}
-                      className="flex flex-1 items-center gap-3 px-2 py-2 text-left min-w-0"
-                    >
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <Clock className="size-4 text-muted-foreground" />
-                      </span>
-                      <span className="text-sm text-foreground truncate">
-                        {item}
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => removeRecent(item)}
-                      className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted-foreground/15 mr-1"
-                      aria-label={`Remove ${item} from recent searches`}
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Trending (only when not typing) */}
-          {!trimmed && (
-            <div className="px-4 py-3">
-              <h3 className="flex items-center gap-1.5 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <TrendingUp className="size-3.5" />
-                Trending
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {TRENDING.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => pickSuggestion(tag)}
-                    className="rounded-full bg-input px-3 py-1.5 text-sm text-foreground hover:bg-border transition-colors"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!trimmed && filteredRecents.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-2 px-6 py-8 text-muted-foreground">
-              <Search className="size-10 opacity-20" />
-              <p className="text-sm text-center">
-                Search posts, people, pages and more
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Desktop / tablet inline search */}
@@ -448,7 +464,6 @@ export function NavSearch({ accessToken }: NavSearchProps) {
             onKeyDown={handleKeyDown}
             className="h-full w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             aria-autocomplete="list"
-            aria-expanded={desktopOpen}
           />
 
           {suggestLoading && trimmed && (
@@ -473,7 +488,17 @@ export function NavSearch({ accessToken }: NavSearchProps) {
             aria-label="Search suggestions"
             className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border bg-card shadow-2xl ring-1 ring-black/5"
           >
-            <PanelBody />
+            <SearchPanelBody
+              trimmed={trimmed}
+              query={query}
+              suggestions={suggestions}
+              suggestLoading={suggestLoading}
+              filteredRecents={filteredRecents}
+              onPickSuggestion={pickSuggestion}
+              onPickSuggestionItem={pickSuggestionItem}
+              onRemoveRecent={removeRecent}
+              onClearAllRecents={clearAllRecents}
+            />
           </div>
         )}
       </div>
@@ -533,7 +558,18 @@ export function NavSearch({ accessToken }: NavSearchProps) {
 
             {/* Suggestion modal — sits directly under the search box, full-width card */}
             <div className="border-t bg-card">
-              <PanelBody compact />
+              <SearchPanelBody
+                compact
+                trimmed={trimmed}
+                query={query}
+                suggestions={suggestions}
+                suggestLoading={suggestLoading}
+                filteredRecents={filteredRecents}
+                onPickSuggestion={pickSuggestion}
+                onPickSuggestionItem={pickSuggestionItem}
+                onRemoveRecent={removeRecent}
+                onClearAllRecents={clearAllRecents}
+              />
             </div>
           </div>
 

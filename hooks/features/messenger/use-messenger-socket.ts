@@ -95,6 +95,23 @@ export function useMessengerSocket({
         (old) => {
           if (!old) return old;
           if (old.data.some((m) => m._id === message._id)) return old;
+          const senderId =
+            typeof message.sender === "string"
+              ? message.sender
+              : message.sender?._id;
+          if (senderId === userId) {
+            const tempIndex = old.data.findIndex(
+              (m) =>
+                m.sendStatus === "waiting" &&
+                m.text === message.text &&
+                m.type === message.type,
+            );
+            if (tempIndex !== -1) {
+              const next = [...old.data];
+              next[tempIndex] = { ...message, sendStatus: "sent" };
+              return { ...old, data: next };
+            }
+          }
           return { ...old, data: [...old.data, message] };
         },
       );
@@ -132,10 +149,28 @@ export function useMessengerSocket({
       );
     }
 
-    function onSeen({ conversationId }: SeenPayload) {
-      qc.invalidateQueries({
-        queryKey: ["messenger", "messages", conversationId],
-      });
+    function onSeen({ conversationId, userId: seenUserId }: SeenPayload) {
+      qc.setQueriesData<MessagesResponse>(
+        { queryKey: ["messenger", "messages", conversationId] },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: old.data.map((message) => {
+              const senderId =
+                typeof message.sender === "string"
+                  ? message.sender
+                  : message.sender?._id;
+              if (senderId === seenUserId) return message;
+              if ((message.seenBy || []).includes(seenUserId)) return message;
+              return {
+                ...message,
+                seenBy: [...(message.seenBy || []), seenUserId],
+              };
+            }),
+          };
+        },
+      );
     }
 
     socket.on("connect", () => {

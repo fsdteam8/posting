@@ -1,5 +1,6 @@
 "use client";
 
+import { useOptionalMiniChat } from "@/components/shared/messenger/mini-chat-provider";
 import { baseURL } from "@/constants";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -11,12 +12,13 @@ interface Params {
 }
 
 /**
- * Opens (or creates) a direct conversation with the given user and navigates
- * the browser to `/messenger/<id>`. Use this from any "Message" button across
- * the app (friends, marketplace, profile, etc.).
+ * Opens (or creates) a direct conversation with the given user. When the
+ * mini-chat provider is mounted, this opens a bottom chat box; otherwise it
+ * falls back to the full Messenger route.
  */
 export function useStartDirectChat({ accessToken }: Params) {
   const router = useRouter();
+  const miniChat = useOptionalMiniChat();
 
   const mutation = useMutation<{ data: { _id: string } }, Error, { userId: string }>({
     mutationKey: ["messenger", "start-direct"],
@@ -45,14 +47,22 @@ export function useStartDirectChat({ accessToken }: Params) {
   const startChat = useCallback(
     async (userId: string) => {
       try {
+        if (miniChat) {
+          await miniChat.openDirectChat(userId);
+          return;
+        }
+
         const res = await mutation.mutateAsync({ userId });
         if (res?.data?._id) router.push(`/messenger/${res.data._id}`);
       } catch {
         /* toast already shown */
       }
     },
-    [mutation, router],
+    [miniChat, mutation, router],
   );
 
-  return { startChat, isStarting: mutation.isPending };
+  return {
+    startChat,
+    isStarting: miniChat ? miniChat.isOpeningDirect : mutation.isPending,
+  };
 }

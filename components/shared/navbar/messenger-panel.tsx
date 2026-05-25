@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar } from "@/app/(website)/messenger/_components/avatar";
+import { useOptionalMiniChat } from "@/components/shared/messenger/mini-chat-provider";
 import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conversations";
 import { useMessengerSocket } from "@/hooks/features/messenger/use-messenger-socket";
 import { useProfile } from "@/hooks/profile/use-profile";
@@ -157,6 +158,7 @@ function Row({
       : (last?.sender as { _id?: string } | undefined)?._id;
   const isMine = lastSenderId === meId;
   const unread = c.unreadCount || 0;
+  const miniChat = useOptionalMiniChat();
   let preview = last?.text || "";
   if (!preview && last?.type) {
     if (last.type === "image") preview = "Sent a photo";
@@ -167,10 +169,17 @@ function Row({
   const other = c.participants.find((p) => p._id !== meId);
 
   return (
-    <Link
-      href={`/messenger/${c._id}`}
-      onClick={onClose}
-      className="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/50"
+    <button
+      type="button"
+      onClick={() => {
+        if (miniChat) {
+          miniChat.openConversation(c._id);
+          onClose();
+          return;
+        }
+        window.location.href = `/messenger/${c._id}`;
+      }}
+      className="flex w-full cursor-pointer items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
     >
       <div className="relative shrink-0">
         <div className="relative size-11 overflow-hidden rounded-full bg-muted">
@@ -214,6 +223,6 @@ function Row({
       {unread > 0 && (
         <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
       )}
-    </Link>
+    </button>
   );
 }

@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { MiniChatProvider } from "@/components/shared/messenger/mini-chat-provider";
 import Navbar from "@/components/shared/navbar/navbar";
 import { baseURL } from "@/constants";
 import { getQueryClient } from "@/lib/tanstack-query/query-client";
@@ -33,8 +34,10 @@ const WebsiteLayout = async ({ children }: Props) => {
     <div>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <CallProvider accessToken={cu.user.accessToken}>
-          <Navbar accessToken={cu.user.accessToken} />
-          {children}
+          <MiniChatProvider accessToken={cu.user.accessToken}>
+            <Navbar accessToken={cu.user.accessToken} />
+            {children}
+          </MiniChatProvider>
         </CallProvider>
       </HydrationBoundary>
     </div>

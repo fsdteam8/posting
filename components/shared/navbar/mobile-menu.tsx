@@ -13,6 +13,7 @@ import {
   MessageCircle,
   PenSquare,
   Store,
+  UserRoundPlus,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +21,7 @@ import { useState } from "react";
 
 interface MobileMenuProps {
   messengerUnread: number;
+  friendRequestsCount: number;
   notificationUnread: number;
   onPostClick?: () => void;
 }
@@ -79,6 +81,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function MobileMenu({
   messengerUnread,
+  friendRequestsCount,
   notificationUnread,
   onPostClick,
 }: MobileMenuProps) {
@@ -97,7 +100,7 @@ export function MobileMenu({
           className="relative flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted transition-colors"
         >
           <Menu className="size-5" />
-          {messengerUnread + notificationUnread > 0 && (
+          {messengerUnread + friendRequestsCount + notificationUnread > 0 && (
             <span className="absolute top-1 right-1 size-2 rounded-full bg-primary" />
           )}
         </button>
@@ -156,6 +159,13 @@ export function MobileMenu({
             label="Messages"
             badge={messengerUnread}
             href="/messenger"
+            onClick={close}
+          />
+          <Item
+            icon={UserRoundPlus}
+            label="Friend Requests"
+            badge={friendRequestsCount}
+            href="/friends/requests"
             onClick={close}
           />
           <Item

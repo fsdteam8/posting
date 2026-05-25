@@ -1,16 +1,18 @@
 "use client";
 
 import FeedPostModalContainer from "@/components/shared/features/post-modal/feed-post-modal-container";
+import { useGetFriendRequests } from "@/hooks/features/friends/use-get-friend-requests";
 import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conversations";
 import { useMessengerSocket } from "@/hooks/features/messenger/use-messenger-socket";
 import { useGetNotifications } from "@/hooks/features/notifications/api/use-get-notifications";
 import { useNotificationSocket } from "@/hooks/features/notifications/use-notification-socket";
 import { useGetMyPages } from "@/hooks/features/pages/use-get-my-pages";
 import { useProfile } from "@/hooks/profile/use-profile";
-import { Bell, MessageCircle } from "lucide-react";
+import { Bell, MessageCircle, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CreateMenu } from "./create-menu";
+import { FriendRequestsPanel } from "./friend-requests-panel";
 import { IconButton } from "./icon-button";
 import { MessengerPanel } from "./messenger-panel";
 import { MobileMenu } from "./mobile-menu";
@@ -32,10 +34,16 @@ export default function Navbar({ accessToken }: Props) {
   });
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessenger, setShowMessenger] = useState(false);
+  const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [postModalOpen, setPostModalOpen] = useState(false);
 
   const { data: notifData } = useGetNotifications({ accessToken, limit: 1 });
   const unreadCount = notifData?.meta?.unreadCount ?? 0;
+  const { data: friendRequestsData } = useGetFriendRequests({
+    accessToken,
+    mode: "incoming",
+  });
+  const friendRequestsCount = friendRequestsData?.data?.length ?? 0;
 
   const { data: profile } = useProfile(accessToken);
 
@@ -104,7 +112,11 @@ export default function Navbar({ accessToken }: Props) {
               icon={MessageCircle}
               label="Messenger"
               badge={messengerUnread}
-              onClick={() => setShowMessenger((v) => !v)}
+              onClick={() => {
+                setShowMessenger((v) => !v);
+                setShowFriendRequests(false);
+                setShowNotifications(false);
+              }}
             />
             {showMessenger && (
               <MessengerPanel
@@ -116,10 +128,33 @@ export default function Navbar({ accessToken }: Props) {
 
           <div className="relative">
             <IconButton
+              icon={UserRoundPlus}
+              label="Friend Requests"
+              badge={friendRequestsCount}
+              onClick={() => {
+                setShowFriendRequests((v) => !v);
+                setShowMessenger(false);
+                setShowNotifications(false);
+              }}
+            />
+            {showFriendRequests && (
+              <FriendRequestsPanel
+                accessToken={accessToken}
+                onClose={() => setShowFriendRequests(false)}
+              />
+            )}
+          </div>
+
+          <div className="relative">
+            <IconButton
               icon={Bell}
               label="Notifications"
               badge={unreadCount}
-              onClick={() => setShowNotifications((prev) => !prev)}
+              onClick={() => {
+                setShowNotifications((prev) => !prev);
+                setShowMessenger(false);
+                setShowFriendRequests(false);
+              }}
             />
             {showNotifications && (
               <NotificationPanel
@@ -132,6 +167,7 @@ export default function Navbar({ accessToken }: Props) {
         <div className="flex sm:hidden">
           <MobileMenu
             messengerUnread={messengerUnread}
+            friendRequestsCount={friendRequestsCount}
             notificationUnread={unreadCount}
             onPostClick={() => setPostModalOpen(true)}
           />

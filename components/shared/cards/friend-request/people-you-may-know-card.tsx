@@ -61,7 +61,7 @@ export function PeopleYouMayKnowCard({
         ) : isAdded ? (
           <>
             <Check className="size-3.5" />
-            Added
+            Request Sent
           </>
         ) : (
           <>

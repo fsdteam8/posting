@@ -1,4 +1,5 @@
 import { baseURL } from "@/constants";
+import type { FeedPostsResponse } from "@/types/features/feed";
 import { GroupPostsResponse, Post } from "@/types/features/posts";
 import {
   InfiniteData,
@@ -71,6 +72,24 @@ export function useReactToPost({ postId, accessToken, groupId }: Params) {
         (old) => {
           if (!old) return old;
 
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((item) =>
+                item._id === postId ? updatedPost : item,
+              ),
+            })),
+          };
+        },
+      );
+
+      // Same patch for the main feed — otherwise tapping like on a feed card
+      // changes nothing visually until the page is refreshed.
+      queryClient.setQueryData<InfiniteData<FeedPostsResponse>>(
+        ["feed-posts"],
+        (old) => {
+          if (!old) return old;
           return {
             ...old,
             pages: old.pages.map((page) => ({

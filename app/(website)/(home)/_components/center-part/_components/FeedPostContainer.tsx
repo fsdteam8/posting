@@ -2,8 +2,9 @@
 
 import GroupPostCard from "@/components/shared/features/posts/post-card";
 import { useGetFeedPosts } from "@/hooks/features/feed/use-get-feed-posts";
+import { useFeedPostsSocket } from "@/hooks/posts/use-feed-posts-socket";
 import { Loader2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 interface Props {
   accessToken: string;
@@ -42,7 +43,14 @@ const FeedPostContainer = ({ accessToken, loggedinUser }: Props) => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // ── Flatten pages into a single post list ─────────────────────────────────
-  const posts = data?.pages.flatMap((page) => page.data) ?? [];
+  const posts = useMemo(
+    () => data?.pages.flatMap((page) => page.data) ?? [],
+    [data],
+  );
+
+  // Subscribe to live reaction / comment events for every visible feed post.
+  const postIds = useMemo(() => posts.map((p) => p._id), [posts]);
+  useFeedPostsSocket({ userId: loggedinUser, postIds });
 
   // ── Loading state (first load) ────────────────────────────────────────────
   if (isLoading) {

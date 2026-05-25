@@ -126,7 +126,7 @@ export function PageCard({
                     : "bg-primary text-white hover:bg-primary/90"
                 } disabled:opacity-60 disabled:cursor-not-allowed`}
               >
-                {isPending ? "..." : isLiked ? "Liked" : "Like"}
+                {isPending ? "..." : isLiked ? "Followed" : "Follow"}
               </button>
               <button
                 onClick={() => onRemove?.(id)}
@@ -140,7 +140,7 @@ export function PageCard({
           {mode === "liked" && (
             <>
               <button className="flex-1 py-1.5 text-sm font-semibold rounded-lg bg-primary text-white cursor-default">
-                Liked
+                Followed
               </button>
               <button
                 onClick={() => onRemove?.(id)}

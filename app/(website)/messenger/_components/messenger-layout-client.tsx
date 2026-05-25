@@ -1,6 +1,7 @@
 "use client";
 
 import { useBlockUser } from "@/hooks/features/messenger/api/use-block-user";
+import { useClearChat } from "@/hooks/features/messenger/api/use-clear-chat";
 import { useCreateGroupConversation } from "@/hooks/features/messenger/api/use-create-group-conversation";
 import { useGetConversations } from "@/hooks/features/messenger/api/use-get-conversations";
 import { useLeaveConversation } from "@/hooks/features/messenger/api/use-leave-conversation";
@@ -156,6 +157,7 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
 
   const createGroup = useCreateGroupConversation({ accessToken });
   const leaveConv = useLeaveConversation({ accessToken });
+  const clearChat = useClearChat({ accessToken });
   const blockUser = useBlockUser({ accessToken });
 
   const openNewGroup = useCallback((prefill?: MessengerUser[]) => {
@@ -328,14 +330,14 @@ export function MessengerLayoutClient({ accessToken, me, children }: Props) {
         <ConfirmDialog
           open={!!deleteTarget}
           title="Delete chat?"
-          message="This will remove the conversation from your inbox. You can be re-added if someone messages you again."
+          message="This clears the chat history from your inbox only. The other person can still message you, and the conversation will reappear when they do."
           confirmLabel="Delete"
           destructive
-          loading={leaveConv.isPending}
+          loading={clearChat.isPending}
           onClose={() => setDeleteTarget(null)}
           onConfirm={async () => {
             if (!deleteTarget) return;
-            await leaveConv.mutateAsync({ conversationId: deleteTarget });
+            await clearChat.mutateAsync({ conversationId: deleteTarget });
             setDeleteTarget(null);
             router.push("/messenger");
           }}

@@ -86,9 +86,11 @@ export const PostActions = ({
     react({ type });
   };
 
-  // Quick tap = like, long hover = picker
+  // Click toggles the current reaction (defaults to "like"). The reaction
+  // picker overlay still appears on hover, but clicking the main button
+  // always fires — hovering shouldn't suppress the tap.
   const handleLikeClick = () => {
-    if (!hovering) handleReact("like");
+    handleReact(activeReaction ?? "like");
   };
 
   const currentReaction = REACTIONS.find((r) => r.type === activeReaction);
@@ -134,35 +136,27 @@ export const PostActions = ({
           <AnimatePresence>
             {hovering && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.14, ease: "easeOut" }}
                 onMouseEnter={openPicker}
                 onMouseLeave={closePicker}
                 className="absolute bottom-full left-0 mb-2 bg-white rounded-full shadow-[0_2px_12px_rgba(0,0,0,0.15)] border border-gray-100 px-2.5 py-2 flex items-end gap-1 z-50"
               >
-                {REACTIONS.map((reaction, i) => (
-                  <motion.div
+                {REACTIONS.map((reaction) => (
+                  <div
                     key={reaction.type}
-                    initial={{ scale: 0, opacity: 0, y: 10 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    transition={{
-                      delay: i * 0.035,
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 22,
-                    }}
                     className="relative flex flex-col items-center"
                   >
                     {/* Label */}
                     <AnimatePresence>
                       {hoveredReaction === reaction.type && (
                         <motion.span
-                          initial={{ opacity: 0, y: 4, scale: 0.85 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 4, scale: 0.85 }}
-                          transition={{ duration: 0.12 }}
+                          initial={{ opacity: 0, y: 2 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 2 }}
+                          transition={{ duration: 0.1 }}
                           className="absolute -top-8 bg-gray-900 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap pointer-events-none"
                         >
                           {reaction.label}
@@ -172,25 +166,21 @@ export const PostActions = ({
 
                     <motion.button
                       type="button"
-                      whileHover={{ scale: 1.45, y: -8 }}
+                      whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 20,
-                      }}
+                      transition={{ duration: 0.12, ease: "easeOut" }}
                       onClick={() => handleReact(reaction.type)}
                       onHoverStart={() => setHoveredReaction(reaction.type)}
                       onHoverEnd={() => setHoveredReaction(null)}
                       className={cn(
-                        "text-[28px] leading-none select-none focus:outline-none relative",
+                        "text-[26px] leading-none select-none focus:outline-none relative",
                         activeReaction === reaction.type &&
-                          "drop-shadow-[0_0_6px_rgba(24,119,242,0.8)]",
+                          "drop-shadow-[0_0_4px_rgba(24,119,242,0.6)]",
                       )}
                     >
                       {reaction.emoji}
                     </motion.button>
-                  </motion.div>
+                  </div>
                 ))}
               </motion.div>
             )}
@@ -206,10 +196,10 @@ export const PostActions = ({
               {activeReaction && currentReaction ? (
                 <motion.span
                   key={activeReaction}
-                  initial={{ scale: 0.4, rotate: -15 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0.4, rotate: 15 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
                   className="flex items-center gap-2 hover:bg-gray-100 w-full justify-center p-1 rounded-[3px] cursor-pointer"
                 >
                   <span className="text-[18px] leading-none">
@@ -225,10 +215,10 @@ export const PostActions = ({
               ) : (
                 <motion.span
                   key="like-default"
-                  initial={{ scale: 0.4 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.4 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
                   className="flex items-center gap-2 hover:bg-gray-100 w-full justify-center p-1 rounded-[3px] cursor-pointer"
                 >
                   <ThumbsUp className="w-4 h-4 text-secondary-foreground" />

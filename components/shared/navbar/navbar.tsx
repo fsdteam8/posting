@@ -88,7 +88,7 @@ export default function Navbar({ accessToken }: Props) {
         >
           Postin
         </Link>
-        <NavSearch onSearch={handleSearch} />
+        <NavSearch onSearch={handleSearch} accessToken={accessToken} />
       </div>
 
       {/* Center Section - Nav Icons */}

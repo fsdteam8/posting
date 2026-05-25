@@ -166,11 +166,11 @@ export function ProfileMenu({
 
               {/* Menu Items */}
               <nav className="flex flex-col">
-                <MenuItem
+                {/* <MenuItem
                   icon={ExternalLink}
                   label="Meta Business Suite"
                   trailing="external"
-                />
+                /> */}
                 {/* <MenuItem
                   icon={Settings}
                   label="Settings & privacy"
